@@ -1,0 +1,8 @@
+[server]
+    Address        = ":8199"
+    ServerRoot     = "public"
+    ServerAgent    = "home-proxy"
+    RouteOverWrite = true
+
+[database]
+    link = "sqlite:db/data.sqlite"

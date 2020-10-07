@@ -1,0 +1,6 @@
+*.exe
+*.test
+
+.idea
+.logs
+*.log
