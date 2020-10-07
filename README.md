@@ -9,6 +9,9 @@ HTTP/HTTPS proxy over SSH.
 - [ ] 支持https 证书
 - [ ] 支持控制台需要账号访问
 
+## QQ群
+782391570
+
 ## 启动
 ![](/pic/start.jpg)
 
