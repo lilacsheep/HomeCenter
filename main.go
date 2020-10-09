@@ -1,58 +1,38 @@
 package main
 
 import (
+	"flag"
 	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/net/ghttp"
 	"github.com/gogf/gf/os/grpool"
-	"homeproxy/app/api"
-	_ "homeproxy/app/models"
+	"homeproxy/app/models"
 	_ "homeproxy/app/server"
 	"homeproxy/library/events"
 	_ "homeproxy/packed"
+	_ "homeproxy/router"
 )
 
-func MiddlewareCORS(r *ghttp.Request) {
-	r.Response.CORSDefault()
-	r.Middleware.Next()
+var (
+	host string
+)
+
+func init() {
+	flag.StringVar(&models.Dbname, "name", "default", "数据库名称,默认为: default")
+	flag.StringVar(&models.Dbpath, "path", "db", "数据路径, 默认 ./db")
+	flag.StringVar(&host, "h", "0.0.0.0:80", "监听地址,默认为0.0.0.0:80")
+	flag.Parse()
 }
 
 func main() {
+	models.InitDB()
 	eventProcess := events.EventProcess{Pool: grpool.New(10)}
 	go eventProcess.Run()
 
 	s := g.Server()
 	s.SetIndexFolder(true)
 	s.SetRouteOverWrite(true)
+	s.SetServerRoot("public")
+	s.SetAddr(host)
 	s.AddStaticPath("/static", "public")
-	s.BindHandler("/", func(r *ghttp.Request) {
-		r.Response.WriteTpl("index.html")
-	})
 
-	s.SetRewriteMap(map[string]string{
-		"/dashboard": "/",
-	})
-	proxyInstanceApi := &api.ProxyInstanceApi{}
-	proxyServerApi := &api.ProxyServerApi{}
-	proxyRoleApi := &api.ProxyRoleApi{}
-
-	s.Group("/api", func(group *ghttp.RouterGroup) {
-		group.Middleware(MiddlewareCORS)
-
-		//group.POST("/login", new(api.AuthController).LoginUser)
-		//group.POST("/auth/user/create", new(api.AuthController).CreateUser)
-		//group.GET("/auth/self", new(api.AuthController).MySelf)
-		// proxy instance api
-		group.POST("/proxy/instance/create", proxyInstanceApi.Create)
-		group.GET("/proxy/instances", proxyInstanceApi.Query)
-		// proxy server api
-		group.POST("/proxy/server/start", proxyServerApi.Start)
-		group.POST("/proxy/server/stop", proxyServerApi.Stop)
-		group.POST("/proxy/server/update", proxyServerApi.Update)
-		group.GET("/proxy/server/info", proxyServerApi.Info)
-		// proxy url role
-		group.POST("/proxy/role/add", proxyRoleApi.AddRole)
-		group.POST("/proxy/role/remove", proxyRoleApi.Remove)
-		group.GET("/proxy/roles", proxyRoleApi.All)
-	})
 	s.Run()
 }

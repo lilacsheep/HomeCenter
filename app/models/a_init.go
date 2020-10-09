@@ -1,7 +1,7 @@
 package models
 
 import (
-	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/os/glog"
 	"homeproxy/library/filedb"
 	"time"
@@ -9,10 +9,16 @@ import (
 
 var DB *filedb.Database
 
-func init() {
-	path := g.Cfg().GetString("db.path", "db")
-	name := g.Cfg().GetString("db.name", "default")
-	DB = filedb.NewDatabase(name, path)
+var (
+	Dbname string
+	Dbpath string
+)
+
+func InitDB() {
+	if !gfile.Exists(Dbpath) {
+		_ = gfile.Mkdir(Dbpath)
+	}
+	DB = filedb.NewDatabase(Dbname, Dbpath)
 	if err := DB.NewCollections(ProxyInstanceTable); err != nil {
 		if err != filedb.ErrCollectionExist {
 			glog.Error("init collection error: %s", err.Error())

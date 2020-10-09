@@ -31,7 +31,10 @@ type FileSource struct {
 func (self *FileSource) Read() ([]byte, error) {
 	self.lock.RLock()
 	defer self.lock.RUnlock()
-	return ioutil.ReadFile(self.FilePath)
+	if gfile.Exists(self.FilePath) {
+		return ioutil.ReadFile(self.FilePath)
+	}
+	return nil, nil
 }
 
 func (self *FileSource) Save(data []byte) error {
@@ -145,9 +148,13 @@ func (self *Collection) Load() {
 	if err != nil {
 		glog.Errorf("load collection %s error", self.Name, err)
 	} else {
-		d := gjson.New(data, true)
-		for k, v := range d.ToMap() {
-			self.data.Set(k, gjson.New(v, true))
+		if data == nil {
+			glog.Warning("load database mapping is null")
+		} else {
+			d := gjson.New(data, true)
+			for k, v := range d.ToMap() {
+				self.data.Set(k, gjson.New(v, true))
+			}
 		}
 	}
 }
@@ -201,19 +208,23 @@ func (self *Database) Load() {
 	if err != nil {
 		glog.Errorf("load database mapping error: %s", err.Error())
 	} else {
-		if err := NameMap.UnmarshalJSON(data); err != nil {
-			glog.Errorf("load database mapping error: %s", err.Error())
+		if data == nil {
+			glog.Warning("load database mapping is null")
 		} else {
-			NameMap.Iterator(func(k int, v string) bool {
-				if err := self.NewCollections(v); err != nil {
-					glog.Errorf("set collections error: %s", err.Error())
-				}
-				return true
-			})
-			self.collections.Iterator(func(k string, v interface{}) bool {
-				v.(*Collection).Load()
-				return true
-			})
+			if err := NameMap.UnmarshalJSON(data); err != nil {
+				glog.Errorf("load database mapping error: %s", err.Error())
+			} else {
+				NameMap.Iterator(func(k int, v string) bool {
+					if err := self.NewCollections(v); err != nil {
+						glog.Errorf("set collections error: %s", err.Error())
+					}
+					return true
+				})
+				self.collections.Iterator(func(k string, v interface{}) bool {
+					v.(*Collection).Load()
+					return true
+				})
+			}
 		}
 	}
 }

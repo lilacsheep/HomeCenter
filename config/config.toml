@@ -1,8 +1,0 @@
-[server]
-    Address        = ":8199"
-    ServerRoot     = "public"
-    ServerAgent    = "home-proxy"
-    RouteOverWrite = true
-
-[db]
-    path = "db"
