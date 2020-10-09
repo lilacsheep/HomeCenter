@@ -4,7 +4,6 @@ import (
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/ghttp"
 	"github.com/gogf/gf/os/grpool"
-	_ "github.com/mattn/go-sqlite3"
 	"homeproxy/app/api"
 	_ "homeproxy/app/models"
 	_ "homeproxy/app/server"
@@ -38,9 +37,9 @@ func main() {
 	s.Group("/api", func(group *ghttp.RouterGroup) {
 		group.Middleware(MiddlewareCORS)
 
-		group.POST("/login", new(api.AuthController).LoginUser)
-		group.POST("/auth/user/create", new(api.AuthController).CreateUser)
-		group.GET("/auth/self", new(api.AuthController).MySelf)
+		//group.POST("/login", new(api.AuthController).LoginUser)
+		//group.POST("/auth/user/create", new(api.AuthController).CreateUser)
+		//group.GET("/auth/self", new(api.AuthController).MySelf)
 		// proxy instance api
 		group.POST("/proxy/instance/create", proxyInstanceApi.Create)
 		group.GET("/proxy/instances", proxyInstanceApi.Query)

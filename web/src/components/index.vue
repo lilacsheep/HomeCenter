@@ -38,14 +38,14 @@
         <!-- // proxy instances  -->
         <el-col :span="24" style="margin-top: 10px">
           <el-table :data="instanceData" :stripe="true" size="mini" style="width: 100%">
-            <el-table-column prop="Address">
+            <el-table-column prop="address">
               <template slot="header" slot-scope="">
                 <el-button type="text" size="mini" icon="el-icon-circle-plus-outline" @click="add_instance">新增实例</el-button>
               </template>
               <template slot-scope="scope">
                 <span>
                   <el-button type="text" size="mini" @click="edit_instance(scope.row)">
-                    {{`ssh://${scope.row.Username}@${scope.row.Address}`}}</el-button>
+                    {{`ssh://${scope.row.username}@${scope.row.address}`}}</el-button>
                 </span>
               </template>
             </el-table-column>
@@ -66,15 +66,15 @@
       <el-table :data="rolesData" stripe size="mini" style="width: 100%;margin-top: 10px">
         <el-table-column prop="sub" label="域名" width="200">
           <template slot-scope="scope">
-            {{`${scope.row.Sub}.${scope.row.Domain}`}}
+            {{`${scope.row.sub}.${scope.row.domain}`}}
           </template>
         </el-table-column>
-        <el-table-column prop="Status" label="规则" width="60" 
+        <el-table-column prop="status" label="规则" width="60" 
         :filters="[{ text: '代理', value: true }, { text: '封禁', value: false }]"
         :filter-method="filter_status"
         >
           <template slot-scope="scope">
-            <el-tag v-if="scope.row.Status" effect="plain" size="mini">转发</el-tag>
+            <el-tag v-if="scope.row.status" effect="plain" size="mini">转发</el-tag>
             <el-tag v-else size="mini" type="danger" effect="plain">封禁</el-tag>
           </template>
         </el-table-column>
@@ -214,11 +214,11 @@ export default {
         edit: {
           visit: false,
           form: {
-            ID: undefined,
-            Address: undefined,
-            Username: undefined,
-            Password: undefined,
-            PrivateKey: undefined
+            id: undefined,
+            address: undefined,
+            username: undefined,
+            password: undefined,
+            private_key: undefined
           },
         }
       },
@@ -293,7 +293,7 @@ export default {
     },
     remove_role (item) {
       let that = this
-      this.$api.post('/proxy/role/remove', {sub: item.Sub, domain: item.Domain}).then(function (response) {
+      this.$api.post('/proxy/role/remove', {id: item.id}).then(function (response) {
         that.$message({message: '删除成功', type: 'success'})
         that.refresh_roles()
       }).catch(function (response) {
@@ -345,7 +345,7 @@ export default {
       }
     },
     filter_status(value, row) {
-      return row.Status === value;
+      return row.status === value;
     },
   },
   created: function () {

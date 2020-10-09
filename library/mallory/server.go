@@ -30,11 +30,11 @@ func (t AccessType) String() string {
 }
 
 type ProxyRole struct {
-	ID         string `orm:"id"`
-	InstanceID string `orm:"instance_id"`
-	Status     bool   `orm:"status"`
-	Sub        string `orm:"sub"`
-	Domain     string `orm:"domain"`
+	ID         string `json:"id"`
+	InstanceID string `json:"instance_id"`
+	Status     bool   `json:"status"`
+	Sub        string `json:"sub"`
+	Domain     string `json:"domain"`
 }
 
 type Server struct {

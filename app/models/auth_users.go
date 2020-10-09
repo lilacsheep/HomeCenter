@@ -1,7 +1,6 @@
 package models
 
 import (
-	"github.com/gogf/gf/frame/g"
 	"time"
 )
 
@@ -15,13 +14,13 @@ type AuthUser struct {
 	CreateAt time.Time
 }
 
-func UserLogin(username, password string) (user *AuthUser, err error) {
-	err = g.DB().Table(AuthUserTable).Where("username = ? and password = ?", username, password).Struct(user)
-	return
-}
-
-func CreateUser(username, password string) (user *AuthUser, err error) {
-	user = &AuthUser{Username: username, Password: password}
-	_, err = g.DB().Table(AuthUserTable).Insert(&user)
-	return
-}
+//func UserLogin(username, password string) (user *AuthUser, err error) {
+//	err = g.DB().Table(AuthUserTable).Where("username = ? and password = ?", username, password).Struct(user)
+//	return
+//}
+//
+//func CreateUser(username, password string) (user *AuthUser, err error) {
+//	user = &AuthUser{Username: username, Password: password}
+//	_, err = g.DB().Table(AuthUserTable).Insert(&user)
+//	return
+//}

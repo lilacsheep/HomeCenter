@@ -4,7 +4,6 @@ import (
 	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/ghttp"
-	"github.com/gogf/gf/os/glog"
 	"homeproxy/app/models"
 	"homeproxy/app/server"
 	"net/http"
@@ -51,7 +50,6 @@ type UpdateProxyServerRequest struct {
 }
 
 func (self *UpdateProxyServerRequest) Exec(r *ghttp.Request) (response MessageResponse) {
-	querySet := g.DB().Table(models.ProxyServerTable)
 	proxy, err := models.GetProxyServer()
 	if err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err)
@@ -75,13 +73,9 @@ func (self *UpdateProxyServerRequest) Exec(r *ghttp.Request) (response MessageRe
 		if self.AutoProxy != proxy.AutoProxy {
 			data["auto_proxy"] = self.AutoProxy
 		}
-		_, err := querySet.Update(data, "name", proxy.Name)
-		if err != nil {
-			glog.Error(err)
-			response.ErrorWithMessage(http.StatusInternalServerError, err)
-		} else {
-			response.Success()
-		}
+		c, _ := models.DB.Collection(models.ProxyServerTable)
+		c.UpdateById(proxy.ID, data)
+		response.Success()
 	}
 	return
 }

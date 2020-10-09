@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/ghttp"
-	"github.com/gogf/gf/util/guid"
 	"golang.org/x/net/publicsuffix"
 	"homeproxy/app/models"
 	"homeproxy/app/server"
@@ -33,35 +32,24 @@ func (self *AddUrlRoleRequest) UrlSplit(url string) (string, string) {
 
 func (self *AddUrlRoleRequest) Exec(r *ghttp.Request) (response MessageResponse) {
 	sub, domain := self.UrlSplit(self.Url)
-	querySet := g.DB().Table(models.ProxyRoleTable)
-	exist := false
-
-	c, _ := querySet.Count("status = ? and (domain = ? and sub = '*')", self.Status, domain)
-	if c != 0 {
-		exist = true
-	} else {
-		if sub == "" {
-			sub = "*"
-		}
-		n, _ := querySet.Count("status = ? and (domain = ? and sub = ?)", self.Status, domain, sub)
-		if n > 0 {
-			exist = true
-		}
+	var data []mallory.ProxyRole
+	c, _ := models.DB.Collection(models.ProxyRoleTable)
+	if sub == "" {
+		sub = "*"
 	}
-	if exist {
-		response.ErrorWithMessage(http.StatusInternalServerError, "规则已经存在")
+	if err := c.Search(g.Map{"status": self.Status, "sub": sub, "domain": domain}, &data); err != nil {
+		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
-		role := mallory.ProxyRole{
-			ID:         guid.S(),
-			InstanceID: self.InstanceID,
-			Status:     self.Status,
-			Sub:        sub,
-			Domain:     domain,
-		}
-		_, err := g.DB().Table(models.ProxyRoleTable).Insert(&role)
-		if err != nil {
-			response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
+		if len(data) > 0 {
+			response.ErrorWithMessage(http.StatusInternalServerError, "规则已经存在")
 		} else {
+			role := mallory.ProxyRole{
+				InstanceID: self.InstanceID,
+				Status:     self.Status,
+				Sub:        sub,
+				Domain:     domain,
+			}
+			c.Insert(&role)
 			if server.Mallory.Status {
 				server.Mallory.ProxyHandler.AddUrlRole(role.Sub, role.Domain, self.Status)
 			}
@@ -76,18 +64,17 @@ func NewAddUrlRoleRequest() *AddUrlRoleRequest {
 }
 
 type RemoveUrlRoleRequest struct {
-	ID     string
-	Sub    string
-	Domain string `v:"domain     @required"`
+	ID string `json:"id"`
 }
 
 func (self *RemoveUrlRoleRequest) Exec(r *ghttp.Request) (response MessageResponse) {
-	_, err := g.DB().Table(models.ProxyRoleTable).Delete("sub = ? and domain = ?", self.Sub, self.Domain)
-	if err != nil {
+	var role mallory.ProxyRole
+	c, _ := models.DB.Collection(models.ProxyRoleTable)
+	if err := c.GetAndRemove(self.ID, &role); err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
 		if server.Mallory.Status {
-			server.Mallory.ProxyHandler.RemoveUrlRole(self.Sub, self.Domain)
+			server.Mallory.ProxyHandler.RemoveUrlRole(role.Sub, role.Domain)
 		}
 		response.Success()
 	}

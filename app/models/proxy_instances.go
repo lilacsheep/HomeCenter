@@ -3,18 +3,19 @@ package models
 import (
 	"fmt"
 	"github.com/gogf/gf/frame/g"
+	"homeproxy/library/filedb"
 )
 
 const ProxyInstanceTable = "proxy_instances"
 
 type ProxyInstance struct {
-	ID         string `orm:"id"`
-	Protocol   int    `orm:"protocol"` // default 0(SSH)
-	Address    string `orm:"address"`  //
-	Username   string `orm:"username"`
-	Password   string `orm:"password"`
-	PrivateKey string `orm:"private_key"`
-	Status     bool   `orm:"status"`
+	ID         string `json:"id"`
+	Protocol   int    `json:"protocol"` // default 0(SSH)
+	Address    string `json:"address"`  //
+	Username   string `json:"username"`
+	Password   string `json:"password"`
+	PrivateKey string `json:"private_key"`
+	Status     bool   `json:"status"`
 }
 
 func (self *ProxyInstance) Url() string {
@@ -27,11 +28,13 @@ func (self *ProxyInstance) Url() string {
 }
 
 func GetEnableProxyInstances() (instances []ProxyInstance, err error) {
-	err = g.DB().Table(ProxyInstanceTable).Structs(&instances, "status = true")
-	return
-}
-
-func GetAllProxyInstances() (instances []ProxyInstance, err error) {
-	err = g.DB().Table(ProxyInstanceTable).Structs(&instances)
+	var c *filedb.Collection
+	if c, err = DB.Collection(ProxyInstanceTable); err != nil {
+		return
+	} else {
+		if err = c.Search(g.Map{"status": true}, &instances); err != nil {
+			return
+		}
+	}
 	return
 }

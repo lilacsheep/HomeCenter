@@ -4,5 +4,5 @@
     ServerAgent    = "home-proxy"
     RouteOverWrite = true
 
-[database]
-    link = "sqlite:db/data.sqlite"
+[db]
+    path = "db"

@@ -3,10 +3,9 @@ package requests
 import (
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/ghttp"
-	"github.com/gogf/gf/os/glog"
-	"github.com/gogf/gf/util/guid"
 	"homeproxy/app/models"
 	"homeproxy/app/server"
+	"homeproxy/library/filedb"
 	"net/http"
 )
 
@@ -19,24 +18,22 @@ type CreateProxyInstanceRequest struct {
 
 func (self *CreateProxyInstanceRequest) Exec(r *ghttp.Request) (response MessageResponse) {
 	instance := models.ProxyInstance{}
-	instance.ID = guid.S()
 	instance.Address = self.Address
 	instance.Username = self.Username
 	instance.Password = self.Password
 	instance.PrivateKey = self.PrivateKey
 	instance.Status = true
 
-	_, err := g.DB().Table(models.ProxyInstanceTable).Insert(&instance)
+	c, err := models.DB.Collection(models.ProxyInstanceTable)
 	if err != nil {
-		glog.Errorf("add instance error: %s", err.Error())
-		glog.Errorf("add instance error: %v", instance)
 		response.ErrorWithMessage(http.StatusInternalServerError, err)
 	} else {
-		if server.Mallory.Status {
-			server.Mallory.ProxyHandler.Balance.AddInstances(instance.Url(), instance.PrivateKey)
-		}
-		response.SuccessWithDetail(instance)
+		c.Insert(&instance)
 	}
+	if server.Mallory.Status {
+		server.Mallory.ProxyHandler.Balance.AddInstances(instance.Url(), instance.PrivateKey)
+	}
+	response.SuccessWithDetail(instance)
 	return
 }
 
@@ -47,13 +44,20 @@ func NewCreateProxyInstanceRequest() *CreateProxyInstanceRequest {
 type QueryAllInstanceRequest struct{}
 
 func (self *QueryAllInstanceRequest) Exec(r *ghttp.Request) (response MessageResponse) {
-	querySet := g.DB().Table(models.ProxyInstanceTable)
-	var instances []models.ProxyInstance
-	err := querySet.Structs(&instances)
-	if err != nil {
+
+	var (
+		c         *filedb.Collection
+		err       error
+		instances []models.ProxyInstance
+	)
+	if c, err = models.DB.Collection(models.ProxyInstanceTable); err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
-		response.SuccessWithDetail(instances)
+		if err = c.Search(g.Map{}, &instances); err != nil {
+			response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
+		} else {
+			response.SuccessWithDetail(instances)
+		}
 	}
 	return
 }
