@@ -1,0 +1,12 @@
+[Unit]
+Description=http proxy Client Service
+After=network.target
+
+[Service]
+Type=simple
+Restart=on-failure
+RestartSec=5s
+ExecStart=/path/to/proxy -h 0.0.0.0:8080 -name default -path /etc/db
+
+[Install]
+WantedBy=multi-user.target
