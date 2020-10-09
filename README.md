@@ -9,6 +9,9 @@ HTTP/HTTPS proxy over SSH.
 - [ ] 支持https 证书
 - [ ] 支持控制台需要账号访问
 
+## 更新
+2020年10月9日 去除sqlite3依赖 
+
 ## QQ群
 782391570
 
