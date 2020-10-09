@@ -8,6 +8,7 @@ import (
 	_ "homeproxy/app/models"
 	_ "homeproxy/app/server"
 	"homeproxy/library/events"
+	_ "homeproxy/packed"
 )
 
 func MiddlewareCORS(r *ghttp.Request) {
