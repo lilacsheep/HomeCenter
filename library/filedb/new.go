@@ -49,10 +49,12 @@ type Collection struct {
 	data *gmap.TreeMap
 }
 
-func (self *Collection) Insert(data interface{}) {
+func (self *Collection) Insert(data interface{}) string {
 	j := gjson.New(data, true)
-	j.Set("id", guid.S())
+	id := guid.S()
+	j.Set("id", id)
 	self.data.Set(j.Get("id"), j)
+	return id
 }
 
 func (self *Collection) GetFirst(data interface{}) error {

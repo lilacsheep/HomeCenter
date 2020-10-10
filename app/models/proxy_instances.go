@@ -16,15 +16,11 @@ type ProxyInstance struct {
 	Password   string `json:"password"`
 	PrivateKey string `json:"private_key"`
 	Status     bool   `json:"status"`
+	Delay      int    `json:"delay"`
 }
 
 func (self *ProxyInstance) Url() string {
-	// ssh://user:passwd@192.168.1.1:1122
-	if self.Password == "" {
-		return fmt.Sprintf("ssh://%s@%s", self.Username, self.Address)
-	} else {
-		return fmt.Sprintf("ssh://%s:%s@%s", self.Username, self.Password, self.Address)
-	}
+	return fmt.Sprintf("ssh://%s@%s", self.Username, self.Address)
 }
 
 func GetEnableProxyInstances() (instances []ProxyInstance, err error) {

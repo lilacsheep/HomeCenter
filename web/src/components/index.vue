@@ -15,9 +15,9 @@
                   <el-tag v-if="!scope.row.value" type="success" size="mini" effect="plain">随机模式</el-tag>
                   <el-tag v-else size="mini" type="danger" effect="plain">循环模式</el-tag>
                 </span>
-                <span v-else-if="scope.row.key === 'auto_proxy'">
-                  <el-tag v-if="scope.row.value" type="success" size="mini" effect="plain">自动</el-tag>
-                  <el-tag v-else size="mini" type="danger" effect="plain">关闭</el-tag>
+                <span v-else-if="scope.row.key === 'all_proxy'">
+                  <el-tag v-if="scope.row.value" type="success" size="mini" effect="plain">全部转发</el-tag>
+                  <el-tag v-else size="mini" type="danger" effect="plain">规则转发</el-tag>
                 </span>
                 <span v-else>{{scope.row.value}}</span>
               </template>
@@ -43,10 +43,9 @@
                 <el-button type="text" size="mini" icon="el-icon-circle-plus-outline" @click="add_instance">新增实例</el-button>
               </template>
               <template slot-scope="scope">
-                <span>
                   <el-button type="text" size="mini" @click="edit_instance(scope.row)">
                     {{`ssh://${scope.row.username}@${scope.row.address}`}}</el-button>
-                </span>
+                  <el-tag style="float: right" size="mini" effect="plain">{{scope.row.delay}} ms</el-tag>
               </template>
             </el-table-column>
           </el-table>
@@ -100,11 +99,11 @@
             inactive-text="随机">
           </el-switch>
         </el-form-item>
-        <el-form-item label="自动" label-width="100px">
+        <el-form-item label="模式" label-width="100px">
           <el-switch
-            v-model="server.edit.form.auto_proxy"
-            active-text="开启"
-            inactive-text="关闭">
+            v-model="server.edit.form.all_proxy"
+            active-text="全部转发"
+            inactive-text="规则转发">
           </el-switch>
         </el-form-item>
       </el-form>
@@ -141,21 +140,21 @@
           <el-input v-model="instaces.edit.form.ID" size="small" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="地址" label-width="100px">
-          <el-input v-model="instaces.edit.form.Address" size="small" autocomplete="off"></el-input>
+          <el-input v-model="instaces.edit.form.address" size="small" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="用户" label-width="100px">
-          <el-input v-model="instaces.edit.form.Username" size="small" autocomplete="off"></el-input>
+          <el-input v-model="instaces.edit.form.username" size="small" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="密码" label-width="100px">
-          <el-input v-model="instaces.edit.form.Password" size="small" autocomplete="off"></el-input>
+          <el-input v-model="instaces.edit.form.password" size="small" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="秘钥" label-width="100px">
-          <el-input type="textarea" :autosize="{ minRows: 3, maxRows: 6}" placeholder="请输入内容" v-model="instaces.edit.form.PrivateKey"></el-input>
+          <el-input type="textarea" :autosize="{ minRows: 3, maxRows: 6}" placeholder="请输入内容" v-model="instaces.edit.form.private_key"></el-input>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button size="small" @click="instaces.edit.visit = false">取 消</el-button>
-        <el-button size="small" type="primary" @click="submit_edit_server">确 定</el-button>
+        <el-button size="small" type="primary" @click="submit_edit_instance">确 定</el-button>
       </div>
     </el-dialog>
 
@@ -197,7 +196,8 @@ export default {
             status: false,
             username: "",
             password: "",
-            auto_proxy: false
+            auto_proxy: false,
+            all_proxy: false
           }
         }
       },
@@ -252,8 +252,8 @@ export default {
             that.server.edit.form.port = row.value
           case "balance":
             that.server.edit.form.status = row.value
-          case "auto_proxy":
-            that.server.edit.form.auto_proxy = row.value
+          case "all_proxy":
+            that.server.edit.form.all_proxy = row.value
         }
       })
       this.server.edit.visit = true
@@ -288,8 +288,16 @@ export default {
         that.$message.error({message: response.message, type: 'error'})
       })
     },
-    submit_edit () {
-      console.log(this.editInstance)
+    submit_edit_instance () {
+      let that = this
+      this.$api.post('/proxy/instance/update', this.instaces.edit.form).then(function (response) {
+        that.instaces.edit.visit = false
+        that.$message({message: '修改成功', type: 'success'})
+        that.refresh_instances()
+        that.refresh_server()
+      }).catch(function (response) {
+        that.$message.error({message: response.message, type: 'error'})
+      })
     },
     remove_role (item) {
       let that = this

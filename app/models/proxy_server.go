@@ -14,6 +14,7 @@ type ProxyServer struct {
 	Password  string `json:"password"`
 	Status    bool   `json:"status"`
 	AutoProxy bool   `json:"auto_proxy"`
+	AllProxy  bool   `json:"all_proxy"`
 }
 
 func GetProxyServer() (server ProxyServer, err error) {

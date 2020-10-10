@@ -5,10 +5,15 @@ import (
 	"fmt"
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/os/glog"
+	"github.com/gogf/gf/util/guid"
 	"github.com/gogf/gf/util/gutil"
+	"golang.org/x/crypto/ssh"
 	"homeproxy/app/models"
 	"homeproxy/library/mallory"
+	"net"
 	"net/http"
+	"net/url"
+	"os/user"
 	"time"
 )
 
@@ -21,12 +26,15 @@ func init() {
 type MalloryManger struct {
 	HttpServer   *http.Server    `json:"-"`
 	ProxyHandler *mallory.Server `json:"-"`
+	BalanceType  int
+	Instances    *gmap.TreeMap
 	Error        error
 	Status       bool
 }
 
 func (self *MalloryManger) Init() error {
 	// init
+	self.Instances = gmap.NewTreeMap(gutil.ComparatorString, true)
 	self.Status = false
 	self.HttpServer = nil
 	self.ProxyHandler = nil
@@ -62,17 +70,128 @@ func (self *MalloryManger) Init() error {
 	self.ProxyHandler.Username = info.Username
 	self.ProxyHandler.Password = info.Password
 	self.ProxyHandler.AutoProxy = info.AutoProxy
-	self.ProxyHandler.Balance = mallory.NewRandomBalance()
+	self.ProxyHandler.AllProxy = info.AllProxy
+
+	// set proxy Balance
+	switch self.BalanceType {
+	case 0:
+		self.ProxyHandler.Balance = mallory.NewRandomBalance()
+	case 1:
+		self.ProxyHandler.Balance = mallory.NewRoundRobinBalance()
+	}
 
 	// add ssh instance
 	for _, instance := range instances {
-		self.ProxyHandler.Balance.AddInstances(instance.Url(), instance.PrivateKey)
+		self.AddInstances(instance.Url(), instance.Password, instance.PrivateKey, instance.ID)
 	}
+	self.ProxyHandler.Instances = self.Instances
 
 	// set http server Handler
 	self.HttpServer.Handler = self.ProxyHandler
 	self.HttpServer.Addr = fmt.Sprintf(":%d", info.Port)
 	return nil
+}
+
+func (self *MalloryManger) SetBalance(balanceType int) {
+	if balanceType != self.BalanceType {
+		self.BalanceType = balanceType
+		switch balanceType {
+		case 0:
+			self.ProxyHandler.Balance = mallory.NewRandomBalance()
+		case 1:
+			self.ProxyHandler.Balance = mallory.NewRoundRobinBalance()
+		}
+	}
+}
+
+func (self *MalloryManger) AddInstances(remoteUrl, Password, PrivateKey string, id ...string) {
+	var (
+		uuid string
+		err  error
+	)
+	if len(id) > 0 {
+		uuid = id[0]
+	} else {
+		uuid = guid.S()
+	}
+
+	Instance := &mallory.SSH{
+		UUID: uuid,
+		Cfg: struct {
+			RemoteServer string
+			PrivateKey   string
+		}{RemoteServer: remoteUrl, PrivateKey: PrivateKey},
+		CliCfg:   &ssh.ClientConfig{},
+		StopChan: make(chan bool, 1),
+	}
+	Instance.URL, err = url.Parse(Instance.Cfg.RemoteServer)
+	if err != nil {
+		glog.Errorf("Error parsing link, %s", err.Error())
+		return
+	}
+	if Instance.URL.User != nil {
+		Instance.CliCfg.User = Instance.URL.User.Username()
+	} else {
+		u, err := user.Current()
+		if err != nil {
+			glog.Errorf("Error parsing link, %s", err.Error())
+			return
+		}
+		// u.Name is the full name, should not be used
+		Instance.CliCfg.User = u.Username
+	}
+
+	// host key break
+	Instance.CliCfg.HostKeyCallback = func(hostname string, remote net.Addr, key ssh.PublicKey) error {
+		return nil
+	}
+	// ssh auth
+	if Instance.Cfg.PrivateKey == "" {
+		if Instance.URL.User == nil || Password == "" {
+			glog.Errorf("%s not found user or password", Instance.URL)
+			return
+		}
+		Instance.CliCfg.Auth = append(Instance.CliCfg.Auth, ssh.Password(Password))
+	} else {
+		signer, err := ssh.ParsePrivateKey([]byte(PrivateKey))
+		if err != nil {
+			glog.Errorf("ParsePrivateKey %s failed:%s", Instance.Cfg.PrivateKey, err)
+			return
+		}
+		Instance.CliCfg.Auth = append(Instance.CliCfg.Auth, ssh.PublicKeys(signer))
+	}
+
+	// init Client , first time to dial to remote server, make sure it is available
+	Instance.Client, err = ssh.Dial("tcp", Instance.URL.Host, Instance.CliCfg)
+	if err != nil {
+		glog.Errorf("connect err: %s, %s", Instance.URL.Host, err)
+		return
+	}
+	Instance.Direct = &mallory.Direct{
+		Tr: &http.Transport{Dial: Instance.SSHDail},
+	}
+	Instance.Status = true
+	// add
+	go Instance.KeepAlive()
+	self.Instances.Set(uuid, Instance)
+}
+
+func (self *MalloryManger) RemoveInstance(uuid string) {
+	value := self.Instances.Remove(uuid)
+	instance := value.(*mallory.SSH)
+	if err := instance.Stop(); err != nil {
+		glog.Errorf("stop instance error: %s", err.Error())
+	}
+}
+
+func (self *MalloryManger) ReleaseInstances() {
+	for _, key := range self.Instances.Keys() {
+		value := self.Instances.Remove(key)
+		instance := value.(*mallory.SSH)
+		if err := instance.Stop(); err != nil {
+			glog.Errorf("stop instance error: %s", err.Error())
+		}
+	}
 }
 
 func (self *MalloryManger) Start() error {
@@ -86,8 +205,10 @@ func (self *MalloryManger) Start() error {
 			err := self.HttpServer.ListenAndServe()
 			if err != nil {
 				self.Status = false
-				self.Error = err
-				glog.Errorf("proxy error exit: %s", err.Error())
+				if err != http.ErrServerClosed {
+					self.Error = err
+					glog.Errorf("proxy error exit: %s", err.Error())
+				}
 			}
 		}()
 
@@ -104,7 +225,7 @@ func (self *MalloryManger) Stop() error {
 			glog.Errorf("http proxy server stop err: %s", err.Error())
 			return err
 		} else {
-			self.ProxyHandler.Balance.ReleaseInstances()
+			self.ReleaseInstances()
 			self.Status = false
 			self.HttpServer = nil
 			self.ProxyHandler = nil

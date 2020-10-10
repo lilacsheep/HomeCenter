@@ -18,3 +18,8 @@ func (self *ProxyInstanceApi) Query(r *ghttp.Request) {
 	request := requests.NewQueryAllInstanceRequest()
 	self.DoRequest(request, r)
 }
+
+func (self *ProxyInstanceApi) Update(r *ghttp.Request) {
+	request := requests.NewUpdateInstanceRequest()
+	self.DoRequestValid(request, r)
+}

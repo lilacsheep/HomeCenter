@@ -2,7 +2,6 @@ package mallory
 
 import (
 	"github.com/gogf/gf/os/glog"
-	"homeproxy/library/events"
 	"net"
 	"net/http"
 	"net/url"
@@ -107,15 +106,16 @@ func (self *SSH) KeepAlive() {
 				status = false
 			}
 		default:
-			t1 := time.Now()
+			//t1 := time.Now()
 			_, _, err := self.Client.SendRequest("keepalive", true, nil)
 			if err != nil {
 				glog.Errorf("ssh proxy connect err: %s ", err.Error())
 				self.Status = false
 				self.Renew()
 			}
-			event := SSHKeepAliveEvent{self.Client, time.Now().Sub(t1).Milliseconds()}
-			events.EventChan <- &event
+			// TODO: 获取监控数据
+			//event := SSHKeepAliveEvent{self.Client, time.Now().Sub(t1).Milliseconds()}
+			//events.EventChan <- &event
 		}
 		time.Sleep(2 * time.Second)
 	}

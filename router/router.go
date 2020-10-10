@@ -27,6 +27,7 @@ func init() {
 		group.Middleware(MiddlewareCORS)
 		// proxy instance api
 		group.POST("/proxy/instance/create", proxyInstanceApi.Create)
+		group.POST("/proxy/instance/update", proxyInstanceApi.Update)
 		group.GET("/proxy/instances", proxyInstanceApi.Query)
 		// proxy server api
 		group.POST("/proxy/server/start", proxyServerApi.Start)

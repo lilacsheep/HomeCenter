@@ -47,6 +47,7 @@ type UpdateProxyServerRequest struct {
 	Password  string `json:"password"`
 	Status    bool   `json:"status"`
 	AutoProxy bool   `json:"auto_proxy"`
+	AllProxy  bool   `json:"all_proxy"`
 }
 
 func (self *UpdateProxyServerRequest) Exec(r *ghttp.Request) (response MessageResponse) {
@@ -69,9 +70,20 @@ func (self *UpdateProxyServerRequest) Exec(r *ghttp.Request) (response MessageRe
 		}
 		if self.Status != proxy.Status {
 			data["status"] = self.Status
+			if self.Status {
+				server.Mallory.SetBalance(1)
+			} else {
+				server.Mallory.SetBalance(0)
+			}
 		}
 		if self.AutoProxy != proxy.AutoProxy {
 			data["auto_proxy"] = self.AutoProxy
+		}
+		if self.AllProxy != proxy.AllProxy {
+			data["all_proxy"] = self.AllProxy
+			if server.Mallory.Status {
+				server.Mallory.ProxyHandler.AllProxy = self.AllProxy
+			}
 		}
 		c, _ := models.DB.Collection(models.ProxyServerTable)
 		c.UpdateById(proxy.ID, data)
@@ -96,9 +108,14 @@ func (self *InfoProxyServerRequest) Exec(r *ghttp.Request) (response MessageResp
 		data.Append(g.Map{"key": "port", "name": "端口", "value": info.Port})
 		data.Append(g.Map{"key": "status", "name": "状态", "value": server.Mallory.Status})
 		data.Append(g.Map{"key": "balance", "name": "负载", "value": info.Status})
-		data.Append(g.Map{"key": "auto_proxy", "name": "代理", "value": info.AutoProxy})
-		if server.Mallory.Error != nil {
-			data.Append(g.Map{"key": "error", "name": "错误", "value": server.Mallory.Error})
+		//TODO: 自动代理模式，
+		//data.Append(g.Map{"key": "auto_proxy", "name": "代理", "value": info.AutoProxy})
+		data.Append(g.Map{"key": "all_proxy", "name": "模式", "value": info.AllProxy})
+		if server.Mallory.Status {
+			data.Append(g.Map{"key": "instances", "name": "实例", "value": server.Mallory.Instances.Size()})
+		}
+		if server.Mallory.Error != nil && server.Mallory.Error != http.ErrServerClosed {
+			data.Append(g.Map{"key": "error", "name": "错误", "value": server.Mallory.Error.Error()})
 		}
 		response.SuccessWithDetail(data)
 	}

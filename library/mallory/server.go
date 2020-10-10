@@ -14,11 +14,6 @@ import (
 	"sync"
 )
 
-const (
-	SmartSrv = iota
-	NormalSrv
-)
-
 type AccessType bool
 
 func (t AccessType) String() string {
@@ -56,8 +51,12 @@ type Server struct {
 	Password string
 	// Auto Proxy
 	AutoProxy bool
+	// All http to Proxy
+	AllProxy bool
 	// for serve http
 	mutex sync.RWMutex
+	// ssh instances
+	Instances *gmap.TreeMap
 }
 
 func (self *Server) UrlSplit(url string) (string, string) {
@@ -198,16 +197,24 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if self.Black(r.URL.Host) {
 		return
 	}
+	var (
+		use bool
+	)
+	if self.AutoProxy {
+		use = true
+	} else {
+		use = self.Blocked(r.URL.Host) && r.URL.Host != ""
+	}
 
-	use := self.Blocked(r.URL.Host) && r.URL.Host != ""
 	glog.Infof("%s", r.RemoteAddr)
 	glog.Infof("[%s] %d %s %s %s", AccessType(use), self.Mode, r.Method, r.RequestURI, r.Proto)
 
 	if use {
-		SSH, err := self.Balance.DoBalance()
+		instance, err := self.Balance.DoBalance(self.Instances)
 		if err != nil {
 			glog.Errorf("get proxy connect error: %s", err.Error())
 		} else {
+			SSH := instance.(*SSH)
 			if r.Method == "CONNECT" && SSH.Status {
 				SSH.Connect(w, r)
 			} else if r.URL.IsAbs() && SSH.Status {
