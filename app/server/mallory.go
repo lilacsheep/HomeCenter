@@ -1,10 +1,12 @@
 package server
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/os/glog"
+	"github.com/gogf/gf/util/gconv"
 	"github.com/gogf/gf/util/guid"
 	"github.com/gogf/gf/util/gutil"
 	"golang.org/x/crypto/ssh"
@@ -121,8 +123,7 @@ func (self *MalloryManger) AddInstances(remoteUrl, Password, PrivateKey string, 
 			RemoteServer string
 			PrivateKey   string
 		}{RemoteServer: remoteUrl, PrivateKey: PrivateKey},
-		CliCfg:   &ssh.ClientConfig{},
-		StopChan: make(chan bool, 1),
+		CliCfg: &ssh.ClientConfig{},
 	}
 	Instance.URL, err = url.Parse(Instance.Cfg.RemoteServer)
 	if err != nil {
@@ -171,9 +172,33 @@ func (self *MalloryManger) AddInstances(remoteUrl, Password, PrivateKey string, 
 		Tr: &http.Transport{Dial: Instance.SSHDail},
 	}
 	Instance.Status = true
-	// add
-	go Instance.KeepAlive()
+	// set instance keepalive
+	ctx, Cancel := context.WithCancel(context.Background())
+	Instance.Cancel = Cancel
+	go self.InstanceKeepAlive(Instance, ctx)
+	// TODO: 探测失败以后需要重新拉起
+	// add instance in proxy
 	self.Instances.Set(uuid, Instance)
+}
+
+func (self *MalloryManger) InstanceKeepAlive(instance *mallory.SSH, ctx context.Context) {
+	for {
+		select {
+		case _ = <-ctx.Done():
+			return
+		default:
+			t1 := time.Now()
+			_, _, err := instance.Client.SendRequest("keepalive", true, nil)
+			if err != nil {
+				glog.Errorf("ssh proxy connect err: %s ", err.Error())
+				instance.Status = false
+				instance.Renew()
+			} else {
+				_ = models.UpdateProxyInstanceDelay(instance.UUID, gconv.Int(time.Now().Sub(t1).Milliseconds()))
+			}
+		}
+		time.Sleep(2 * time.Second)
+	}
 }
 
 func (self *MalloryManger) RemoveInstance(uuid string) {

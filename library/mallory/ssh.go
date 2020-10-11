@@ -1,6 +1,7 @@
 package mallory
 
 import (
+	"context"
 	"github.com/gogf/gf/os/glog"
 	"net"
 	"net/http"
@@ -37,10 +38,10 @@ type SSH struct {
 	// direct fetcher
 	Direct *Direct
 	// only re-dial once
-	sf       Group
-	l        sync.RWMutex
-	Status   bool
-	StopChan chan bool
+	sf     Group
+	l      sync.RWMutex
+	Status bool
+	Cancel context.CancelFunc
 }
 
 func (self *SSH) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -97,31 +98,7 @@ func (self *SSH) Renew() {
 	}
 }
 
-func (self *SSH) KeepAlive() {
-	status := true
-	for status {
-		select {
-		case _, ok := <-self.StopChan:
-			if ok {
-				status = false
-			}
-		default:
-			//t1 := time.Now()
-			_, _, err := self.Client.SendRequest("keepalive", true, nil)
-			if err != nil {
-				glog.Errorf("ssh proxy connect err: %s ", err.Error())
-				self.Status = false
-				self.Renew()
-			}
-			// TODO: 获取监控数据
-			//event := SSHKeepAliveEvent{self.Client, time.Now().Sub(t1).Milliseconds()}
-			//events.EventChan <- &event
-		}
-		time.Sleep(2 * time.Second)
-	}
-}
-
 func (self *SSH) Stop() error {
-	self.StopChan <- false
+	self.Cancel()
 	return self.Client.Close()
 }

@@ -1,6 +1,7 @@
 import Router from 'vue-router'
 import Herader from '../components/header.vue'
 import Dashboard from '../components/index.vue'
+import Roles from '../components/roles/index.vue'
 import Vue from 'vue'
 
 
@@ -21,6 +22,14 @@ const router = new Router({
             component: Dashboard,
             meta: {
               title: '面板'
+            }
+          },
+          {
+            path: '/roles',
+            name: 'roles',
+            component: Roles,
+            meta: {
+              title: '规则配置'
             }
           },
         ],

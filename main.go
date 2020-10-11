@@ -32,6 +32,7 @@ func main() {
 	s.SetRouteOverWrite(true)
 	s.SetServerRoot("public")
 	s.SetAddr(host)
+	s.SetDumpRouterMap(false)
 	s.AddStaticPath("/static", "public")
 
 	s.Run()

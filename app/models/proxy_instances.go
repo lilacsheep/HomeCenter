@@ -23,6 +23,14 @@ func (self *ProxyInstance) Url() string {
 	return fmt.Sprintf("ssh://%s@%s", self.Username, self.Address)
 }
 
+func UpdateProxyInstanceDelay(id string, delay int) error {
+	if c, err := DB.Collection(ProxyInstanceTable); err != nil {
+		return err
+	} else {
+		c.UpdateById(id, g.Map{"delay": delay})
+	}
+	return nil
+}
 func GetEnableProxyInstances() (instances []ProxyInstance, err error) {
 	var c *filedb.Collection
 	if c, err = DB.Collection(ProxyInstanceTable); err != nil {
