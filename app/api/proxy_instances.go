@@ -23,3 +23,18 @@ func (self *ProxyInstanceApi) Update(r *ghttp.Request) {
 	request := requests.NewUpdateInstanceRequest()
 	self.DoRequestValid(request, r)
 }
+
+func (self *ProxyInstanceApi) Remove(r *ghttp.Request) {
+	request := requests.NewRemoveInstanceRequest()
+	self.DoRequestValid(request, r)
+}
+
+func (self *ProxyInstanceApi) RemoveFromPool(r *ghttp.Request) {
+	request := requests.NewRemoveInstanceFromPoolRequest()
+	self.DoRequestValid(request, r)
+}
+
+func (self *ProxyInstanceApi) IntoPool(r *ghttp.Request) {
+	request := requests.NewAddInstanceIntoPoolRequest()
+	self.DoRequestValid(request, r)
+}

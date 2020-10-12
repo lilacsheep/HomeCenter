@@ -29,6 +29,9 @@ func init() {
 		// proxy instance api
 		group.POST("/proxy/instance/create", proxyInstanceApi.Create)
 		group.POST("/proxy/instance/update", proxyInstanceApi.Update)
+		group.POST("/proxy/instance/remove", proxyInstanceApi.Remove)
+		group.POST("/proxy/instance/pool/remove", proxyInstanceApi.RemoveFromPool)
+		group.POST("/proxy/instance/pool/add", proxyInstanceApi.IntoPool)
 		group.GET("/proxy/instances", proxyInstanceApi.Query)
 		// proxy server api
 		group.POST("/proxy/server/start", proxyServerApi.Start)

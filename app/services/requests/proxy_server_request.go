@@ -111,15 +111,15 @@ func (self *InfoProxyServerRequest) Exec(r *ghttp.Request) (response MessageResp
 		//TODO: 自动代理模式，
 		//data.Append(g.Map{"key": "auto_proxy", "name": "代理", "value": info.AutoProxy})
 		data.Append(g.Map{"key": "all_proxy", "name": "模式", "value": info.AllProxy})
-		if server.Mallory.Status {
-			data.Append(g.Map{"key": "instances", "name": "实例", "value": server.Mallory.Instances.Size()})
-		}
 		if server.Mallory.Error != nil && server.Mallory.Error != http.ErrServerClosed {
 			data.Append(g.Map{"key": "error", "name": "错误", "value": server.Mallory.Error.Error()})
 		}
-		response.SuccessWithDetail(data)
-	}
 
+		response.SuccessWithDetail(g.Map{
+			"data":      data,
+			"instances": server.Mallory.InstancesInfo(),
+		})
+	}
 	return
 }
 

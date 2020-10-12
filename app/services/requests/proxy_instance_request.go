@@ -121,4 +121,76 @@ func NewUpdateInstanceRequest() *UpdateInstanceRequest {
 	return &UpdateInstanceRequest{}
 }
 
-type RemoveInstanceRequest struct{}
+type RemoveInstanceRequest struct {
+	ID string `v:"id @required"`
+}
+
+func (self *RemoveInstanceRequest) Exec(r *ghttp.Request) (response MessageResponse) {
+	var (
+		err error
+		c   *filedb.Collection
+	)
+	if c, err = models.DB.Collection(models.ProxyInstanceTable); err != nil {
+		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
+	} else {
+		c.RemoveById(self.ID)
+		server.Mallory.RemoveInstance(self.ID)
+		response.Success()
+	}
+	return
+}
+
+func NewRemoveInstanceRequest() *RemoveInstanceRequest {
+	return &RemoveInstanceRequest{}
+}
+
+type RemoveInstanceFromPoolRequest struct {
+	ID string `v:"id @required"`
+}
+
+func (self *RemoveInstanceFromPoolRequest) Exec(r *ghttp.Request) (response MessageResponse) {
+	var (
+		err error
+		c   *filedb.Collection
+	)
+	if c, err = models.DB.Collection(models.ProxyInstanceTable); err != nil {
+		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
+	} else {
+		c.UpdateById(self.ID, g.Map{"status": false})
+		server.Mallory.RemoveInstance(self.ID)
+		response.Success()
+	}
+	return
+}
+
+func NewRemoveInstanceFromPoolRequest() *RemoveInstanceFromPoolRequest {
+	return &RemoveInstanceFromPoolRequest{}
+}
+
+type AddInstanceIntoPoolRequest struct {
+	ID string `v:"id @required"`
+}
+
+func (self *AddInstanceIntoPoolRequest) Exec(r *ghttp.Request) (response MessageResponse) {
+	var (
+		err      error
+		c        *filedb.Collection
+		instance models.ProxyInstance
+	)
+	if c, err = models.DB.Collection(models.ProxyInstanceTable); err != nil {
+		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
+	} else {
+		if err = c.GetById(self.ID, &instance); err != nil {
+			response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
+		} else {
+			c.UpdateById(self.ID, g.Map{"status": true})
+			server.Mallory.AddInstances(instance.Url(), instance.Password, instance.PrivateKey, self.ID)
+			response.Success()
+		}
+	}
+	return
+}
+
+func NewAddInstanceIntoPoolRequest() *AddInstanceIntoPoolRequest {
+	return &AddInstanceIntoPoolRequest{}
+}

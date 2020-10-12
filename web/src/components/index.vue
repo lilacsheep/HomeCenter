@@ -1,9 +1,9 @@
 <template>
   <el-row :gutter="20">
     <el-col :span="8">
-      <el-table :data="serverData" size="mini" :stripe="true" :show-header="false" style="width: 100%">
+      <el-table :data="server.info.data" size="mini" :stripe="true" :show-header="false" style="width: 100%">
         <el-table-column prop="name" label="配置" width="60"></el-table-column>
-        <el-table-column prop="value" label="值" width="80">
+        <el-table-column prop="value" label="值" width="150">
           <template slot-scope="scope">
             <span v-if="scope.row.key === 'status'">
               <el-tag v-if="scope.row.value" type="success" size="mini" effect="plain">运行中</el-tag>
@@ -16,6 +16,9 @@
             <span v-else-if="scope.row.key === 'all_proxy'">
               <el-tag v-if="scope.row.value" type="success" size="mini" effect="plain">全部转发</el-tag>
               <el-tag v-else size="mini" type="danger" effect="plain">规则转发</el-tag>
+            </span>
+            <span v-else-if="scope.row.key === 'instances'">
+              <el-tag v-for="(item, i) in scope.row.value" size="mini" type="danger" effect="plain" :key="i">{{item.address}}</el-tag>
             </span>
             <span v-else>{{scope.row.value}}</span>
           </template>
@@ -32,6 +35,18 @@
           </template>
         </el-table-column>
       </el-table>
+
+      <el-card v-if="server.info.instances.length > 0" style="margin-top: 10px;">
+        <div slot="header" class="clearfix">
+          <span>代理池</span>
+        </div>
+        <div v-for="(item, i) in server.info.instances" :key="i">
+          <el-tag  size="mini" effect="plain" >{{item.address}}</el-tag>
+          <el-popconfirm title="是否将实例从代理池中移除？" @onConfirm="instance_remove_from_pool(item.id)">
+            <el-button slot="reference" style="color: red;float: right;" type="text" size="mini" icon="el-icon-remove"></el-button>
+          </el-popconfirm>
+        </div>
+      </el-card>
     </el-col>
      <!-- // proxy instances  -->
     <el-col :span="16">
@@ -54,9 +69,12 @@
         </el-table-column>
         <el-table-column label="操作">
           <template slot-scope="scope" >
-            <el-button type="text" size="mini" icon="el-icon-error" @click="edit_instance(scope.row)"></el-button>
-            <el-button type="text" size="mini" icon="el-icon-remove" @click="edit_instance(scope.row)"></el-button>
-            <el-button type="text" size="mini" icon="el-icon-circle-plus" @click="edit_instance(scope.row)"></el-button>
+            <el-popconfirm title="是否将实例删除？" @onConfirm="instance_remove(scope.row.id)">
+              <el-button slot="reference" style="color: red" type="text" size="mini" icon="el-icon-error"></el-button>
+            </el-popconfirm>
+            <el-popconfirm v-if="!scope.row.status" title="是否将实例加入代理池？" @onConfirm="instance_into_pool(scope.row.id)">
+              <el-button slot="reference" style="color: green" type="text" size="mini" icon="el-icon-circle-plus"></el-button>
+            </el-popconfirm>
           </template>
         </el-table-column>
       </el-table>
@@ -160,6 +178,10 @@ export default {
             auto_proxy: false,
             all_proxy: false
           }
+        },
+        info: {
+          data: [],
+          instances: []
         }
       },
       instaces: {
@@ -237,10 +259,41 @@ export default {
         that.$message.error({message: response.message, type: 'error'})
       })
     },
+    instance_remove_from_pool (id) {
+      let that = this
+      this.$api.post('/proxy/instance/pool/remove', {'id': id}).then(function (response) {
+        that.$message({message: '移除成功', type: 'success'})
+        that.refresh_instances()
+        that.refresh_server()
+      }).catch(function (response) {
+        that.$message.error({message: response.message, type: 'error'})
+      })
+    },
+    instance_remove (id) {
+      let that = this
+      this.$api.post('/proxy/instance/remove', {'id': id}).then(function (response) {
+        that.$message({message: '移除成功', type: 'success'})
+        that.refresh_instances()
+        that.refresh_server()
+      }).catch(function (response) {
+        that.$message.error({message: response.message, type: 'error'})
+      })
+    },
+    instance_into_pool (id) {
+      let that = this
+      this.$api.post('/proxy/instance/pool/add', {'id': id}).then(function (response) {
+        that.$message({message: '加入成功', type: 'success'})
+        that.refresh_instances()
+        that.refresh_server()
+      }).catch(function (response) {
+        that.$message.error({message: response.message, type: 'error'})
+      })
+    },
     refresh_server () {
       let that = this
       this.$api.get("/proxy/server/info").then(function (response) {
-        that.serverData = response.detail
+        that.server.info.data = response.detail.data
+        that.server.info.instances = response.detail.instances
       })
     },
     refresh_instances () {
@@ -274,10 +327,7 @@ export default {
       } else{
         this.stop_server()
       }
-    },
-    filter_status(value, row) {
-      return row.status === value;
-    },
+    }
   },
   created: function () {
     this.refresh_instances()

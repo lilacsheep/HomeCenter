@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/container/gmap"
+	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/os/glog"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/gogf/gf/util/guid"
@@ -176,7 +178,7 @@ func (self *MalloryManger) AddInstances(remoteUrl, Password, PrivateKey string, 
 	ctx, Cancel := context.WithCancel(context.Background())
 	Instance.Cancel = Cancel
 	go self.InstanceKeepAlive(Instance, ctx)
-	// TODO: 探测失败以后需要重新拉起
+
 	// add instance in proxy
 	self.Instances.Set(uuid, Instance)
 }
@@ -203,9 +205,10 @@ func (self *MalloryManger) InstanceKeepAlive(instance *mallory.SSH, ctx context.
 
 func (self *MalloryManger) RemoveInstance(uuid string) {
 	value := self.Instances.Remove(uuid)
-	instance := value.(*mallory.SSH)
-	if err := instance.Stop(); err != nil {
-		glog.Errorf("stop instance error: %s", err.Error())
+	if instance, ok := value.(*mallory.SSH); ok {
+		if err := instance.Stop(); err != nil {
+			glog.Errorf("stop instance error: %s", err.Error())
+		}
 	}
 }
 
@@ -217,6 +220,24 @@ func (self *MalloryManger) ReleaseInstances() {
 			glog.Errorf("stop instance error: %s", err.Error())
 		}
 	}
+}
+
+func (self *MalloryManger) InstancesInfo() []interface{} {
+	if !self.Status {
+		return []interface{}{}
+	}
+	var data = garray.New(true)
+	self.Instances.Iterator(func(key, value interface{}) bool {
+		if s, ok := value.(*mallory.SSH); ok {
+			data.Append(g.Map{
+				"id":      s.UUID,
+				"address": s.URL.Hostname(),
+				"status":  s.Status,
+			})
+		}
+		return true
+	})
+	return data.Slice()
 }
 
 func (self *MalloryManger) Start() error {
