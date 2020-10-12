@@ -214,7 +214,7 @@ export default {
     },
     edit_server (item) {
       let that = this
-      this.serverData.forEach(function (row) {
+      this.server.info.data.forEach(function (row) {
         switch (row.key) {
           case "name":
             that.server.edit.form.name = row.value

@@ -14,12 +14,14 @@
             {{`${scope.row.sub}.${scope.row.domain}`}}
           </template>
         </el-table-column>
-        <el-table-column prop="status" label="规则" width="60" 
+        <el-table-column prop="status" label="规则" width="200" 
         :filters="[{ text: '代理', value: true }, { text: '封禁', value: false }]"
         :filter-method="filter_status"
         >
           <template slot-scope="scope">
-            <el-tag v-if="scope.row.status" effect="plain" size="mini">转发</el-tag>
+            <span v-if="scope.row.status">
+              <el-tag effect="plain" size="mini">转发 -> {{get_instance(scope.row.instance_id)}}</el-tag>
+            </span>
             <el-tag v-else size="mini" type="danger" effect="plain">封禁</el-tag>
           </template>
         </el-table-column>
@@ -37,7 +39,13 @@
           <el-input v-model="roles.create.form.url" size="small" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="规则" label-width="100px">
-          <el-switch v-model="roles.create.form.status" active-text="转发" inactive-text="封禁"></el-switch>
+          <el-switch v-model="roles.create.form.status" active-text="转发" inactive-text="封禁" @change="role_change"></el-switch>
+        </el-form-item>
+        <el-form-item label="实例" label-width="100px" :style="roles.create.style">
+          <el-select v-model="roles.create.form.instance_id" size="small" placeholder="请选择转发">
+            <el-option label="默认转发" value=""></el-option>
+            <el-option v-for="(item, i) in instanceData" :key="i" :label="item.address" :value="item.id"></el-option>
+          </el-select>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -54,6 +62,7 @@ export default {
   data() {
     return {
       rolesData: [],
+      instanceData: [],
       proxy: {
         Status: false,
         Error: null
@@ -62,9 +71,11 @@ export default {
         filter: undefined,
         create: {
           visit: false,
+          style: "display: none",
           form: {
             url: undefined,
             status: undefined,
+            instance_id: ""
           },
         }
       }
@@ -99,9 +110,32 @@ export default {
     filter_status(value, row) {
       return row.status === value;
     },
+    refresh_instances () {
+      let that = this
+      this.$api.get("/proxy/instances").then(function (response) {
+        that.instanceData = response.detail
+      })
+    },
+    role_change: function (status) {
+      if (status) {
+        this.roles.create.style = ""
+      } else {
+        this.roles.create.style = "display: none"
+      }
+    },
+    get_instance: function (id) {
+      name = "默认转发"
+      this.instanceData.forEach(function (item) {
+        if (item.id === id) {
+          name = item.address
+        }
+      })
+      return name
+    }
   },
   created: function () {
     this.refresh_roles()
+    this.refresh_instances()
   },
   mounted: function () {}
 };

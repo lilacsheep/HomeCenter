@@ -55,7 +55,7 @@ func (self *MalloryManger) Init() error {
 	}
 	// init url role
 	for _, p := range models.AllRoles() {
-		self.ProxyHandler.AddUrlRole(p.Sub, p.Domain, p.Status)
+		self.ProxyHandler.AddUrlRole(p.Sub, p.Domain, p.Status, p.InstanceID)
 	}
 
 	// get Proxy Server

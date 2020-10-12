@@ -71,18 +71,22 @@ func (self *Server) UrlSplit(url string) (string, string) {
 	return subDomain, domain
 }
 
-func (self *Server) AddUrlRole(sub, domain string, status bool) {
+func (self *Server) AddUrlRole(sub, domain string, status bool, instances ...string) {
+	instanceId := ""
+	if len(instances) > 0 {
+		instanceId = instances[0]
+	}
 	if status {
 		if v, found := self.BlockedHosts.Search(domain); found {
 			if sub != "" {
-				self.BlockedHosts.Set(domain, v.(*garray.StrArray).Append(sub))
+				v.(*gmap.StrStrMap).Set(sub, instanceId)
 			}
 		} else {
-			subList := garray.NewStrArray(true)
+			subMapping := gmap.NewStrStrMap(true)
 			if sub != "" {
-				subList = subList.Append(sub)
+				subMapping.Set(sub, instanceId)
 			}
-			self.BlockedHosts.Set(domain, subList)
+			self.BlockedHosts.Set(domain, subMapping)
 		}
 	} else {
 		if v, found := self.BlackHosts.Search(domain); found {
@@ -99,30 +103,42 @@ func (self *Server) AddUrlRole(sub, domain string, status bool) {
 	}
 }
 
-func (self *Server) RemoveUrlRole(sub, domain string) {
-	if v, found := self.BlockedHosts.Search(domain); found {
-		if sub != "" {
-			v.(*garray.StrArray).RemoveValue(sub)
-		} else {
-			self.BlockedHosts.Remove(domain)
+func (self *Server) RemoveUrlRole(sub, domain string, status bool) {
+	if status {
+		if v, found := self.BlockedHosts.Search(domain); found {
+			if sub != "" {
+				v.(*gmap.StrStrMap).Remove(sub)
+			} else {
+				self.BlockedHosts.Remove(domain)
+			}
+		}
+	} else {
+		if v, found := self.BlackHosts.Search(domain); found {
+			if sub != "" {
+				v.(*garray.StrArray).RemoveValue(sub)
+			} else {
+				self.BlackHosts.Remove(domain)
+			}
 		}
 	}
 }
 
-func (self *Server) Blocked(host string) bool {
+func (self *Server) Blocked(host string) (bool, string) {
 	blocked := false
+	instance := ""
 	sub, domain := self.UrlSplit(host)
 
 	if value, f := self.BlockedHosts.Search(domain); f {
-		value.(*garray.StrArray).Iterator(func(k int, v string) bool {
-			if sub == v || v == "*" {
+		value.(*gmap.StrStrMap).Iterator(func(k string, v string) bool {
+			if k == sub || k == "*" {
 				blocked = true
+				instance = v
 				return false
 			}
 			return true
 		})
 	}
-	return blocked
+	return blocked, instance
 }
 
 func (self *Server) Black(host string) bool {
@@ -198,65 +214,55 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var (
-		use bool
+		use        bool
+		instanceId string
+		t          bool
+		connect    *SSH
 	)
 	if self.AutoProxy {
 		use = true
 	} else {
-		use = self.Blocked(r.URL.Host) && r.URL.Host != ""
+		t, instanceId = self.Blocked(r.URL.Host)
+		use = t && r.URL.Host != ""
 	}
 
 	glog.Infof("%s", r.RemoteAddr)
 	glog.Infof("[%s] %d %s %s %s", AccessType(use), self.Mode, r.Method, r.RequestURI, r.Proto)
 
 	if use {
-		instance, err := self.Balance.DoBalance(self.Instances)
-		if err != nil {
-			glog.Errorf("get proxy connect error: %s", err.Error())
+		if self.Instances.Size() == 0 {
+			glog.Errorf("error: proxy no instance")
 		} else {
-			SSH := instance.(*SSH)
-			if r.Method == "CONNECT" && SSH.Status {
-				SSH.Connect(w, r)
-			} else if r.URL.IsAbs() && SSH.Status {
-				r.RequestURI = ""
-				RemoveHopHeaders(r.Header)
-				SSH.ServeHTTP(w, r)
+			if v, ok := self.Instances.Search(instanceId); ok {
+				connect = v.(*SSH)
 			} else {
-				glog.Infof("%s is not a full URL path", r.RequestURI)
+				instance, err := self.Balance.DoBalance(self.Instances)
+				if err != nil {
+					glog.Errorf("get proxy connect error: %s", err.Error())
+				} else {
+					connect = instance.(*SSH)
+					if r.Method == "CONNECT" && connect.Status {
+						connect.Connect(w, r)
+					} else if r.URL.IsAbs() && connect.Status {
+						r.RequestURI = ""
+						RemoveHopHeaders(r.Header)
+						connect.ServeHTTP(w, r)
+					} else {
+						glog.Infof("%s is not a full URL path", r.RequestURI)
+					}
+				}
 			}
 		}
 	} else {
 		if r.Method == "CONNECT" {
 			if err := self.Direct.Connect(w, r); err != nil {
 				glog.Errorf("connect %s error %s", r.URL.Host, err)
-				//if self.AutoProxy {
-				//	glog.Errorf("visit %s reproxy error %s", r.URL.Host, err)
-				//	SSH, err := self.Balance.DoBalance()
-				//	if err == nil {
-				//		SSH.Connect(w, r)
-				//	} else {
-				//		glog.Errorf("get proxy connect error: %s", err.Error())
-				//	}
-				//} else {
-				//	glog.Errorf("connect %s error %s", r.URL.Host, err)
-				//}
 			}
 		} else if r.URL.IsAbs() {
 			r.RequestURI = ""
 			RemoveHopHeaders(r.Header)
 			if err := self.Direct.ServeHTTP(w, r); err != nil {
 				glog.Errorf("visit %s error %s", r.URL.Host, err)
-				//if self.AutoProxy {
-				//	glog.Errorf("visit %s reproxy error %s", r.URL.Host, err)
-				//	SSH, err := self.Balance.DoBalance()
-				//	if err == nil {
-				//		SSH.ServeHTTP(w, r)
-				//	} else {
-				//		glog.Errorf("get proxy connect error: %s", err.Error())
-				//	}
-				//} else {
-				//	glog.Errorf("visit %s error %s", r.URL.Host, err)
-				//}
 			}
 		} else {
 			glog.Infof("%s is not a full URL path", r.RequestURI)

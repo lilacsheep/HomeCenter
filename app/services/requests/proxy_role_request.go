@@ -51,7 +51,7 @@ func (self *AddUrlRoleRequest) Exec(r *ghttp.Request) (response MessageResponse)
 			}
 			c.Insert(&role)
 			if server.Mallory.Status {
-				server.Mallory.ProxyHandler.AddUrlRole(role.Sub, role.Domain, self.Status)
+				server.Mallory.ProxyHandler.AddUrlRole(role.Sub, role.Domain, self.Status, self.InstanceID)
 			}
 			response.Success()
 		}
@@ -74,7 +74,7 @@ func (self *RemoveUrlRoleRequest) Exec(r *ghttp.Request) (response MessageRespon
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
 		if server.Mallory.Status {
-			server.Mallory.ProxyHandler.RemoveUrlRole(role.Sub, role.Domain)
+			server.Mallory.ProxyHandler.RemoveUrlRole(role.Sub, role.Domain, role.Status)
 		}
 		response.Success()
 	}

@@ -6,7 +6,7 @@ HTTP/HTTPS proxy over SSH.
 
 ## Future
 - [x] 支持树莓派3b+, 4b+
-- [ ] 支持域名定向转发
+- [x] 支持域名定向转发
 - [x] 支持替换轮训器,现在随机
 - [ ] 支持http Basic auth
 - [ ] 支持https 证书
@@ -14,6 +14,7 @@ HTTP/HTTPS proxy over SSH.
 
 ## 更新 2020年10月12日
 1. 转发实例的删除和移除
+2. 域名定向转发
 
 ## 更新 2020年10月11日
 1. 转发实例新增优化
