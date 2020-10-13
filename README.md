@@ -5,12 +5,17 @@ HTTP/HTTPS proxy over SSH.
 782391570
 
 ## Future
-- [x] 支持树莓派3b+, 4b+
-- [x] 支持域名定向转发
-- [x] 支持替换轮训器,现在随机
-- [ ] 支持http Basic auth
-- [ ] 支持https 证书
 - [ ] 支持控制台需要账号访问
+- [ ] 服务与主机监控信息展示
+- [ ] IP访问控制，访问黑名单
+- [ ] 自定义解析DNS
+- [ ] 新增：内部集成dns服务
+- [ ] 新增：DDNS
+- [ ] SS实例的添加
+
+## 更新 2020年10月13日 
+1. 前端操作和展示的优化
+2. 修复：定向转发失败
 
 ## 更新 2020年10月12日
 1. 转发实例的删除和移除
@@ -47,9 +52,14 @@ cp systemd/system/proxy.service /lib/systemd/system/
 systemctl enable proxy
 systemct start proxy
 ```
+## 访问
+访问http://your_address:port
 
 ## 启动代理
 ![](/pic/start.jpg)
+
+## 修改代理
+![](/pic/modify_server.jpg)
 
 ## 新增规则
 ![](/pic/add_role.jpg)
@@ -58,4 +68,4 @@ systemct start proxy
 ![](/pic/add_instance.jpg)
 
 ## 配置http代理
-[帮助](https://jingyan.baidu.com/article/72ee561a053a87e16138dfed.html)
+[Win帮助](https://jingyan.baidu.com/article/72ee561a053a87e16138dfed.html)

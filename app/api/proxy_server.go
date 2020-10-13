@@ -28,3 +28,8 @@ func (self *ProxyServerApi) Info(r *ghttp.Request) {
 	request := requests.NewInfoProxyServerRequest()
 	self.DoRequestValid(request, r)
 }
+
+func (self *ProxyServerApi) Monitor(r *ghttp.Request) {
+	request := requests.NewQueryProxyMonitorInfoRequest()
+	self.DoRequest(request, r)
+}

@@ -69,7 +69,7 @@ func (self *Direct) ServeHTTP(w http.ResponseWriter, r *http.Request) (err error
 
 	n, err := io.Copy(w, resp.Body)
 	if err != nil {
-		glog.Printf("Copy: %s\n", err.Error())
+		glog.Printf("Copy: %s", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

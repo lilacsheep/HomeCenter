@@ -241,15 +241,19 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					glog.Errorf("get proxy connect error: %s", err.Error())
 				} else {
 					connect = instance.(*SSH)
-					if r.Method == "CONNECT" && connect.Status {
-						connect.Connect(w, r)
-					} else if r.URL.IsAbs() && connect.Status {
-						r.RequestURI = ""
-						RemoveHopHeaders(r.Header)
-						connect.ServeHTTP(w, r)
-					} else {
-						glog.Infof("%s is not a full URL path", r.RequestURI)
-					}
+				}
+			}
+			if connect == nil {
+				glog.Errorf("get proxy connect is nil")
+			} else {
+				if r.Method == "CONNECT" && connect.Status {
+					connect.Connect(w, r)
+				} else if r.URL.IsAbs() && connect.Status {
+					r.RequestURI = ""
+					RemoveHopHeaders(r.Header)
+					connect.ServeHTTP(w, r)
+				} else {
+					glog.Infof("%s is not a full URL path", r.RequestURI)
 				}
 			}
 		}

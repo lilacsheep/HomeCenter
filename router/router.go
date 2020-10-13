@@ -38,6 +38,7 @@ func init() {
 		group.POST("/proxy/server/stop", proxyServerApi.Stop)
 		group.POST("/proxy/server/update", proxyServerApi.Update)
 		group.GET("/proxy/server/info", proxyServerApi.Info)
+		group.GET("/proxy/server/monitor", proxyServerApi.Monitor)
 		// proxy url role
 		group.POST("/proxy/role/add", proxyRoleApi.AddRole)
 		group.POST("/proxy/role/remove", proxyRoleApi.Remove)
