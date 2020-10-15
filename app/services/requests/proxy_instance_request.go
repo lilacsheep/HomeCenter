@@ -28,11 +28,15 @@ func (self *CreateProxyInstanceRequest) Exec(r *ghttp.Request) (response Message
 	if err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err)
 	} else {
-		id := c.Insert(&instance)
-		if server.Mallory.Status {
-			server.Mallory.AddInstances(instance.Url(), instance.Password, instance.PrivateKey, id)
+		id, err := c.Insert(&instance)
+		if err != nil && err == filedb.ErrUnique {
+			response.ErrorWithMessage(http.StatusInternalServerError, "该记录已存在")
+		} else {
+			if server.Mallory.Status {
+				server.Mallory.AddInstances(instance.Url(), instance.Password, instance.PrivateKey, id)
+			}
+			response.SuccessWithDetail(instance)
 		}
-		response.SuccessWithDetail(instance)
 	}
 	return
 }
@@ -105,12 +109,16 @@ func (self *UpdateInstanceRequest) Exec(r *ghttp.Request) (response MessageRespo
 			if len(data) == 0 {
 				response.ErrorWithMessage(http.StatusInternalServerError, "没有改变")
 			} else {
-				c.UpdateById(self.ID, data)
-				if server.Mallory.Status {
-					server.Mallory.RemoveInstance(self.ID)
-					server.Mallory.AddInstances(instance.Url(), instance.Password, instance.PrivateKey, self.ID)
+				err = c.UpdateById(self.ID, data)
+				if err != nil {
+					response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
+				} else {
+					if server.Mallory.Status {
+						server.Mallory.RemoveInstance(self.ID)
+						server.Mallory.AddInstances(instance.Url(), instance.Password, instance.PrivateKey, self.ID)
+					}
+					response.Success()
 				}
-				response.Success()
 			}
 		}
 	}
@@ -134,7 +142,9 @@ func (self *RemoveInstanceRequest) Exec(r *ghttp.Request) (response MessageRespo
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
 		c.RemoveById(self.ID)
-		server.Mallory.RemoveInstance(self.ID)
+		if server.Mallory.Status {
+			server.Mallory.RemoveInstance(self.ID)
+		}
 		response.Success()
 	}
 	return
@@ -156,7 +166,9 @@ func (self *RemoveInstanceFromPoolRequest) Exec(r *ghttp.Request) (response Mess
 	if c, err = models.DB.Collection(models.ProxyInstanceTable); err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
-		c.UpdateById(self.ID, g.Map{"status": false})
+		if err := c.UpdateById(self.ID, g.Map{"status": false}); err != nil {
+			response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
+		}
 		server.Mallory.RemoveInstance(self.ID)
 		response.Success()
 	}
@@ -184,8 +196,12 @@ func (self *AddInstanceIntoPoolRequest) Exec(r *ghttp.Request) (response Message
 			response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 		} else {
 			c.UpdateById(self.ID, g.Map{"status": true})
-			server.Mallory.AddInstances(instance.Url(), instance.Password, instance.PrivateKey, self.ID)
-			response.Success()
+			if server.Mallory.Status {
+				server.Mallory.AddInstances(instance.Url(), instance.Password, instance.PrivateKey, self.ID)
+				response.Success()
+			} else {
+				response.ErrorWithMessage(http.StatusInternalServerError, "代理服务没有启动，但是会在代理启动时启动...")
+			}
 		}
 	}
 	return

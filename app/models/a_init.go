@@ -19,17 +19,27 @@ func InitDB() {
 		_ = gfile.Mkdir(Dbpath)
 	}
 	DB = filedb.NewDatabase(Dbname, Dbpath)
-	if err := DB.NewCollections(ProxyInstanceTable); err != nil {
+	settings := filedb.DefaultCollectionSettings()
+	settings.Unique = "address"
+	if err := DB.NewCollections(ProxyInstanceTable, settings); err != nil {
 		if err != filedb.ErrCollectionExist {
 			glog.Error("init collection error: %s", err.Error())
 		}
 	}
-	if err := DB.NewCollections(ProxyRoleTable); err != nil {
+	if err := DB.NewCollections(ProxyRoleTable, nil); err != nil {
 		if err != filedb.ErrCollectionExist {
 			glog.Error("init collection error: %s", err.Error())
 		}
 	}
-	if err := DB.NewCollections(ProxyServerTable); err != nil {
+	settings = filedb.DefaultCollectionSettings()
+	settings.AutoDump = false
+	settings.MaxRecord = 10
+	if err := DB.NewCollections(ProxyMonitorTable, settings); err != nil {
+		if err != filedb.ErrCollectionExist {
+			glog.Error("init collection error: %s", err.Error())
+		}
+	}
+	if err := DB.NewCollections(ProxyServerTable, nil); err != nil {
 		if err != filedb.ErrCollectionExist {
 			glog.Error("init collection error: %s", err.Error())
 		}
@@ -39,9 +49,13 @@ func InitDB() {
 			Port:      1316,
 			Status:    true,
 			AutoProxy: false,
+			AutoStart: true,
 		}
 		c, _ := DB.Collection(ProxyServerTable)
-		c.Insert(&server)
+		_, err := c.Insert(server)
+		if err != nil {
+			glog.Errorf("init server info error: %s", err)
+		}
 	}
 	go func() {
 		for {
