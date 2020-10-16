@@ -84,6 +84,13 @@ export default {
     get_info () {
       let that = this
       this.$api.get("/proxy/server/monitor").then(function (response) {
+        if (that.memoryChart.rows.length > 120) {
+          that.memoryChart.rows.shift()
+          that.cpuChart.rows.shift()
+          that.ioChart.rows.shift()
+          that.netChart.rows.shift()
+        }
+
         let item = response.detail.pop()
         that.memoryChart.rows.push({"create_at": item.create_at.split(" ")[1], "memory_size": item.memory_size})
         that.cpuChart.rows.push({"create_at": item.create_at.split(" ")[1], "cpu_percent": item.cpu_percent})
