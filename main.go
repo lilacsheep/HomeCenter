@@ -6,6 +6,7 @@ import (
 	"github.com/gogf/gf/os/grpool"
 	"homeproxy/app/models"
 	_ "homeproxy/app/server"
+	_ "homeproxy/app/services/tasks"
 	"homeproxy/library/events"
 	_ "homeproxy/packed"
 	_ "homeproxy/router"
