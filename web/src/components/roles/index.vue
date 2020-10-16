@@ -14,7 +14,7 @@
             {{`${scope.row.sub}.${scope.row.domain}`}}
           </template>
         </el-table-column>
-        <el-table-column prop="status" label="规则" width="200" 
+        <el-table-column prop="status" label="规则"
         :filters="[{ text: '代理', value: true }, { text: '封禁', value: false }]"
         :filter-method="filter_status"
         >
@@ -25,9 +25,11 @@
             <el-tag v-else size="mini" type="danger" effect="plain">封禁</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作">
+        <el-table-column label="操作" fixed="right" width="100">
           <template slot-scope="scope">
-            <el-button type="text" size="mini" icon="el-icon-delete" @click="remove_role(scope.row)"></el-button>
+            <el-popconfirm title="是否删除该规则？" @onConfirm="remove_role(scope.row)">
+              <el-button slot="reference" style="color: red" type="text" size="mini" icon="el-icon-delete"></el-button>
+            </el-popconfirm>
           </template>
         </el-table-column>
       </el-table>     

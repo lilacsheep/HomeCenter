@@ -2,6 +2,7 @@ import Router from 'vue-router'
 import Herader from '../components/header.vue'
 import Dashboard from '../components/index.vue'
 import Roles from '../components/roles/index.vue'
+import Monitor from '../components/monitor/index.vue'
 import Vue from 'vue'
 
 
@@ -30,6 +31,14 @@ const router = new Router({
             component: Roles,
             meta: {
               title: '规则配置'
+            }
+          },
+          {
+            path: '/monitor',
+            name: 'monitor',
+            component: Monitor,
+            meta: {
+              title: '应用监控'
             }
           },
         ],

@@ -4,6 +4,9 @@
       <el-menu :default-active="activeIndex" mode="horizontal" @select="handleSelect">
         <el-menu-item index="dashboard"><i class="el-icon-s-home"></i>首页</el-menu-item>
         <el-menu-item index="roles"><i class="el-icon-finished"></i>规则配置</el-menu-item>
+        <el-menu-item index="monitor"><i class="el-icon-data-analysis"></i>应用监控</el-menu-item>
+        <!-- <el-menu-item index="info"><i class="el-icon-document-checked"></i>访问记录</el-menu-item> -->
+        <!-- <el-menu-item index="oss"><i class="el-icon-document-checked"></i>文件管理</el-menu-item> -->
         <!-- <el-menu-item style="float: right" index="3">消息中心</el-menu-item> -->
       </el-menu>
     </el-header>

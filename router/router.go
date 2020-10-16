@@ -19,6 +19,7 @@ func init() {
 	s.SetRewriteMap(map[string]string{
 		"/dashboard": "/",
 		"/roles":     "/",
+		"/monitor":   "/",
 	})
 	proxyInstanceApi := &api.ProxyInstanceApi{}
 	proxyServerApi := &api.ProxyServerApi{}

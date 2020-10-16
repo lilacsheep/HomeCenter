@@ -1,5 +1,5 @@
 <template>
-  <el-row :gutter="20">
+  <el-row :gutter="20" v-loading="loading">
     <el-col :span="8">
       <el-table :data="server.info.data" size="mini" :stripe="true" :show-header="false" style="width: 100%">
         <el-table-column prop="name" label="配置" width="60"></el-table-column>
@@ -45,6 +45,7 @@
           <el-popconfirm title="是否将实例从代理池中移除？" @onConfirm="instance_remove_from_pool(item.id)">
             <el-button slot="reference" style="color: red;float: right;" type="text" size="mini" icon="el-icon-remove"></el-button>
           </el-popconfirm>
+          <el-divider></el-divider>
         </div>
       </el-card>
     </el-col>
@@ -160,6 +161,7 @@
 export default {
   data() {
     return {
+      loading: false,
       instanceData: [],
       serverData: [],
       proxy: {
@@ -303,15 +305,43 @@ export default {
       })
     },
     start_server () {
+      this.loading = true
       let that = this
       this.$api.post("/proxy/server/start").then(function (response) {
         that.refresh_server()
+        that.loading = false
+        that.$notify({
+          title: '启动成功',
+          message: '服务器启动成功',
+          type: 'success'
+        });
+      }).then(function (response) {
+        that.$notify({
+          title: '启动失败',
+          message: response.message,
+          type: 'warning'
+        });
+        that.loading = false
       })
     },
     stop_server () {
+      this.loading = true
       let that = this
       this.$api.post("/proxy/server/stop").then(function (response) {
         that.refresh_server()
+        that.loading = false
+        that.$notify({
+          title: '停止成功',
+          message: '服务器启动成功',
+          type: 'success'
+        });
+      }).then(function (response) {
+        that.$notify({
+          title: '停止失败',
+          message: response.message,
+          type: 'warning'
+        });
+        that.loading = false
       })
     },
     start () {
@@ -359,5 +389,9 @@ export default {
 .el-dialog__footer {
   border-top: 1px solid whitesmoke;
   padding: 5px 10px 10px;
+}
+
+.el-divider--horizontal {
+  margin: 3px 0;
 }
 </style>

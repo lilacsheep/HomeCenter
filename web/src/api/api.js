@@ -5,7 +5,7 @@ let apiUrl = "/api"
 const httpService = axios.create({
     baseURL: apiUrl, // 需自定义
     // 请求超时时间
-    timeout: 3000 // 需自定义
+    timeout: 30000 // 需自定义
 });
 
 
