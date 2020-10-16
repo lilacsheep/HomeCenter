@@ -46,17 +46,10 @@ func QueryProxyMonitorInfoTask() {
 		if v, err := mainProxy.IOCounters(); err == nil {
 			NowInfo.WriteBytes = v.WriteBytes
 			NowInfo.ReadBytes = v.ReadBytes
-			if History != nil {
-				data.WriteBytes = v.WriteBytes - History.WriteBytes
-				data.ReadBytes = v.ReadBytes - History.ReadBytes
-			}
 		}
 		if v, err := mainProxy.NetIOCounters(false); err == nil {
 			NowInfo.BytesRecv = v[0].BytesRecv
 			NowInfo.BytesSent = v[0].BytesSent
-			if History != nil {
-
-			}
 		}
 		if History != nil {
 			data.BytesRecv = NowInfo.BytesRecv - History.BytesRecv

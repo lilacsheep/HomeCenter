@@ -31,9 +31,9 @@
     <el-col :span="12" style="margin-top: 10px;">
       <el-card>
         <div slot="header" class="clearfix">
-          <span>磁盘读写</span>
+          <span>网络连接</span>
         </div>
-        <ve-line height="300px" :extend="extend" :data="ioChart" :settings="ChartSettings" :legend-visible="false"></ve-line>
+        <ve-line height="300px" :extend="extend" :data="connectionsChart" :legend-visible="false"></ve-line>
       </el-card>
     </el-col>
     <el-col :span="12" style="margin-top: 10px;">
@@ -64,8 +64,8 @@ export default {
           columns: ['create_at', 'cpu_percent'],
           rows: []
       },
-      ioChart: {
-          columns: ['create_at', 'read_bytes', 'write_bytes'],
+      connectionsChart: {
+          columns: ['create_at', 'connections'],
           rows: []
       },
       netChart: {
@@ -87,15 +87,16 @@ export default {
         if (that.memoryChart.rows.length > 120) {
           that.memoryChart.rows.shift()
           that.cpuChart.rows.shift()
-          that.ioChart.rows.shift()
+          that.connectionsChart.rows.shift()
           that.netChart.rows.shift()
         }
-
         let item = response.detail.pop()
-        that.memoryChart.rows.push({"create_at": item.create_at.split(" ")[1], "memory_size": item.memory_size})
-        that.cpuChart.rows.push({"create_at": item.create_at.split(" ")[1], "cpu_percent": item.cpu_percent})
-        that.ioChart.rows.push({"create_at": item.create_at.split(" ")[1], "read_bytes": item.read_bytes, 'write_bytes': item.write_bytes})
-        that.netChart.rows.push({"create_at": item.create_at.split(" ")[1], "bytes_sent": item.bytes_sent, 'bytes_recv': item.bytes_recv})
+        let time = item.create_at.split(" ")[1]
+
+        that.memoryChart.rows.push({"create_at": time, "memory_size": item.memory_size})
+        that.cpuChart.rows.push({"create_at": time, "cpu_percent": item.cpu_percent})
+        that.connectionsChart.rows.push({"create_at": time, "connections": item.connections})
+        that.netChart.rows.push({"create_at": time, "bytes_sent": item.bytes_sent, 'bytes_recv': item.bytes_recv})
       })
     },
     monitor_interval: function (value) {
@@ -106,10 +107,11 @@ export default {
       let that = this
       this.$api.get("/proxy/server/monitor").then(function (response) {
         response.detail.forEach(function (item) {
-          that.memoryChart.rows.push({"create_at": item.create_at.split(" ")[1], "memory_size": item.memory_size})
-          that.cpuChart.rows.push({"create_at": item.create_at.split(" ")[1], "cpu_percent": item.cpu_percent})
-          that.ioChart.rows.push({"create_at": item.create_at.split(" ")[1], "read_bytes": item.read_bytes, 'write_bytes': item.write_bytes})
-          that.netChart.rows.push({"create_at": item.create_at.split(" ")[1], "bytes_sent": item.bytes_sent, 'bytes_recv': item.bytes_recv})
+          let time = item.create_at.split(" ")[1]
+          that.memoryChart.rows.push({"create_at": time, "memory_size": item.memory_size})
+          that.cpuChart.rows.push({"create_at": time, "cpu_percent": item.cpu_percent})
+          that.connectionsChart.rows.push({"create_at": time, "connections": item.connections})
+          that.netChart.rows.push({"create_at": time, "bytes_sent": item.bytes_sent, 'bytes_recv': item.bytes_recv})
         })
       })
     },
