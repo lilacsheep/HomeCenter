@@ -72,7 +72,7 @@ func (self *Collection) checkUnique(value *gjson.Json) (bool, error) {
 }
 
 func (self *Collection) insert(data interface{}) (id string, err error) {
-	j := gjson.New(data, true)
+	j := gjson.New(data)
 	if found, err := self.checkUnique(j); err != nil {
 		return "", err
 	} else {
@@ -119,7 +119,7 @@ func (self *Collection) GetById(id string, data interface{}) error {
 
 func (self *Collection) RemoveById(id string) {
 	v := self.data.Remove(id)
-	if v != nil {
+	if v != nil && self.UniqueIndex != nil {
 		self.UniqueIndex.Remove(v.(*gjson.Json).Get(self.Settings.Unique))
 	}
 }

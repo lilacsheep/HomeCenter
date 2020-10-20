@@ -1,7 +1,7 @@
 import axios from "axios"
 
 
-let apiUrl = "/api"
+let apiUrl = "http://127.0.0.1/api"
 const httpService = axios.create({
     baseURL: apiUrl, // 需自定义
     // 请求超时时间

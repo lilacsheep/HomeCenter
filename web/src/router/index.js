@@ -3,6 +3,7 @@ import Herader from '../components/header.vue'
 import Dashboard from '../components/index.vue'
 import Roles from '../components/roles/index.vue'
 import Monitor from '../components/monitor/index.vue'
+import Download from '../components/download/index.vue'
 import Vue from 'vue'
 
 
@@ -31,6 +32,14 @@ const router = new Router({
             component: Roles,
             meta: {
               title: '规则配置'
+            }
+          },
+          {
+            path: '/download',
+            name: 'download',
+            component: Download,
+            meta: {
+              title: '资源下载'
             }
           },
           {

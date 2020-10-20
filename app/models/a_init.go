@@ -32,6 +32,13 @@ func InitDB() {
 		}
 	}
 	settings = filedb.DefaultCollectionSettings()
+	settings.Unique = "url"
+	if err := DB.NewCollections(DownloadListTable, settings); err != nil {
+		if err != filedb.ErrCollectionExist {
+			glog.Error("init collection error: %s", err.Error())
+		}
+	}
+	settings = filedb.DefaultCollectionSettings()
 	settings.AutoDump = false
 	settings.MaxRecord = 10
 	if err := DB.NewCollections(ProxyMonitorTable, settings); err != nil {

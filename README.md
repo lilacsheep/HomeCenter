@@ -1,5 +1,5 @@
 ## HomeProxy
-HTTP/HTTPS proxy over SSH.
+HTTP/HTTPS proxy over SSH. 在家庭使用的功能中心
 
 ### QQ群
 782391570
@@ -12,6 +12,10 @@ HTTP/HTTPS proxy over SSH.
 - [ ] 新增：内部集成dns服务
 - [ ] 新增：DDNS
 - [ ] SS实例的添加
+
+## 更新预告
+1. 离线下载
+2. 文件管理
 
 ## 更新 2020年10月16日
 1. 服务与主机监控信息展示

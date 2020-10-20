@@ -44,5 +44,10 @@ func init() {
 		group.POST("/proxy/role/add", proxyRoleApi.AddRole)
 		group.POST("/proxy/role/remove", proxyRoleApi.Remove)
 		group.GET("/proxy/roles", proxyRoleApi.All)
+
+		// download api
+		downloadApi := &api.ProxyDownloadApi{}
+		group.POST("/download/create", downloadApi.Create)
+		group.GET("/download/tasks", downloadApi.Query)
 	})
 }
