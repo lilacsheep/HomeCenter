@@ -9,6 +9,10 @@ import VeLine from 'v-charts/lib/line.common'
 import 'element-ui/lib/theme-chalk/index.css';
 import numerify from 'numerify'
 import numerifyBytes from 'numerify/lib/plugins/bytes.umd.js'
+import VideoPlayer from 'vue-video-player'
+import 'vue-video-player/src/custom-theme.css'
+import 'video.js/dist/video-js.css'
+  
 
 
 Vue.config.productionTip = false;
@@ -17,6 +21,7 @@ axios.defaults.withCredentials = true;
 Vue.prototype.$axios = axios;
 Vue.prototype.$api = api;
 Vue.use(VueClipboard)
+Vue.use(VideoPlayer)
 Vue.use(ElementUI)
 Vue.component(VeLine.name, VeLine)
 numerify.register('bytes', numerifyBytes)

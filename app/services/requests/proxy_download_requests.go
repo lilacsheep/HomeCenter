@@ -1,65 +1,22 @@
 package requests
 
 import (
-	"github.com/gogf/gf/encoding/gjson"
 	"github.com/gogf/gf/net/ghttp"
-	"github.com/gogf/gf/os/glog"
 	"homeproxy/app/models"
-	"homeproxy/app/server/download"
 	"net/http"
-	"time"
 )
 
 type CreateDownloadTaskRequest struct {
 	Url       string `json:"url"`
-	ChunkSize int    `json:"chunk_size"`
+	Path      string `json:"path"`
+	ThreadNum int64  `json:"thread_num"`
 }
 
-func (self *CreateDownloadTaskRequest) sync(task *download.Task) {
-	go func() {
-		c, _ := models.DB.Collection(models.DownloadListTable)
-		convertTask := func(task *download.Task) *gjson.Json {
-			j := gjson.New(task, true)
-			j.Remove("url")
-			j.Remove("id")
-			return j
-		}
-		for task.Status < 3 {
-			j := convertTask(task)
-			err := c.UpdateById(task.ID, j.ToMap())
-			if err != nil {
-				glog.Error(err.Error())
-			}
-			time.Sleep(time.Second)
-		}
-		j := convertTask(task)
-		err := c.UpdateById(task.ID, j.ToMap())
-		if err != nil {
-			glog.Error(err.Error())
-		}
-		glog.Debugf("task: %s sync done", task.ID)
-	}()
-}
 func (self *CreateDownloadTaskRequest) Exec(r *ghttp.Request) (response MessageResponse) {
-	if self.ChunkSize == 0 {
-		self.ChunkSize = 32 * 1024 * 1024
-	}
-	task, err := download.NewDownLoadTask(self.Url, self.ChunkSize)
-	if err != nil {
+	if err := models.DownloadManager.NewTask(self.Url, self.ThreadNum, self.Path); err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
-		go task.Do()
-		time.Sleep(time.Second)
-
-		c, _ := models.DB.Collection(models.DownloadListTable)
-		id, err := c.Insert(task)
-		if err != nil {
-			response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
-		} else {
-			task.ID = id
-			self.sync(task)
-			response.SuccessWithDetail(id)
-		}
+		response.Success()
 	}
 	return
 }
@@ -71,7 +28,7 @@ func NewCreateDownloadTaskRequest() *CreateDownloadTaskRequest {
 type QueryDownloadTaskRequest struct{}
 
 func (self *QueryDownloadTaskRequest) Exec(r *ghttp.Request) (response MessageResponse) {
-	tasks, err := models.GetALLDownloadTasks()
+	tasks, err := models.DownloadManager.Tasks()
 	if err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
@@ -82,4 +39,79 @@ func (self *QueryDownloadTaskRequest) Exec(r *ghttp.Request) (response MessageRe
 
 func NewQueryDownloadTaskRequest() *QueryDownloadTaskRequest {
 	return &QueryDownloadTaskRequest{}
+}
+
+type RemoveDownloadTaskRequest struct {
+	TaskId string `json:"id"`
+}
+
+func (self *RemoveDownloadTaskRequest) Exec(r *ghttp.Request) (response MessageResponse) {
+	models.DownloadManager.RemoveTask(self.TaskId)
+	response.Success()
+	return
+}
+
+func NewRemoveDownloadTaskRequest() *RemoveDownloadTaskRequest {
+	return &RemoveDownloadTaskRequest{}
+}
+
+type CancelDownloadTaskRequest struct {
+	TaskId string `json:"id"`
+}
+
+func (self *CancelDownloadTaskRequest) Exec(r *ghttp.Request) (response MessageResponse) {
+	models.DownloadManager.CancelTask(self.TaskId)
+	response.Success()
+	return
+}
+
+func NewCancelDownloadTaskRequest() *CancelDownloadTaskRequest {
+	return &CancelDownloadTaskRequest{}
+}
+
+type StartDownloadTaskRequest struct {
+	TaskId string `json:"id"`
+}
+
+func (self *StartDownloadTaskRequest) Exec(r *ghttp.Request) (response MessageResponse) {
+	models.DownloadManager.StartTask(self.TaskId)
+	response.Success()
+	return
+}
+
+func NewStartDownloadTaskRequest() *StartDownloadTaskRequest {
+	return &StartDownloadTaskRequest{}
+}
+
+type GetDownloadSettingsRequest struct{}
+
+func (self *GetDownloadSettingsRequest) Exec(r *ghttp.Request) (response MessageResponse) {
+	settings := models.DownloadManager.GetSettings()
+	response.SuccessWithDetail(settings)
+	return
+}
+
+func NewGetDownloadSettingsRequest() *GetDownloadSettingsRequest {
+	return &GetDownloadSettingsRequest{}
+}
+
+type UpdateDownloadSettingsRequest struct {
+	Path          string `json:"path"`           // 下载路径
+	ThreadNum     int64  `json:"thread_num"`     // 默认的线程大小
+	NotifyOpen    bool   `json:"notify_open"`    // 是否开启通知
+	NotifyMessage string `json:"notify_message"` // 通知消息
+}
+
+func (self *UpdateDownloadSettingsRequest) Exec(r *ghttp.Request) (response MessageResponse) {
+	err := models.DownloadManager.UpdateSettings(self)
+	if err != nil {
+		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
+	} else {
+		response.Success()
+	}
+	return
+}
+
+func NewUpdateDownloadSettingsRequest() *UpdateDownloadSettingsRequest {
+	return &UpdateDownloadSettingsRequest{}
 }

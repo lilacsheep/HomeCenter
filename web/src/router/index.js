@@ -1,9 +1,9 @@
 import Router from 'vue-router'
 import Herader from '../components/header.vue'
 import Dashboard from '../components/index.vue'
-import Roles from '../components/roles/index.vue'
 import Monitor from '../components/monitor/index.vue'
 import Download from '../components/download/index.vue'
+import Filesystem from '../components/filesystem/index.vue'
 import Vue from 'vue'
 
 
@@ -27,19 +27,19 @@ const router = new Router({
             }
           },
           {
-            path: '/roles',
-            name: 'roles',
-            component: Roles,
-            meta: {
-              title: '规则配置'
-            }
-          },
-          {
             path: '/download',
             name: 'download',
             component: Download,
             meta: {
               title: '资源下载'
+            }
+          },
+          {
+            path: '/filesystem',
+            name: 'filesystem',
+            component: Filesystem,
+            meta: {
+              title: '资源管理'
             }
           },
           {

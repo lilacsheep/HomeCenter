@@ -1,7 +1,7 @@
 import axios from "axios"
 
 
-let apiUrl = "http://127.0.0.1/api"
+let apiUrl = "/api"
 const httpService = axios.create({
     baseURL: apiUrl, // 需自定义
     // 请求超时时间
@@ -132,6 +132,24 @@ export function post(url, params = {}) {
 }
 
 /*
+ *  head请求
+ *  url:请求地址
+ *  params:参数
+ * */
+export function head(url, params = {}) {
+    return new Promise((resolve, reject) => {
+        httpService({
+            url: url,
+            method: 'head',
+            data: params
+        }).then(response => {
+            resolve(response);
+        }).catch(error => {
+            reject(error);
+        });
+    });
+}
+/*
  *  文件上传
  *  url:请求地址
  *  params:参数
@@ -154,5 +172,6 @@ export function fileUpload(url, params = {}) {
 export default {
     get,
     post,
+    head,
     fileUpload
 }

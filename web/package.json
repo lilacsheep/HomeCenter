@@ -17,9 +17,12 @@
     "sass": "^1.26.10",
     "sass-loader": "^10.0.2",
     "v-charts": "^1.19.0",
+    "video.js": "^7.10.2",
     "vue": "^2.5.16",
     "vue-clipboard2": "^0.3.1",
-    "vue-router": "^3.3.2"
+    "vue-router": "^3.3.2",
+    "vue-video-player": "^5.0.2",
+    "yarn": "^1.22.10"
   },
   "engines": {
     "node": ">=6"

@@ -8,6 +8,7 @@ import (
 	"github.com/gogf/gf/container/gset"
 	"github.com/gogf/gf/encoding/gjson"
 	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/os/gcache"
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/os/glog"
 	"github.com/gogf/gf/util/guid"
@@ -55,6 +56,7 @@ type Collection struct {
 	data        *gmap.TreeMap
 	Settings    *CollectionSettings
 	UniqueIndex *gset.Set
+	lock        *sync.RWMutex
 }
 
 func (self *Collection) checkUnique(value *gjson.Json) (bool, error) {
@@ -72,6 +74,8 @@ func (self *Collection) checkUnique(value *gjson.Json) (bool, error) {
 }
 
 func (self *Collection) insert(data interface{}) (id string, err error) {
+	self.lock.Lock()
+	defer self.lock.Unlock()
 	j := gjson.New(data)
 	if found, err := self.checkUnique(j); err != nil {
 		return "", err
@@ -83,6 +87,7 @@ func (self *Collection) insert(data interface{}) (id string, err error) {
 			if self.UniqueIndex != nil {
 				self.UniqueIndex.Add(j.Get(self.Settings.Unique))
 			}
+			self.dump(false)
 			return id, nil
 		} else {
 			return "", ErrUnique
@@ -96,12 +101,14 @@ func (self *Collection) Insert(data interface{}) (string, error) {
 	} else if self.Settings.MaxRecord == 0 {
 		return self.insert(data)
 	} else {
-		self.data.Remove(self.data.Keys()[0])
+		self.RemoveFirst()
 		return self.insert(data)
 	}
 }
 
 func (self *Collection) GetFirst(data interface{}) error {
+	self.lock.RLock()
+	defer self.lock.RUnlock()
 	if self.data.Size() > 0 {
 		v, _ := self.data.Search(self.data.Keys()[0])
 		return v.(*gjson.Json).ToStruct(data)
@@ -110,6 +117,8 @@ func (self *Collection) GetFirst(data interface{}) error {
 }
 
 func (self *Collection) GetById(id string, data interface{}) error {
+	self.lock.RLock()
+	defer self.lock.RUnlock()
 	v := self.data.Get(id)
 	if v == nil {
 		return ErrNoData
@@ -117,20 +126,33 @@ func (self *Collection) GetById(id string, data interface{}) error {
 	return v.(*gjson.Json).ToStruct(data)
 }
 
+func (self *Collection) RemoveFirst() {
+	self.lock.Lock()
+	defer self.lock.Unlock()
+	self.data.Remove(self.data.Keys()[0])
+	self.dump(false)
+}
+
 func (self *Collection) RemoveById(id string) {
+	self.lock.Lock()
+	defer self.lock.Unlock()
 	v := self.data.Remove(id)
 	if v != nil && self.UniqueIndex != nil {
 		self.UniqueIndex.Remove(v.(*gjson.Json).Get(self.Settings.Unique))
 	}
+	self.dump(false)
 }
 
 func (self *Collection) GetAndRemove(id string, data interface{}) error {
+	self.lock.Lock()
+	defer self.lock.Unlock()
 	value := self.data.Remove(id)
 	if value != nil {
 		t := value.(*gjson.Json)
 		if self.UniqueIndex != nil {
 			self.UniqueIndex.Remove(t.Get(self.Settings.Unique))
 		}
+		self.dump(false)
 		return t.ToStruct(data)
 	} else {
 		return ErrNoData
@@ -138,6 +160,8 @@ func (self *Collection) GetAndRemove(id string, data interface{}) error {
 }
 
 func (self *Collection) All(data interface{}) error {
+	self.lock.RLock()
+	defer self.lock.RUnlock()
 	temp := gjson.New(nil)
 	index := 0
 	self.data.Iterator(func(key, value interface{}) bool {
@@ -151,6 +175,8 @@ func (self *Collection) All(data interface{}) error {
 }
 
 func (self *Collection) Search(params g.Map, data interface{}) error {
+	self.lock.RLock()
+	defer self.lock.RUnlock()
 	temp := gjson.New(nil)
 	index := 0
 	self.data.Iterator(func(key, value interface{}) bool {
@@ -173,6 +199,8 @@ func (self *Collection) Search(params g.Map, data interface{}) error {
 }
 
 func (self *Collection) Paging(offset, limit int, data interface{}) (err error) {
+	self.lock.RLock()
+	defer self.lock.RUnlock()
 	index := 0
 	d := gjson.New(nil)
 	if offset >= self.data.Size() {
@@ -198,6 +226,8 @@ func (self *Collection) Paging(offset, limit int, data interface{}) (err error) 
 }
 
 func (self *Collection) UpdateById(id string, data interface{}) error {
+	self.lock.Lock()
+	defer self.lock.Unlock()
 	g_ := gjson.New(data, true)
 	if found, err := self.checkUnique(g_); err != nil {
 		return err
@@ -215,6 +245,7 @@ func (self *Collection) UpdateById(id string, data interface{}) error {
 					ov.Set(k, value)
 				}
 				self.data.Set(id, ov)
+				self.dump(false)
 			}
 		}
 	}
@@ -261,19 +292,22 @@ func (self *Collection) Load() {
 	}
 }
 
-func (self *Collection) Dump() {
-	t := gjson.New(nil, false)
-	self.data.Iterator(func(key, value interface{}) bool {
-		t.Set(key.(string), value.(*gjson.Json).ToMap())
-		return true
-	})
-	data := t.MustToJson()
-	if err := self.file.Save(data); err != nil {
-		glog.Errorf("dump collection error: %s", err.Error())
+func (self *Collection) dump(force bool) {
+	if self.Settings.AutoDump || force {
+		t := gjson.New(nil, false)
+		self.data.Iterator(func(key, value interface{}) bool {
+			t.Set(key.(string), value.(*gjson.Json).ToMap())
+			return true
+		})
+		data := t.MustToJson()
+		if err := self.file.Save(data); err != nil {
+			glog.Errorf("dump collection error: %s", err.Error())
+		}
 	}
 }
 
 type Database struct {
+	Cache       *gcache.Cache // key/value memory cache,
 	collections *gmap.StrAnyMap
 	file        *FileSource
 	Path        string
@@ -302,11 +336,13 @@ func (self *Database) NewCollections(name string, settings *CollectionSettings) 
 			data:        gmap.NewTreeMap(gutil.ComparatorString, true),
 			Settings:    settings,
 			UniqueIndex: indexSet,
+			lock:        &sync.RWMutex{},
 			file: &FileSource{
 				FilePath: path.Join(self.Path, fmt.Sprintf("%s.json", name)),
 				lock:     &sync.RWMutex{},
 			},
 		})
+		self.Dump()
 	} else {
 		return ErrCollectionExist
 	}
@@ -347,12 +383,8 @@ func (self *Database) Load() {
 
 func (self *Database) Dump() {
 	NameMap := gmap.NewStrAnyMap()
-
 	self.collections.Iterator(func(k string, v interface{}) bool {
 		collection := v.(*Collection)
-		if collection.Settings.AutoDump {
-			collection.Dump()
-		}
 		NameMap.Set(collection.Name, collection.Settings)
 		return true
 	})
@@ -366,8 +398,36 @@ func (self *Database) Dump() {
 	}
 }
 
+func (self *Database) Insert(collectionName string, data interface{}) (id string, err error) {
+	var collection *Collection
+	collection, err = self.Collection(collectionName)
+	if err != nil {
+		return "", err
+	}
+	return collection.Insert(data)
+}
+
+func (self *Database) UpdateById(collectionName string, id string, data interface{}) (err error) {
+	var collection *Collection
+	collection, err = self.Collection(collectionName)
+	if err != nil {
+		return err
+	}
+	return collection.UpdateById(id, data)
+}
+
+func (self *Database) QueryAll(collectionName string, data interface{}) (err error) {
+	var collection *Collection
+	collection, err = self.Collection(collectionName)
+	if err != nil {
+		return err
+	}
+	return collection.All(data)
+}
+
 func NewDatabase(name, path string) *Database {
 	database := &Database{
+		Cache:       gcache.New(),
 		collections: gmap.NewStrAnyMap(true),
 		file:        &FileSource{FilePath: gfile.Join(path, fmt.Sprintf("%s_collection.json", name)), lock: &sync.RWMutex{}},
 		Name:        name,

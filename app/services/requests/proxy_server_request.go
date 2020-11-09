@@ -104,7 +104,6 @@ func (self *InfoProxyServerRequest) Exec(r *ghttp.Request) (response MessageResp
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
 		data := garray.New(true)
-		data.Append(g.Map{"key": "name", "name": "名称", "value": info.Name})
 		data.Append(g.Map{"key": "port", "name": "端口", "value": info.Port})
 		data.Append(g.Map{"key": "status", "name": "状态", "value": server.Mallory.Status})
 		data.Append(g.Map{"key": "balance", "name": "负载", "value": info.Status})

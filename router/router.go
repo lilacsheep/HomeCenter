@@ -17,9 +17,12 @@ func init() {
 		r.Response.WriteTpl("index.html")
 	})
 	s.SetRewriteMap(map[string]string{
-		"/dashboard": "/",
-		"/roles":     "/",
-		"/monitor":   "/",
+		"/dashboard":  "/",
+		"/roles":      "/",
+		"/monitor":    "/",
+		"/download":   "/",
+		"/filesystem": "/",
+		"/message":    "/",
 	})
 	proxyInstanceApi := &api.ProxyInstanceApi{}
 	proxyServerApi := &api.ProxyServerApi{}
@@ -49,5 +52,29 @@ func init() {
 		downloadApi := &api.ProxyDownloadApi{}
 		group.POST("/download/create", downloadApi.Create)
 		group.GET("/download/tasks", downloadApi.Query)
+		group.POST("/download/remove", downloadApi.Remove)
+		group.POST("/download/cancel", downloadApi.Cancel)
+		group.POST("/download/start", downloadApi.Start)
+
+		// download settings api
+		group.GET("/download/settings", downloadApi.Settings)
+		group.POST("/download/settings/update", downloadApi.UpdateSettings)
+
+		// filesystem api
+		filesystemApi := &api.ProxyFilesystemApi{}
+		group.GET("/filesystem/nodes", filesystemApi.Nodes)
+		group.POST("/filesystem/files", filesystemApi.Files)
+		group.POST("/filesystem/file/remove", filesystemApi.RemoveFile)
+		group.POST("/filesystem/file/upload", filesystemApi.UploadFile)
+		group.POST("/filesystem/node/create", filesystemApi.CreateNode)
+		group.POST("/filesystem/node/remove", filesystemApi.RemoveNode)
+		group.POST("/filesystem/dir/create", filesystemApi.CreateDir)
+		group.POST("/filesystem/dir/remove", filesystemApi.RemoveDir)
+		group.GET("/filesystem/download", filesystemApi.DownloadFile)
+		group.POST("/filesystem/file/info", filesystemApi.FileInfo)
+
+		// message api
+		messageApi := new(api.ProxyMessageApi)
+		group.GET("/messages", messageApi.All)
 	})
 }

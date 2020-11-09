@@ -25,11 +25,16 @@ func init() {
 
 func main() {
 	models.InitDB()
+	err := models.InitDownloadManager()
+	if err != nil {
+		panic(err)
+	}
 	eventProcess := events.EventProcess{Pool: grpool.New(10)}
 	go eventProcess.Run()
 
 	s := g.Server()
 	s.SetIndexFolder(true)
+	s.SetClientMaxBodySize(1073741824)
 	s.SetRouteOverWrite(true)
 	s.SetServerRoot("public")
 	s.SetAddr(host)

@@ -14,8 +14,12 @@ HTTP/HTTPS proxy over SSH. 在家庭使用的功能中心
 - [ ] SS实例的添加
 
 ## 更新预告
+1. DDNS
+
+## 更新 2020年11月9日
 1. 离线下载
 2. 文件管理
+3. 文件预览（视频和图片）
 
 ## 更新 2020年10月16日
 1. 服务与主机监控信息展示
@@ -45,7 +49,7 @@ HTTP/HTTPS proxy over SSH. 在家庭使用的功能中心
 
 # 使用帮助
 ## 下载
-根据自己的版本下载相应文件[下载](https://gitee.com/Dukeshi/home-proxy/releases)
+根据自己的版本下载相应文件[下载](https://github.com/lilacsheep/HomeCenter/releases)
 
 ## 启动进程
 ```bash
