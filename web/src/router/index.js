@@ -4,6 +4,7 @@ import Dashboard from '../components/index.vue'
 import Monitor from '../components/monitor/index.vue'
 import Download from '../components/download/index.vue'
 import Filesystem from '../components/filesystem/index.vue'
+import Other from '../components/other/index.vue'
 import Vue from 'vue'
 
 
@@ -48,6 +49,14 @@ const router = new Router({
             component: Monitor,
             meta: {
               title: '应用监控'
+            }
+          },
+          {
+            path: '/other',
+            name: 'other',
+            component: Other,
+            meta: {
+              title: '其他功能'
             }
           },
         ],

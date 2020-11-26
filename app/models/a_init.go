@@ -51,6 +51,11 @@ func InitDB() {
 			glog.Error("init collection error: %s", err.Error())
 		}
 	}
+	if err := DB.NewCollections(DDnsProviderSettingsTable, nil); err != nil {
+		if err != filedb.ErrCollectionExist {
+			glog.Error("init collection error: %s", err.Error())
+		}
+	}
 	if err := DB.NewCollections(FilesystemNodeTable, nil); err != nil {
 		if err != filedb.ErrCollectionExist {
 			glog.Error("init collection error: %s", err.Error())

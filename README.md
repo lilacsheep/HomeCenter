@@ -10,11 +10,14 @@ HTTP/HTTPS proxy over SSH. 在家庭使用的功能中心
 - [ ] IP访问控制，访问黑名单
 - [ ] 自定义解析DNS
 - [ ] 新增：内部集成dns服务
-- [ ] 新增：DDNS
+- [x] 新增：DDNS
 - [ ] SS实例的添加
 
 ## 更新预告
-1. DDNS
+1. DDNS (aliDNS)
+
+## 更新 2020年11月26日
+1. ddns （dnspod）
 
 ## 更新 2020年11月9日
 1. 离线下载

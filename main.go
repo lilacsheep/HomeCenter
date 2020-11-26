@@ -6,7 +6,7 @@ import (
 	"github.com/gogf/gf/os/grpool"
 	"homeproxy/app/models"
 	_ "homeproxy/app/server"
-	_ "homeproxy/app/services/tasks"
+	"homeproxy/app/services/tasks"
 	"homeproxy/library/events"
 	_ "homeproxy/packed"
 	_ "homeproxy/router"
@@ -29,6 +29,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	tasks.InitDDnsTask()
 	eventProcess := events.EventProcess{Pool: grpool.New(10)}
 	go eventProcess.Run()
 
@@ -38,8 +39,7 @@ func main() {
 	s.SetRouteOverWrite(true)
 	s.SetServerRoot("public")
 	s.SetAddr(host)
-	s.SetDumpRouterMap(false)
 	s.AddStaticPath("/static", "public")
-
+	s.SetDumpRouterMap(false)
 	s.Run()
 }

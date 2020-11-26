@@ -33,7 +33,7 @@ httpService.interceptors.response.use(
             // 返回异常
             return Promise.reject({
                 status: res.code,
-                message: res.detail,
+                message: res.detail
             });
         } else {
             return response.data;
@@ -48,7 +48,6 @@ httpService.interceptors.response.use(
                     break;
                 case 401:
                     error.message = '未授权，请重新登录';
-                    window.sessionStorage.removeItem("auth")
                     location.href = "/login"
                     break;
                 case 403:
@@ -97,7 +96,7 @@ httpService.interceptors.response.use(
  *  get请求
  *  url:请求地址
  *  params:参数
- * */
+ */
 export function get(url, params = {}) {
     return new Promise((resolve, reject) => {
         httpService({

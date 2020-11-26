@@ -6,7 +6,7 @@
         <el-menu-item index="download"><i class="el-icon-download"></i>资源下载</el-menu-item>
         <el-menu-item index="filesystem"><i class="el-icon-folder"></i>资源管理</el-menu-item>
         <el-menu-item index="monitor"><i class="el-icon-data-analysis"></i>应用监控</el-menu-item>
-        <!-- <el-menu-item index="oss"><i class="el-icon-document-checked"></i>文件管理</el-menu-item> -->
+        <el-menu-item index="other"><i class="el-icon-more"></i>其他功能</el-menu-item>
         <!-- <el-menu-item style="float: right" index="3">消息中心</el-menu-item> -->
       </el-menu>
     </el-header>

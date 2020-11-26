@@ -416,6 +416,25 @@ func (self *Database) UpdateById(collectionName string, id string, data interfac
 	return collection.UpdateById(id, data)
 }
 
+func (self *Database) GetById(collectionName string, id string, data interface{}) (err error) {
+	var collection *Collection
+	collection, err = self.Collection(collectionName)
+	if err != nil {
+		return err
+	}
+	return collection.GetById(id, data)
+}
+
+func (self *Database) RemoveByID(collectionName string, id string) (err error) {
+	var collection *Collection
+	collection, err = self.Collection(collectionName)
+	if err != nil {
+		return err
+	}
+	collection.RemoveById(id)
+	return nil
+}
+
 func (self *Database) QueryAll(collectionName string, data interface{}) (err error) {
 	var collection *Collection
 	collection, err = self.Collection(collectionName)

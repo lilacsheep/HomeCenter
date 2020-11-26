@@ -23,6 +23,7 @@ func init() {
 		"/download":   "/",
 		"/filesystem": "/",
 		"/message":    "/",
+		"/other":      "/",
 	})
 	proxyInstanceApi := &api.ProxyInstanceApi{}
 	proxyServerApi := &api.ProxyServerApi{}
@@ -76,5 +77,17 @@ func init() {
 		// message api
 		messageApi := new(api.ProxyMessageApi)
 		group.GET("/messages", messageApi.All)
+
+		// ddns api
+		ddnsApi := new(api.ProxyDDnsApi)
+		group.GET("/ddns/settings", ddnsApi.GetSettings)
+		group.GET("/ddns/netcards", ddnsApi.ChooseCards)
+		group.POST("/ddns/setting/create", ddnsApi.CreateSetting)
+		group.POST("/ddns/records", ddnsApi.GetRecords)
+		group.POST("/ddns/setting", ddnsApi.GetSettingInfo)
+		group.POST("/ddns/setting/start", ddnsApi.StartSetting)
+		group.POST("/ddns/setting/stop", ddnsApi.StopSetting)
+		group.POST("/ddns/setting/remove", ddnsApi.DeleteSetting)
+		group.POST("/ddns/setting/refresh", ddnsApi.RefreshSetting)
 	})
 }
