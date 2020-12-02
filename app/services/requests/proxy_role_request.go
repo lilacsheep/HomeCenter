@@ -7,6 +7,7 @@ import (
 	"golang.org/x/net/publicsuffix"
 	"homeproxy/app/models"
 	"homeproxy/app/server"
+	"homeproxy/library/filedb"
 	"homeproxy/library/mallory"
 	"net/http"
 	"strings"
@@ -33,7 +34,7 @@ func (self *AddUrlRoleRequest) UrlSplit(url string) (string, string) {
 func (self *AddUrlRoleRequest) Exec(r *ghttp.Request) (response MessageResponse) {
 	sub, domain := self.UrlSplit(self.Url)
 	var data []mallory.ProxyRole
-	c, _ := models.DB.Collection(models.ProxyRoleTable)
+	c, _ := filedb.DB.Collection(mallory.ProxyRoleTable)
 	if sub == "" {
 		sub = "*"
 	}
@@ -69,7 +70,7 @@ type RemoveUrlRoleRequest struct {
 
 func (self *RemoveUrlRoleRequest) Exec(r *ghttp.Request) (response MessageResponse) {
 	var role mallory.ProxyRole
-	c, _ := models.DB.Collection(models.ProxyRoleTable)
+	c, _ := filedb.DB.Collection(mallory.ProxyRoleTable)
 	if err := c.GetAndRemove(self.ID, &role); err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
@@ -95,4 +96,39 @@ func (self *QueryAllRoleRequest) Exec(r *ghttp.Request) (response MessageRespons
 
 func NewQueryAllRoleRequest() *QueryAllRoleRequest {
 	return &QueryAllRoleRequest{}
+}
+
+type ChangeRoleInstanceRequest struct {
+	ID         string `v:"id     @required"`
+	InstanceID string
+	Status     bool
+}
+
+func (self *ChangeRoleInstanceRequest) Exec(r *ghttp.Request) (response MessageResponse) {
+	role := mallory.ProxyRole{}
+	err := filedb.DB.GetById(mallory.ProxyRoleTable, self.ID, &role)
+	if err != nil {
+		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
+	} else {
+		if server.Mallory.Status {
+			server.Mallory.ProxyHandler.RemoveUrlRole(role.Sub, role.Domain, role.Status)
+		}
+		role.InstanceID = self.InstanceID
+		role.Status = self.Status
+		err = filedb.DB.UpdateById(mallory.ProxyRoleTable, self.ID, role)
+		if err != nil {
+			response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
+		} else {
+			if server.Mallory.Status {
+				server.Mallory.ProxyHandler.AddUrlRole(role.Sub, role.Domain, role.Status, role.InstanceID)
+			}
+			response.Success()
+		}
+	}
+
+	return
+}
+
+func NewChangeRoleInstanceRequest() *ChangeRoleInstanceRequest {
+	return &ChangeRoleInstanceRequest{}
 }

@@ -2,13 +2,26 @@ package models
 
 import (
 	"github.com/gogf/gf/os/glog"
+	"homeproxy/library/filedb"
 	"homeproxy/library/mallory"
 )
 
-const ProxyRoleTable = "proxy_role_list"
+func init() {
+	if err := filedb.DB.NewCollections(mallory.ProxyRoleTable, nil); err != nil {
+		if err != filedb.ErrCollectionExist {
+			glog.Error("init collection error: %s", err.Error())
+		}
+	}
+
+	if err := filedb.DB.NewCollections(mallory.ProxyRoleAnalysisTable, nil); err != nil {
+		if err != filedb.ErrCollectionExist {
+			glog.Error("init collection error: %s", err.Error())
+		}
+	}
+}
 
 func AllRoles() (proxies []mallory.ProxyRole) {
-	c, _ := DB.Collection(ProxyRoleTable)
+	c, _ := filedb.DB.Collection(mallory.ProxyRoleTable)
 	if err := c.All(&proxies); err != nil {
 		glog.Errorf("get all proxies error: %s", err.Error())
 	}

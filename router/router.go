@@ -47,6 +47,7 @@ func init() {
 		// proxy url role
 		group.POST("/proxy/role/add", proxyRoleApi.AddRole)
 		group.POST("/proxy/role/remove", proxyRoleApi.Remove)
+		group.POST("/proxy/role/change", proxyRoleApi.Change)
 		group.GET("/proxy/roles", proxyRoleApi.All)
 
 		// download api

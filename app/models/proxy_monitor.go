@@ -1,8 +1,24 @@
 package models
 
+import (
+	"github.com/gogf/gf/os/glog"
+	"homeproxy/library/filedb"
+)
+
 const (
 	ProxyMonitorTable = "proxy_monitor_info"
 )
+
+func init() {
+	settings := filedb.DefaultCollectionSettings()
+	settings.AutoDump = false
+	settings.MaxRecord = 10
+	if err := filedb.DB.NewCollections(ProxyMonitorTable, settings); err != nil {
+		if err != filedb.ErrCollectionExist {
+			glog.Error("init collection error: %s", err.Error())
+		}
+	}
+}
 
 type ProxyMonitorInfo struct {
 	ID          string  `json:"id"`
@@ -17,7 +33,7 @@ type ProxyMonitorInfo struct {
 }
 
 func GetAllProxyMonitorInfo() (info []ProxyMonitorInfo, err error) {
-	c, _ := DB.Collection(ProxyMonitorTable)
+	c, _ := filedb.DB.Collection(ProxyMonitorTable)
 	err = c.All(&info)
 	return
 }

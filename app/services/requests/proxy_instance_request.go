@@ -24,7 +24,7 @@ func (self *CreateProxyInstanceRequest) Exec(r *ghttp.Request) (response Message
 	instance.PrivateKey = self.PrivateKey
 	instance.Status = true
 
-	c, err := models.DB.Collection(models.ProxyInstanceTable)
+	c, err := filedb.DB.Collection(models.ProxyInstanceTable)
 	if err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err)
 	} else {
@@ -53,7 +53,7 @@ func (self *QueryAllInstanceRequest) Exec(r *ghttp.Request) (response MessageRes
 		err       error
 		instances []models.ProxyInstance
 	)
-	if c, err = models.DB.Collection(models.ProxyInstanceTable); err != nil {
+	if c, err = filedb.DB.Collection(models.ProxyInstanceTable); err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
 		if err = c.Search(g.Map{}, &instances); err != nil {
@@ -83,7 +83,7 @@ func (self *UpdateInstanceRequest) Exec(r *ghttp.Request) (response MessageRespo
 		c        *filedb.Collection
 		instance models.ProxyInstance
 	)
-	if c, err = models.DB.Collection(models.ProxyInstanceTable); err != nil {
+	if c, err = filedb.DB.Collection(models.ProxyInstanceTable); err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
 		if err = c.GetById(self.ID, &instance); err != nil {
@@ -138,7 +138,7 @@ func (self *RemoveInstanceRequest) Exec(r *ghttp.Request) (response MessageRespo
 		err error
 		c   *filedb.Collection
 	)
-	if c, err = models.DB.Collection(models.ProxyInstanceTable); err != nil {
+	if c, err = filedb.DB.Collection(models.ProxyInstanceTable); err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
 		c.RemoveById(self.ID)
@@ -163,7 +163,7 @@ func (self *RemoveInstanceFromPoolRequest) Exec(r *ghttp.Request) (response Mess
 		err error
 		c   *filedb.Collection
 	)
-	if c, err = models.DB.Collection(models.ProxyInstanceTable); err != nil {
+	if c, err = filedb.DB.Collection(models.ProxyInstanceTable); err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
 		if err := c.UpdateById(self.ID, g.Map{"status": false}); err != nil {
@@ -189,7 +189,7 @@ func (self *AddInstanceIntoPoolRequest) Exec(r *ghttp.Request) (response Message
 		c        *filedb.Collection
 		instance models.ProxyInstance
 	)
-	if c, err = models.DB.Collection(models.ProxyInstanceTable); err != nil {
+	if c, err = filedb.DB.Collection(models.ProxyInstanceTable); err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
 		if err = c.GetById(self.ID, &instance); err != nil {

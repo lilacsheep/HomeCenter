@@ -6,6 +6,7 @@ import (
 	"github.com/gogf/gf/net/ghttp"
 	"github.com/gogf/gf/os/gfile"
 	"homeproxy/app/models"
+	"homeproxy/library/filedb"
 	"image"
 	_ "image/gif"
 	_ "image/jpeg"
@@ -19,7 +20,7 @@ import (
 type AllFilesystemNodesRequest struct{}
 
 func (self *AllFilesystemNodesRequest) Exec(r *ghttp.Request) (response MessageResponse) {
-	c, _ := models.DB.Collection(models.FilesystemNodeTable)
+	c, _ := filedb.DB.Collection(models.FilesystemNodeTable)
 	var nodes []models.ProxyFileSystemNode
 	err := c.All(&nodes)
 	if err != nil {
@@ -39,7 +40,7 @@ type AllFilesystemFilesRequest struct {
 }
 
 func (self *AllFilesystemFilesRequest) Exec(r *ghttp.Request) (response MessageResponse) {
-	c, _ := models.DB.Collection(models.FilesystemNodeTable)
+	c, _ := filedb.DB.Collection(models.FilesystemNodeTable)
 	var node models.ProxyFileSystemNode
 	err := c.GetById(self.ID, &node)
 	if err != nil {
@@ -136,7 +137,7 @@ type RemoveFilesystemFileRequest struct {
 }
 
 func (self *RemoveFilesystemFileRequest) Exec(r *ghttp.Request) (response MessageResponse) {
-	c, _ := models.DB.Collection(models.FilesystemNodeTable)
+	c, _ := filedb.DB.Collection(models.FilesystemNodeTable)
 	var node models.ProxyFileSystemNode
 	err := c.GetById(self.NodeID, &node)
 	if err != nil {
@@ -163,7 +164,7 @@ type CreateFilesystemNodeRequest struct {
 
 func (self *CreateFilesystemNodeRequest) Exec(r *ghttp.Request) (response MessageResponse) {
 	node := models.ProxyFileSystemNode{Path: self.Path, Name: self.Name, CreateAt: time.Now().Format("2006-01-02 15:04:05")}
-	c, _ := models.DB.Collection(models.FilesystemNodeTable)
+	c, _ := filedb.DB.Collection(models.FilesystemNodeTable)
 	if id, err := c.Insert(node); err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
@@ -181,7 +182,7 @@ type RemoveFilesystemNodeRequest struct {
 }
 
 func (self *RemoveFilesystemNodeRequest) Exec(r *ghttp.Request) (response MessageResponse) {
-	c, _ := models.DB.Collection(models.FilesystemNodeTable)
+	c, _ := filedb.DB.Collection(models.FilesystemNodeTable)
 	c.RemoveById(self.ID)
 	response.Success()
 	return
@@ -197,7 +198,7 @@ type CreateFilesystemDirRequest struct {
 }
 
 func (self *CreateFilesystemDirRequest) Exec(r *ghttp.Request) (response MessageResponse) {
-	c, _ := models.DB.Collection(models.FilesystemNodeTable)
+	c, _ := filedb.DB.Collection(models.FilesystemNodeTable)
 	var node models.ProxyFileSystemNode
 	if err := c.GetById(self.NodeID, &node); err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
@@ -227,7 +228,7 @@ type RemoveFilesystemDirRequest struct {
 }
 
 func (self *RemoveFilesystemDirRequest) Exec(r *ghttp.Request) (response MessageResponse) {
-	c, _ := models.DB.Collection(models.FilesystemNodeTable)
+	c, _ := filedb.DB.Collection(models.FilesystemNodeTable)
 	var node models.ProxyFileSystemNode
 	if err := c.GetById(self.NodeID, &node); err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
@@ -268,7 +269,7 @@ func (self *UploadFilesystemFileRequest) Exec(r *ghttp.Request) (response Messag
 				response.ErrorWithMessage(http.StatusInternalServerError, "路径不存在")
 			}
 		} else {
-			c, _ := models.DB.Collection(models.FilesystemNodeTable)
+			c, _ := filedb.DB.Collection(models.FilesystemNodeTable)
 			var node models.ProxyFileSystemNode
 			if err := c.GetById(nodeID, &node); err != nil {
 				response.ErrorWithMessage(http.StatusInternalServerError, err.Error())

@@ -38,7 +38,7 @@
             </el-table-column>
           </el-table>
 
-          <el-card v-if="server.info.instances.length > 0" style="margin-top: 10px;">
+          <el-card v-if="server.info.instances.length > 0" style="margin-top: 10px;" :body-style="{padding: '5px'}">
             <div slot="header" class="clearfix">
               <span>代理池</span>
             </div>
@@ -110,6 +110,7 @@
           </el-table-column>
           <el-table-column label="操作" fixed="right" width="100">
             <template slot-scope="scope">
+              <el-button slot="reference" style="color: green" type="text" size="mini" icon="el-icon-edit" @click="change_role(scope.row)"></el-button>
               <el-popconfirm title="是否删除该规则？" @onConfirm="remove_role(scope.row)">
                 <el-button slot="reference" style="color: red" type="text" size="mini" icon="el-icon-delete"></el-button>
               </el-popconfirm>
@@ -210,6 +211,24 @@
         <el-button size="small" type="primary" @click="submit_create_role">确 定</el-button>
       </div>
     </el-dialog>
+
+    <el-dialog title="修改规则" :visible.sync="roles.change.visit">
+      <el-form :model="roles.change.form" label-position="right">
+        <el-form-item label="规则" label-width="100px">
+          <el-switch v-model="roles.change.form.status" active-text="转发" inactive-text="封禁" @change="role_change"></el-switch>
+        </el-form-item>
+        <el-form-item label="实例" label-width="100px" :style="roles.create.style">
+          <el-select v-model="roles.change.form.instance_id" size="small" placeholder="请选择转发">
+            <el-option label="默认转发" value=""></el-option>
+            <el-option v-for="(item, i) in instanceData" :key="i" :label="item.address" :value="item.id"></el-option>
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button size="small" @click="roles.change.visit = false">取 消</el-button>
+        <el-button size="small" type="primary" @click="submit_change_role">确 定</el-button>
+      </div>
+    </el-dialog>
   </el-row>
 </template>
 
@@ -273,6 +292,15 @@ export default {
           style: "display: none",
           form: {
             url: undefined,
+            status: undefined,
+            instance_id: ""
+          },
+        },
+        change: {
+          visit: false,
+          style: "display: none",
+          form: {
+            id: undefined,
             status: undefined,
             instance_id: ""
           },
@@ -448,6 +476,21 @@ export default {
         that.$message.error({message: response.message, type: 'error'})
       })
     },
+    change_role (role) {
+      this.role_change(role.status)
+      this.roles.change.form = role
+      this.roles.change.visit = true
+    },
+    submit_change_role () {
+      let that = this
+      this.$api.post("/proxy/role/change", this.roles.change.form).then(function (response) {
+        that.$message({message: '修改成功', type: 'success'})
+        that.refresh_roles()
+      }).catch(function (response) {
+        that.$message({message: '修改失败', type: 'error'})
+      })
+      this.roles.change.visit = false
+    },
     refresh_roles () {
       let that = this
       this.$api.get("/proxy/roles").then(function (response) {
@@ -494,9 +537,6 @@ export default {
 
 <style>
 .el-card__header {
-  padding: 5px;
-}
-.el-card__body {
   padding: 5px;
 }
 

@@ -24,7 +24,7 @@ func (self *ProxyInstance) Url() string {
 }
 
 func UpdateProxyInstanceDelay(id string, delay int) error {
-	if c, err := DB.Collection(ProxyInstanceTable); err != nil {
+	if c, err := filedb.DB.Collection(ProxyInstanceTable); err != nil {
 		return err
 	} else {
 		c.UpdateById(id, g.Map{"delay": delay})
@@ -33,7 +33,7 @@ func UpdateProxyInstanceDelay(id string, delay int) error {
 }
 func GetEnableProxyInstances() (instances []ProxyInstance, err error) {
 	var c *filedb.Collection
-	if c, err = DB.Collection(ProxyInstanceTable); err != nil {
+	if c, err = filedb.DB.Collection(ProxyInstanceTable); err != nil {
 		return
 	} else {
 		if err = c.Search(g.Map{"status": true}, &instances); err != nil {

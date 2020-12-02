@@ -3,6 +3,7 @@ package requests
 import (
 	"github.com/gogf/gf/net/ghttp"
 	"homeproxy/app/models"
+	"homeproxy/library/filedb"
 	"net/http"
 )
 
@@ -12,7 +13,7 @@ func (self *GetAllMessagesRequest) Exec(r *ghttp.Request) (response MessageRespo
 	var (
 		data []models.NotifyMessage
 	)
-	err := models.DB.QueryAll(models.ProxyNotifyMessageTable, &data)
+	err := filedb.DB.QueryAll(models.ProxyNotifyMessageTable, &data)
 	if err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {

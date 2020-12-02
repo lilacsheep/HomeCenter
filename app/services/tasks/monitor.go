@@ -5,6 +5,7 @@ import (
 	"github.com/gogf/gf/util/gconv"
 	"github.com/shirou/gopsutil/process"
 	"homeproxy/app/models"
+	"homeproxy/library/filedb"
 	"os"
 	"runtime"
 	"time"
@@ -34,7 +35,7 @@ func QueryProxyMonitorInfoTask() {
 	mainProxy, _ = process.NewProcess(gconv.Int32(os.Getpid()))
 
 	if mainProxy != nil {
-		c, _ := models.DB.Collection(models.ProxyMonitorTable)
+		c, _ := filedb.DB.Collection(models.ProxyMonitorTable)
 		data := models.ProxyMonitorInfo{CreateAt: time.Now().Format("2006-01-02 15:04:05")}
 		data.CpuPercent, _ = mainProxy.CPUPercent()
 		if v, err := mainProxy.MemoryInfo(); err == nil {

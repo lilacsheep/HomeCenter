@@ -2,13 +2,35 @@ package models
 
 import (
 	"github.com/gogf/gf/os/gfile"
+	"github.com/gogf/gf/os/glog"
+	"homeproxy/library/filedb"
 	"io/ioutil"
 	"path/filepath"
+	"time"
 )
 
 const (
 	FilesystemNodeTable = "proxy_filesystem_node"
 )
+
+func init() {
+	if err := filedb.DB.NewCollections(FilesystemNodeTable, nil); err != nil {
+		if err != filedb.ErrCollectionExist {
+			glog.Error("init collection error: %s", err.Error())
+		}
+	} else {
+		node := ProxyFileSystemNode{
+			Path:     "download/",
+			Name:     "下载",
+			CreateAt: time.Now().Format("2006-01-02 15:04:05"),
+		}
+		c, _ := filedb.DB.Collection(FilesystemNodeTable)
+		_, err := c.Insert(node)
+		if err != nil {
+			glog.Errorf("init filesystem info error: %s", err)
+		}
+	}
+}
 
 type FileInfo struct {
 	Name        string     `json:"name"`

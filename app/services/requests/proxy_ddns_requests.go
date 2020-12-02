@@ -9,6 +9,7 @@ import (
 	"homeproxy/app/models"
 	"homeproxy/app/services/tasks"
 	"homeproxy/library/ddns"
+	"homeproxy/library/filedb"
 	"net/http"
 	"time"
 )
@@ -33,7 +34,7 @@ type GetDDnsSettingsRequest struct{}
 
 func (self *GetDDnsSettingsRequest) Exec(r *ghttp.Request) (response MessageResponse) {
 	var data []models.DDnsProviderSettings
-	err := models.DB.QueryAll(models.DDnsProviderSettingsTable, &data)
+	err := filedb.DB.QueryAll(models.DDnsProviderSettingsTable, &data)
 	if err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
@@ -84,7 +85,7 @@ func (self *CreateDDnsSettingRequest) Exec(r *ghttp.Request) (response MessageRe
 		setting.DNSPodToken = self.DNSPodToken
 	}
 
-	id, err := models.DB.Insert(models.DDnsProviderSettingsTable, setting)
+	id, err := filedb.DB.Insert(models.DDnsProviderSettingsTable, setting)
 	if err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
@@ -154,7 +155,7 @@ func (self *GetSettingsInfoRequest) Exec(r *ghttp.Request) (response MessageResp
 	}
 	info["entry"] = entryInfo
 	var setting models.DDnsProviderSettings
-	err := models.DB.GetById(models.DDnsProviderSettingsTable, self.ID, &setting)
+	err := filedb.DB.GetById(models.DDnsProviderSettingsTable, self.ID, &setting)
 	if err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
@@ -178,12 +179,12 @@ func (self *StopRoleTaskRequest) Exec(r *ghttp.Request) (response MessageRespons
 		response.ErrorWithMessage(http.StatusInternalServerError, "任务不存在")
 	} else {
 		var role models.DDnsProviderSettings
-		err := models.DB.GetById(models.DDnsProviderSettingsTable, self.ID, &role)
+		err := filedb.DB.GetById(models.DDnsProviderSettingsTable, self.ID, &role)
 		if err != nil {
 			response.ErrorWithMessage(http.StatusInternalServerError, "任务不存在")
 		} else {
 			role.Status = false
-			err := models.DB.UpdateById(models.DDnsProviderSettingsTable, self.ID, role)
+			err := filedb.DB.UpdateById(models.DDnsProviderSettingsTable, self.ID, role)
 			if err != nil {
 				response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 			}
@@ -206,7 +207,7 @@ func (self *StartRoleTaskRequest) Exec(r *ghttp.Request) (response MessageRespon
 	entry := gcron.Search(self.ID)
 	if entry == nil {
 		var role models.DDnsProviderSettings
-		err := models.DB.GetById(models.DDnsProviderSettingsTable, self.ID, &role)
+		err := filedb.DB.GetById(models.DDnsProviderSettingsTable, self.ID, &role)
 		if err != nil {
 			response.ErrorWithMessage(http.StatusInternalServerError, "任务不存在")
 		} else {
@@ -215,7 +216,7 @@ func (self *StartRoleTaskRequest) Exec(r *ghttp.Request) (response MessageRespon
 				response.ErrorWithMessage(http.StatusInternalServerError, "任务不存在")
 			} else {
 				role.Status = true
-				err := models.DB.UpdateById(models.DDnsProviderSettingsTable, self.ID, role)
+				err := filedb.DB.UpdateById(models.DDnsProviderSettingsTable, self.ID, role)
 				if err != nil {
 					response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 				} else {
@@ -243,7 +244,7 @@ func (self *DeleteSettingRequest) Exec(r *ghttp.Request) (response MessageRespon
 	if entry != nil {
 		entry.Close()
 	}
-	err := models.DB.RemoveByID(models.DDnsProviderSettingsTable, self.ID)
+	err := filedb.DB.RemoveByID(models.DDnsProviderSettingsTable, self.ID)
 	if err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
@@ -266,7 +267,7 @@ func (self *RefreshSettingRequest) Exec(r *ghttp.Request) (response MessageRespo
 	if entry != nil {
 		entry.Close()
 	}
-	err := models.DB.UpdateById(models.DDnsProviderSettingsTable, self.ID, g.Map{"time_interval": self.TimeInterval})
+	err := filedb.DB.UpdateById(models.DDnsProviderSettingsTable, self.ID, g.Map{"time_interval": self.TimeInterval})
 	if err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {

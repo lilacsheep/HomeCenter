@@ -82,21 +82,16 @@
         <el-button size="small" type="primary" @click="creat_node_dir">确 定</el-button>
       </div>
     </el-dialog>
-    <el-dialog title="上传文件" :visible.sync="node.file.visit"  width="380px">
+    <el-dialog custom-class="upload_diglog" :title="node.file.title" :visible.sync="node.file.visit"  width="380px">
       <el-upload :data='{"path": node.file.upload_path, "node_id": node.info.id}' class="upload-demo" drag action="/api/filesystem/file/upload" :on-success="upload_success" multiple>
         <i class="el-icon-upload"></i>
         <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
       </el-upload>
     </el-dialog>
 
-    <el-dialog :visible.sync="node.view.visit" :width="node.view.width" @closed="close_view">
-      <span v-if="node.view.type === 'img'">
-        <img :src="node.view.src" fit="fill" :style="node.view.style" class="image">
-      </span>
-      <span v-if="node.view.type === 'video'">
-        <video-player id="videobox" class="video-player vjs-custom-skin" controls :width="node.view.width" :playsinline="true" :options="node.playerOptions" ref='videoRef'>
-        </video-player>
-      </span>
+    <el-dialog :title="node.view.title" custom-class="preview" :visible.sync="node.view.visit" :width="node.view.width" @closed="close_view">
+        <img v-if="node.view.type === 'img'" :src="node.view.src" fit="fill" :style="node.view.style" class="image">
+        <video-player v-else-if="node.view.type === 'video'" id="videobox" class="video-player vjs-custom-skin" controls :width="node.view.width" :playsinline="true" :options="node.playerOptions" ref='videoRef'></video-player>
     </el-dialog>
 
   </el-row>
@@ -134,6 +129,7 @@ export default {
           }
         },
         file: {
+          title: "",
           visit: false,
           upload_path: ""
         },
@@ -141,7 +137,8 @@ export default {
           width: "500px",
           visit: false,
           style: "",
-          src: ""
+          src: "",
+          title: ""
         },
         playerOptions: {
           playbackRates: [0.5, 1.0, 1.5, 2.0], // 可选的播放速度
@@ -244,8 +241,10 @@ export default {
     table_row_click (row, column, event) {
       if (row.is_dir) {
         this.node.file.upload_path = row.path
+        this.node.file.title = `上传至：${row.name}`
       } else {
         var index= row.path.lastIndexOf(row.name);
+        this.node.file.title = `上传文件`
         this.node.file.upload_path = row.path.substr(0, index-1)//截取路径字符串
       }
     },
@@ -265,13 +264,14 @@ export default {
       var index= row.path.lastIndexOf(".");
       var ext = row.path.substr(index+1);
       this.node.view.src = "/api/filesystem/download?path="+row.path
+      this.node.view.title = row.name
       this.$api.post("/filesystem/file/info", {path: row.path}).then(function (response) {
         if (response.detail.type == "img") {
           that.node.view.width = `${response.detail.width + 20}px`
-          if (response.detail.width >= 480) {
+          if (response.detail.width >= 500) {
             that.node.view.width = "500px"
             let height = that.GetPercent(480, response.detail.width)
-            that.node.view.style = `width: 480px; height: ${height}`
+            that.node.view.style = `width: 500px; height: ${height}`
             that.node.view.type = response.detail.type
             that.node.view.visit = true
           }
@@ -283,6 +283,8 @@ export default {
         } else {
           that.$message({type: "error", "message": "不支持该文件预览"})
         }
+      }).catch(function (response) {
+        that.$message({type: "error", "message": "不支持该文件预览"})
       })
     },
     close_view: function () {
@@ -310,20 +312,29 @@ export default {
   padding: 5px;
 }
 
-.el-card__body {
+.el-card__body{
   padding: 20px;
 }
 
-.el-dialog__header {
+.preview .el-dialog__header {
   padding: 10px 10px 5px;
-  /* border-bottom: 1px solid whitesmoke; */
+  border-bottom: 1px solid whitesmoke;
 }
 
 .el-dialog__headerbtn {
   top: 12px;
 }
-.el-dialog__body {
-  padding: 15px 10px;
+.preview .el-dialog__body {
+  padding: 0;
+}
+
+.upload_diglog .el-dialog__header {
+  padding: 10px 10px 5px;
+  border-bottom: 1px solid whitesmoke;
+}
+
+.upload_diglog .el-dialog__body{
+  padding: 0 10px;
 }
 
 .el-dialog__footer {

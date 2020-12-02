@@ -25,6 +25,16 @@ var Mallory *MalloryManger
 
 func init() {
 	Mallory = &MalloryManger{}
+	server, err := models.GetProxyServer()
+	if err != nil {
+		panic(err)
+	} else {
+		if server.AutoStart {
+			glog.Info("proxy auto start, please wait...")
+			Mallory.Start()
+			glog.Info("[proxy] start ok...")
+		}
+	}
 }
 
 type MalloryManger struct {
@@ -93,6 +103,7 @@ func (self *MalloryManger) Init() error {
 	// set http server Handler
 	self.HttpServer.Handler = self.ProxyHandler
 	self.HttpServer.Addr = fmt.Sprintf(":%d", info.Port)
+
 	return nil
 }
 

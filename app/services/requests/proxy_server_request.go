@@ -6,6 +6,7 @@ import (
 	"github.com/gogf/gf/net/ghttp"
 	"homeproxy/app/models"
 	"homeproxy/app/server"
+	"homeproxy/library/filedb"
 	"net/http"
 )
 
@@ -85,7 +86,7 @@ func (self *UpdateProxyServerRequest) Exec(r *ghttp.Request) (response MessageRe
 				server.Mallory.ProxyHandler.AllProxy = self.AllProxy
 			}
 		}
-		c, _ := models.DB.Collection(models.ProxyServerTable)
+		c, _ := filedb.DB.Collection(models.ProxyServerTable)
 		c.UpdateById(proxy.ID, data)
 		response.Success()
 	}

@@ -3,12 +3,22 @@ package models
 import (
 	"github.com/gogf/gf/encoding/gjson"
 	"github.com/gogf/gf/net/ghttp"
+	"github.com/gogf/gf/os/glog"
+	"homeproxy/library/filedb"
 )
 
 const (
 	ProxyNotifyMessageTable = "proxy_notify_message"
 	BarkServerUrl           = "https://api.day.app"
 )
+
+func init() {
+	if err := filedb.DB.NewCollections(ProxyNotifyMessageTable, nil); err != nil {
+		if err != filedb.ErrCollectionExist {
+			glog.Error("init collection error: %s", err.Error())
+		}
+	}
+}
 
 type NotifyMessage struct {
 	ID                string `json:"id"`
@@ -39,5 +49,5 @@ func (self *NotifyMessage) sync() error {
 	json := gjson.New(self)
 	_ = json.Remove("id")
 	_ = json.Remove("create_at")
-	return DB.UpdateById(ProxyNotifyMessageTable, self.ID, self)
+	return filedb.DB.UpdateById(ProxyNotifyMessageTable, self.ID, self)
 }

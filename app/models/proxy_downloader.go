@@ -21,13 +21,44 @@ var (
 	TasksCollection    *filedb.Collection
 )
 
+func init() {
+	settings := filedb.DefaultCollectionSettings()
+	settings.Unique = "url"
+	if err := filedb.DB.NewCollections(DownloadListTable, settings); err != nil {
+		if err != filedb.ErrCollectionExist {
+			glog.Error("init collection error: %s", err.Error())
+		}
+	}
+	if err := filedb.DB.NewCollections(DownloadSettingsTable, nil); err != nil {
+		if err != filedb.ErrCollectionExist {
+			glog.Error("init collection error: %s", err.Error())
+		}
+	} else {
+		settings := DownloadSettings{
+			Path:          "download/",
+			ThreadNum:     32,
+			NotifyOpen:    false,
+			NotifyMessage: "",
+		}
+		c, _ := filedb.DB.Collection(DownloadSettingsTable)
+		_, err := c.Insert(settings)
+		if err != nil {
+			glog.Errorf("init server info error: %s", err)
+		}
+	}
+
+	if err := InitDownloadManager(); err != nil {
+		panic(err)
+	}
+}
+
 func InitDownloadManager() error {
 	var err error
-	SettingsCollection, err = DB.Collection(DownloadSettingsTable)
+	SettingsCollection, err = filedb.DB.Collection(DownloadSettingsTable)
 	if err != nil {
 		return err
 	}
-	TasksCollection, err = DB.Collection(DownloadListTable)
+	TasksCollection, err = filedb.DB.Collection(DownloadListTable)
 	if err != nil {
 		return err
 	}

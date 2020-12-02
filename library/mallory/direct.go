@@ -2,7 +2,9 @@ package mallory
 
 import (
 	"errors"
+	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/os/glog"
+	"homeproxy/library/filedb"
 	"io"
 	"net"
 	"net/http"
@@ -12,6 +14,37 @@ import (
 var (
 	ErrShouldProxy = errors.New("should proxy")
 )
+
+type DomainErrorEvent struct {
+	Domain string
+	Error  string
+}
+
+func (self *DomainErrorEvent) DoEvent() error {
+	params := g.Map{"domain": self.Domain, "error": self.Error}
+	var data = ProxyRoleAnalysis{}
+	err := filedb.DB.QueryOne(ProxyRoleAnalysisTable, &data, params)
+	if err != nil {
+		if err != filedb.ErrNoData {
+			return err
+		} else {
+			data.Domain = self.Domain
+			data.Times = 1
+			data.Error = self.Error
+			_, err := filedb.DB.Insert(ProxyRoleAnalysisTable, data)
+			if err != nil {
+				return err
+			}
+		}
+	} else {
+		data.Times += 1
+		err := filedb.DB.UpdateById(ProxyRoleAnalysisTable, data.ID, data)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
 type closeWriter interface {
 	CloseWrite() error
@@ -97,7 +130,6 @@ func (self *Direct) Connect(w http.ResponseWriter, r *http.Request) (err error) 
 	hij, ok := w.(http.Hijacker)
 	if !ok {
 		s := "Server does not support Hijacker"
-		glog.Println(s)
 		http.Error(w, s, http.StatusInternalServerError)
 		return
 	}
@@ -106,11 +138,10 @@ func (self *Direct) Connect(w http.ResponseWriter, r *http.Request) (err error) 
 	dst, err := self.Tr.Dial("tcp", r.URL.Host)
 	if err != nil {
 		if nerr, ok := err.(net.Error); ok && nerr.Timeout() {
-			glog.Infof("RoundTrip: %s, reproxy...", err.Error())
 			err = ErrShouldProxy
+			glog.Infof("RoundTrip: %s, reproxy...", err.Error())
 			return
 		}
-		//glog.Infof("Dial: %s", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -118,7 +149,6 @@ func (self *Direct) Connect(w http.ResponseWriter, r *http.Request) (err error) 
 
 	src, _, err := hij.Hijack()
 	if err != nil {
-		glog.Printf("Hijack: %s\n", err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

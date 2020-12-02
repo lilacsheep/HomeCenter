@@ -7,18 +7,23 @@ import (
 	"github.com/gogf/gf/util/gconv"
 	"homeproxy/app/models"
 	"homeproxy/library/ddns"
+	"homeproxy/library/filedb"
 	"time"
 )
 
+func init() {
+	InitDDnsTask()
+}
 func InitDDnsTask() {
 	var roles []models.DDnsProviderSettings
-	err := models.DB.QueryAll(models.DDnsProviderSettingsTable, &roles)
+	err := filedb.DB.QueryAll(models.DDnsProviderSettingsTable, &roles)
 	if err != nil {
 		glog.Error("init ddns task error: %s", err.Error())
 	} else {
 		for _, role := range roles {
 			if role.TimeInterval != "" && role.Status {
 				glog.Infof("start ddns task %s, %s.%s", role.ID, role.SubDomain, role.Domain)
+				DDnsSyncTask(role.ID)()
 				gcron.AddSingleton(role.TimeInterval, DDnsSyncTask(role.ID), role.ID)
 			}
 		}
@@ -32,7 +37,7 @@ func DDnsSyncTask(roleID string) func() {
 			err       error
 		)
 		setting := models.DDnsProviderSettings{}
-		err = models.DB.GetById(models.DDnsProviderSettingsTable, roleID, &setting)
+		err = filedb.DB.GetById(models.DDnsProviderSettingsTable, roleID, &setting)
 		if err != nil {
 			glog.Errorf("error: %s", err.Error())
 			return
@@ -69,7 +74,7 @@ func DDnsSyncTask(roleID string) func() {
 				History.Status = 1
 				History.Date = time.Now().Format("2006-01-02 15:04:05")
 				setting.History = append(setting.History, History)
-				models.DB.UpdateById(models.DDnsProviderSettingsTable, setting.ID, setting)
+				filedb.DB.UpdateById(models.DDnsProviderSettingsTable, setting.ID, setting)
 				return
 			}
 			switch setting.RecordID {
@@ -82,7 +87,7 @@ func DDnsSyncTask(roleID string) func() {
 					History.Status = 1
 					History.Date = time.Now().Format("2006-01-02 15:04:05")
 					setting.History = append(setting.History, History)
-					models.DB.UpdateById(models.DDnsProviderSettingsTable, setting.ID, setting)
+					filedb.DB.UpdateById(models.DDnsProviderSettingsTable, setting.ID, setting)
 				} else {
 					History.Error = ""
 					History.Value = addr.String()
@@ -90,7 +95,7 @@ func DDnsSyncTask(roleID string) func() {
 					History.Date = time.Now().Format("2006-01-02 15:04:05")
 					setting.RecordID = recordID
 					setting.History = append(setting.History, History)
-					models.DB.UpdateById(models.DDnsProviderSettingsTable, setting.ID, setting)
+					filedb.DB.UpdateById(models.DDnsProviderSettingsTable, setting.ID, setting)
 				}
 			default:
 				err := provider.RecordModify(setting.Domain, setting.RecordID, setting.SubDomain, addr)
@@ -101,7 +106,7 @@ func DDnsSyncTask(roleID string) func() {
 					History.Status = 1
 					History.Date = time.Now().Format("2006-01-02 15:04:05")
 					setting.History = append(setting.History, History)
-					models.DB.UpdateById(models.DDnsProviderSettingsTable, setting.ID, setting)
+					filedb.DB.UpdateById(models.DDnsProviderSettingsTable, setting.ID, setting)
 				}
 			}
 		}

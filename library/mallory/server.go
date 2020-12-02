@@ -9,9 +9,15 @@ import (
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/os/glog"
 	"golang.org/x/net/publicsuffix"
+	"homeproxy/library/events"
 	"net/http"
 	"strings"
 	"sync"
+)
+
+const (
+	ProxyRoleTable         = "proxy_role_list"
+	ProxyRoleAnalysisTable = "proxy_role_analysis_url"
 )
 
 type AccessType bool
@@ -30,6 +36,13 @@ type ProxyRole struct {
 	Status     bool   `json:"status"`
 	Sub        string `json:"sub"`
 	Domain     string `json:"domain"`
+}
+
+type ProxyRoleAnalysis struct {
+	ID     string `json:"id"`
+	Domain string `json:"domain"`
+	Times  int    `json:"times"`
+	Error  string `json:"error"`
 }
 
 type Server struct {
@@ -260,12 +273,17 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	} else {
 		if r.Method == "CONNECT" {
 			if err := self.Direct.Connect(w, r); err != nil {
-				glog.Errorf("connect %s error %s", r.URL.Host, err)
+				err = ErrShouldProxy
+				event := &DomainErrorEvent{r.URL.Hostname(), err.Error()}
+				events.EventChan <- event
+				glog.Infof("connect %s error %s", r.URL.Host, err)
 			}
 		} else if r.URL.IsAbs() {
 			r.RequestURI = ""
 			RemoveHopHeaders(r.Header)
 			if err := self.Direct.ServeHTTP(w, r); err != nil {
+				event := &DomainErrorEvent{r.URL.Hostname(), err.Error()}
+				events.EventChan <- event
 				glog.Errorf("visit %s error %s", r.URL.Host, err)
 			}
 		} else {

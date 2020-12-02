@@ -174,6 +174,30 @@ func (self *Collection) All(data interface{}) error {
 	return json.Unmarshal([]byte(temp.MustToJsonString()), data)
 }
 
+func (self *Collection) SearchOne(params g.Map, data interface{}) error {
+	self.lock.RLock()
+	defer self.lock.RUnlock()
+	var temp *gjson.Json
+	self.data.Iterator(func(key, value interface{}) bool {
+		same := true
+		t := value.(*gjson.Json)
+		for k, v := range params {
+			if t.Get(k) != v {
+				same = false
+			}
+		}
+		if same {
+			temp = t
+			return false
+		}
+		return true
+	})
+	if temp == nil {
+		return ErrNoData
+	}
+	return temp.ToStruct(data)
+}
+
 func (self *Collection) Search(params g.Map, data interface{}) error {
 	self.lock.RLock()
 	defer self.lock.RUnlock()
@@ -433,6 +457,24 @@ func (self *Database) RemoveByID(collectionName string, id string) (err error) {
 	}
 	collection.RemoveById(id)
 	return nil
+}
+
+func (self *Database) Query(collectionName string, data interface{}, params g.Map) (err error) {
+	var collection *Collection
+	collection, err = self.Collection(collectionName)
+	if err != nil {
+		return err
+	}
+	return collection.Search(params, data)
+}
+
+func (self *Database) QueryOne(collectionName string, data interface{}, params g.Map) (err error) {
+	var collection *Collection
+	collection, err = self.Collection(collectionName)
+	if err != nil {
+		return err
+	}
+	return collection.SearchOne(params, data)
 }
 
 func (self *Database) QueryAll(collectionName string, data interface{}) (err error) {
