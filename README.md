@@ -13,9 +13,7 @@ HTTP/HTTPS proxy over SSH. 在家庭使用的功能中心
 
 ## 更新预告
 1. DDNS (aliDNS)
-
-## 更新记录
-[Win帮助](/doc/update.md)
+> [更新记录](/doc/update.md)
 
 ## 手动构建
 详情见build.sh
