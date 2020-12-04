@@ -25,7 +25,7 @@ func main() {
 
 	s := g.Server()
 	s.SetIndexFolder(true)
-	s.SetClientMaxBodySize(1073741824)
+	s.SetClientMaxBodySize(2199023255552)
 	s.SetRouteOverWrite(true)
 	s.SetServerRoot("public")
 	s.SetAddr(host)
