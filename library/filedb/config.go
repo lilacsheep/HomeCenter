@@ -5,6 +5,7 @@ import (
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/os/glog"
+	"path"
 )
 
 var (
@@ -16,10 +17,21 @@ var (
 func init() {
 	flag.StringVar(&Dbname, "name", "default", "数据库名称,默认为: default")
 	flag.StringVar(&Dbpath, "path", "db", "数据路径, 默认 ./db")
-	if !gfile.Exists(Dbpath) {
-		_ = gfile.Mkdir(Dbpath)
+	flag.Parse()
+
+	var p string
+	if path.IsAbs(Dbpath) {
+		if !gfile.Exists(Dbpath) {
+			_ = gfile.Mkdir(Dbpath)
+		}
+	} else {
+		p = gfile.Join(gfile.SelfDir(), Dbpath)
+		if !gfile.Exists(p) {
+			_ = gfile.Mkdir(p)
+		}
 	}
-	glog.Debugf("init db: %s path: %s", Dbname, Dbpath)
+
+	glog.Debugf("init db: %s path: %s", Dbname, p)
 	DB = NewDatabase(Dbname, Dbpath)
 }
 
