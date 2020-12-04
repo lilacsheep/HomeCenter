@@ -1,6 +1,6 @@
 <template>
   <el-row :gutter="20" v-loading="loading">
-    <el-tabs tab-position="left">
+    <el-tabs tab-position="left" @tab-click="tabClick">
       <el-tab-pane label="代理配置">
         <el-col :span="8">
           <el-table :data="server.info.data" size="mini" :stripe="true" :show-header="false" style="width: 100%">
@@ -83,6 +83,20 @@
           </el-table>
         </el-col>
       </el-tab-pane>
+      <el-tab-pane label="访问记录">
+        <el-table :data="roleLogs" stripe border size="mini">
+          <el-table-column prop="domain" label="站点"></el-table-column>
+          <el-table-column prop="error"  label="错误"></el-table-column>
+          <el-table-column prop="times"  label="次数"></el-table-column>
+          <el-table-column label="操作" fixed="right" width="100">
+            <template slot-scope="scope">
+              <el-popconfirm title="是否将站点加入负载策略？" @onConfirm="add_log_to_role(scope.row)">
+                <el-button slot="reference" style="color: red" type="text" size="mini" icon="el-icon-circle-plus"></el-button>
+              </el-popconfirm>
+            </template>
+          </el-table-column>
+        </el-table>
+      </el-tab-pane>
       <el-tab-pane label="规则配置">
         <el-button-group>
           <el-button size="mini" type="primary" icon="el-icon-edit" @click="roles.create.visit = true">新增规则</el-button>
@@ -92,7 +106,7 @@
         </el-input> -->
 
         <el-table :data="rolesData" stripe border size="mini" style="margin-top: 10px;">
-          <el-table-column prop="sub" label="域名" width="200">
+          <el-table-column prop="sub" label="域名" width="300">
             <template slot-scope="scope">
               {{`${scope.row.sub}.${scope.row.domain}`}}
             </template>
@@ -285,6 +299,7 @@ export default {
       },
       rolesData: [],
       instanceData: [],
+      roleLogs: [],
       roles: {
         filter: undefined,
         create: {
@@ -309,6 +324,16 @@ export default {
     }
   },
   methods: {
+    tabClick: function (tab, event) {
+      if (tab.index === '0') {
+        this.refresh_instances()
+        this.refresh_server()
+      } else if (tab.index === '1') {
+        this.refresh_visit_logs()
+      } else if (tab.index === '2') {
+        this.refresh_roles()
+      }
+    },
     edit_instance (item) {
       this.instaces.edit.visit = true
       this.instaces.edit.form = item
@@ -401,6 +426,29 @@ export default {
       let that = this
       this.$api.get("/proxy/instances").then(function (response) {
         that.instanceData = response.detail
+      })
+    },
+    refresh_visit_logs () {
+      let that = this
+      this.$api.get("/proxy/logs").then(function (response) {
+        that.roleLogs = response.detail
+      })
+    },
+    add_log_to_role(row) {
+      let that = this
+      this.$api.post("/proxy/log/add", {id: row.id}).then(function (response) {
+        that.$notify({
+          title: '添加成功',
+          message: '添加规则成功',
+          type: 'success'
+        });
+        that.refresh_visit_logs()
+      }).catch(function (response) {
+        that.$notify({
+          title: '添加失败',
+          message: response.message,
+          type: 'error'
+        });
       })
     },
     start_server () {
@@ -530,6 +578,7 @@ export default {
     this.refresh_instances()
     this.refresh_server()
     this.refresh_roles()
+    this.refresh_visit_logs()
   },
   mounted: function () {}
 };
