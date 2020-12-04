@@ -27,3 +27,11 @@ func AllRoles() (proxies []mallory.ProxyRole) {
 	}
 	return proxies
 }
+
+func AllRoleAnalysis() (data []mallory.ProxyRoleAnalysis) {
+	err := filedb.DB.QueryAll(mallory.ProxyRoleAnalysisTable, &data)
+	if err != nil {
+		glog.Errorf("get all proxies error: %s", err.Error())
+	}
+	return
+}
