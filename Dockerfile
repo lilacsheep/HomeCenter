@@ -3,5 +3,5 @@ RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositorie
 RUN apk add --no-cache libc6-compat
 ADD build/proxy /usr/local/bin/
 WORKDIR /data
-
-CMD ["proxy", "-path", "/data/db"]
+EXPOSE 8080
+CMD ["proxy", "-h", "0.0.0.0:8080", "-path", "/data/db"]
