@@ -236,38 +236,34 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		use = true
 	} else {
 		t, instanceId = self.Blocked(r.URL.Host)
-		use = t && r.URL.Host != ""
+		use = t && r.URL.Host != "" && self.Instances.Size() != 0
 	}
 
 	glog.Infof("%s", r.RemoteAddr)
 	glog.Infof("[%s] %d %s %s %s", AccessType(use), self.Mode, r.Method, r.RequestURI, r.Proto)
 
 	if use {
-		if self.Instances.Size() == 0 {
-			glog.Errorf("error: proxy no instance")
+		if v, ok := self.Instances.Search(instanceId); ok {
+			connect = v.(*SSH)
 		} else {
-			if v, ok := self.Instances.Search(instanceId); ok {
-				connect = v.(*SSH)
+			instance, err := self.Balance.DoBalance(self.Instances)
+			if err != nil {
+				glog.Errorf("get proxy connect error: %s", err.Error())
 			} else {
-				instance, err := self.Balance.DoBalance(self.Instances)
-				if err != nil {
-					glog.Errorf("get proxy connect error: %s", err.Error())
-				} else {
-					connect = instance.(*SSH)
-				}
+				connect = instance.(*SSH)
 			}
-			if connect == nil {
-				glog.Errorf("get proxy connect is nil")
+		}
+		if connect == nil {
+			glog.Errorf("get proxy connect is nil")
+		} else {
+			if r.Method == "CONNECT" && connect.Status {
+				connect.Connect(w, r)
+			} else if r.URL.IsAbs() && connect.Status {
+				r.RequestURI = ""
+				RemoveHopHeaders(r.Header)
+				connect.ServeHTTP(w, r)
 			} else {
-				if r.Method == "CONNECT" && connect.Status {
-					connect.Connect(w, r)
-				} else if r.URL.IsAbs() && connect.Status {
-					r.RequestURI = ""
-					RemoveHopHeaders(r.Header)
-					connect.ServeHTTP(w, r)
-				} else {
-					glog.Infof("%s is not a full URL path", r.RequestURI)
-				}
+				glog.Infof("%s is not a full URL path", r.RequestURI)
 			}
 		}
 	} else {

@@ -61,6 +61,7 @@ func NewDirect(shouldProxyTimeout time.Duration) *Direct {
 		shouldProxyTimeout = 200 * time.Millisecond
 	}
 	tr := http.DefaultTransport.(*http.Transport)
+
 	tr.Dial = (&net.Dialer{
 		Timeout: shouldProxyTimeout,
 	}).Dial
@@ -91,7 +92,6 @@ func (self *Direct) ServeHTTP(w http.ResponseWriter, r *http.Request) (err error
 			return
 		}
 		glog.Errorf("RoundTrip: %s\n", err.Error())
-		//http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	defer resp.Body.Close()
