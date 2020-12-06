@@ -12,16 +12,6 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-type SSHKeepAliveEvent struct {
-	Client  *ssh.Client
-	UseTime int64
-}
-
-func (self *SSHKeepAliveEvent) DoEvent() error {
-	glog.Debugf("keepalive connect %s use %d ms", self.Client.RemoteAddr(), self.UseTime)
-	return nil
-}
-
 type SSH struct {
 	UUID string
 	// global config file

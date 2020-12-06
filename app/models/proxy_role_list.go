@@ -18,6 +18,15 @@ func init() {
 			glog.Error("init collection error: %s", err.Error())
 		}
 	}
+
+	setting := filedb.DefaultCollectionSettings()
+	setting.AutoDump = false
+	setting.MaxRecord = 1000
+	if err := filedb.DB.NewCollections(mallory.ProxyVisitLogTable, setting); err != nil {
+		if err != filedb.ErrCollectionExist {
+			glog.Error("init collection error: %s", err.Error())
+		}
+	}
 }
 
 func AllRoles() (proxies []mallory.ProxyRole) {
