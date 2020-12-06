@@ -15,7 +15,7 @@ var (
 )
 
 func init() {
-	flag.StringVar(&host, "h", "0.0.0.0:80", "监听地址,默认为0.0.0.0:80")
+	flag.StringVar(&host, "h", "0.0.0.0:8080", "监听地址,默认为0.0.0.0:8080")
 	flag.Parse()
 }
 

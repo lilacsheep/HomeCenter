@@ -4,4 +4,4 @@ RUN apk add --no-cache libc6-compat
 ADD build/proxy /usr/local/bin/
 WORKDIR /data
 EXPOSE 8080
-CMD ["proxy", "-h", "0.0.0.0:8080", "-path", "/data/db"]
+CMD ["proxy", "-path", "/data/db"]
