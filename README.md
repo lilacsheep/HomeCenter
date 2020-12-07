@@ -37,17 +37,17 @@ systemct start proxy
 ## 访问
 访问http://your_address:port
 
-## 启动代理
+## 代理
 ![](/pic/start.jpg)
 
-## 修改代理
-![](/pic/modify_server.jpg)
+## 文件管理
+![](/pic/file.jpg)
 
-## 新增规则
-![](/pic/add_role.jpg)
+## 应用监控
+![](/pic/monitor.jpg)
 
-## 新增转发代理
-![](/pic/add_instance.jpg)
+## ddns
+![](/pic/ddns.jpg)
 
 ## 配置http代理
 [Win帮助](https://jingyan.baidu.com/article/72ee561a053a87e16138dfed.html)
