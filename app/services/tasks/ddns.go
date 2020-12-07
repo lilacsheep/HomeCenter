@@ -106,7 +106,18 @@ func DDnsSyncTask(roleID string) func() {
 					History.Status = 1
 					History.Date = time.Now().Format("2006-01-02 15:04:05")
 					setting.History = append(setting.History, History)
-					filedb.DB.UpdateById(models.DDnsProviderSettingsTable, setting.ID, setting)
+					if err := filedb.DB.UpdateById(models.DDnsProviderSettingsTable, setting.ID, setting); err != nil {
+						glog.Errorf("ddns save data error: %s", err.Error())
+					}
+				} else {
+					History.Error = ""
+					History.Value = addr.String()
+					History.Status = 0
+					History.Date = time.Now().Format("2006-01-02 15:04:05")
+					setting.History = append(setting.History, History)
+					if err := filedb.DB.UpdateById(models.DDnsProviderSettingsTable, setting.ID, setting); err != nil {
+						glog.Errorf("ddns save data error: %s", err.Error())
+					}
 				}
 			}
 		}
