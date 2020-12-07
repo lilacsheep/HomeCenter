@@ -102,10 +102,21 @@ func NewGetFilesystemFileInfoRequest() *GetFilesystemFileInfoRequest {
 }
 
 type DownloadFilesystemFileRequest struct {
-	Path string
+	Path   string `json:"path"`
+	NodeID string `json:"node_id"`
 }
 
 func (self *DownloadFilesystemFileRequest) Exec(r *ghttp.Request) (response MessageResponse) {
+	var node models.ProxyFileSystemNode
+	err := filedb.DB.GetById(models.FilesystemNodeTable, self.NodeID, &node)
+	if err != nil {
+		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
+		return
+	}
+	if !strings.HasPrefix(self.Path, node.Path) {
+		response.ErrorWithMessage(http.StatusInternalServerError, "非法请求")
+		return
+	}
 	if gfile.Exists(self.Path) {
 		ext := gfile.Ext(self.Path)
 		name := gfile.Basename(self.Path)

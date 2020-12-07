@@ -263,7 +263,7 @@ export default {
       let that = this
       var index= row.path.lastIndexOf(".");
       var ext = row.path.substr(index+1);
-      this.node.view.src = "/api/filesystem/download?path="+row.path
+      this.node.view.src = "/api/filesystem/download?path="+row.path+"&node_id="+this.node.info.id
       this.node.view.title = row.name
       this.$api.post("/filesystem/file/info", {path: row.path}).then(function (response) {
         if (response.detail.type == "img") {
