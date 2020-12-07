@@ -113,7 +113,7 @@ func (self *DownloadFilesystemFileRequest) Exec(r *ghttp.Request) (response Mess
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 		return
 	}
-	if !strings.HasPrefix(self.Path, node.Path) {
+	if !strings.HasPrefix(self.Path, gfile.Abs(node.Path)) {
 		response.ErrorWithMessage(http.StatusInternalServerError, "非法请求")
 		return
 	}

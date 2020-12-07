@@ -297,7 +297,7 @@ export default {
       this.node.playerOptions.sources[0].src = ""
     },
     download_file(row) {
-      window.open("/api/filesystem/download?path="+row.path)
+      window.open("/api/filesystem/download?path="+row.path+"&node_id="+this.node.info.id)
     }
   },
   created: function () {
