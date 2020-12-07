@@ -1,23 +1,14 @@
 package main
 
 import (
-	"flag"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/os/grpool"
 	_ "homeproxy/app/server"
 	"homeproxy/library/events"
+	"homeproxy/library/filedb"
 	_ "homeproxy/packed"
 	_ "homeproxy/router"
 )
-
-var (
-	host string
-)
-
-func init() {
-	flag.StringVar(&host, "h", "0.0.0.0:8080", "监听地址,默认为0.0.0.0:8080")
-	flag.Parse()
-}
 
 func main() {
 	eventProcess := events.EventProcess{Pool: grpool.New(10)}
@@ -28,7 +19,7 @@ func main() {
 	s.SetClientMaxBodySize(2199023255552)
 	s.SetRouteOverWrite(true)
 	s.SetServerRoot("public")
-	s.SetAddr(host)
+	s.SetAddr(filedb.WebHost)
 	s.AddStaticPath("/static", "public")
 	s.SetDumpRouterMap(false)
 	s.Run()

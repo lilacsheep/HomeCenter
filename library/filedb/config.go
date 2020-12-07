@@ -8,14 +8,17 @@ import (
 )
 
 var (
-	Dbname string
-	Dbpath string
-	DB     *Database
+	Dbname  string
+	Dbpath  string
+	WebHost string
+	DB      *Database
 )
 
 func init() {
 	flag.StringVar(&Dbname, "name", "default", "数据库名称,默认为: default")
 	flag.StringVar(&Dbpath, "path", "db", "数据路径, 默认 ./db")
+	flag.StringVar(&WebHost, "h", "0.0.0.0:8080", "监听地址,默认为0.0.0.0:8080")
+
 	flag.Parse()
 	if !gfile.Exists(Dbpath) {
 		_ = gfile.Mkdir(Dbpath)
