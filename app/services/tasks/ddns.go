@@ -88,7 +88,6 @@ func DDnsSyncTask(roleID string) func() {
 					History.Error = err.Error()
 					History.Status = 1
 				} else {
-					History.Error = ""
 					History.Status = 0
 					setting.RecordID = recordID
 				}
@@ -99,7 +98,6 @@ func DDnsSyncTask(roleID string) func() {
 					History.Error = err.Error()
 					History.Status = 1
 				} else {
-					History.Error = ""
 					History.Status = 0
 				}
 			}
