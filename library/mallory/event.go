@@ -60,7 +60,7 @@ func (self *DomainErrorEvent) DoEvent() error {
 		if err != filedb.ErrNoData {
 			return err
 		} else {
-			data.Domain = self.Domain
+			data.Domain = domain
 			data.Times = 1
 			data.Error = self.Error
 			_, err := filedb.DB.Insert(ProxyRoleAnalysisTable, data)
