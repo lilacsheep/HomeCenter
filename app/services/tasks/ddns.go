@@ -14,6 +14,7 @@ import (
 func init() {
 	InitDDnsTask()
 }
+
 func InitDDnsTask() {
 	var roles []models.DDnsProviderSettings
 	err := filedb.DB.QueryAll(models.DDnsProviderSettingsTable, &roles)

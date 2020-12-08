@@ -74,6 +74,12 @@ func (self *Collection) checkUnique(value *gjson.Json) (bool, error) {
 	return false, nil
 }
 
+func (self *Collection) Truncate() {
+	self.lock.Lock()
+	defer self.lock.Unlock()
+	self.data.Clear()
+}
+
 func (self *Collection) insert(data interface{}) (id string, err error) {
 	self.lock.Lock()
 	defer self.lock.Unlock()
@@ -485,6 +491,16 @@ func (self *Database) QueryAll(collectionName string, data interface{}) (err err
 		return err
 	}
 	return collection.All(data)
+}
+
+func (self *Database) Truncate(collectionName string) (err error) {
+	var collection *Collection
+	collection, err = self.Collection(collectionName)
+	if err != nil {
+		return err
+	}
+	collection.Truncate()
+	return
 }
 
 func NewDatabase(name, path string) *Database {

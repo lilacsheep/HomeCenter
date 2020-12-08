@@ -17,6 +17,9 @@ func init() {
 		if err != filedb.ErrCollectionExist {
 			glog.Error("init collection error: %s", err.Error())
 		}
+	} else {
+		// 每次启动清空访问失败的网站
+		_ = filedb.DB.Truncate(mallory.ProxyRoleAnalysisTable)
 	}
 
 	setting := filedb.DefaultCollectionSettings()
