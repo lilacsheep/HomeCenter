@@ -70,6 +70,7 @@ func (self *Collection) checkUnique(value *gjson.Json) (bool, error) {
 			return false, ErrUniqueNotExist
 		}
 	}
+
 	return false, nil
 }
 

@@ -63,6 +63,8 @@ func DDnsSyncTask(roleID string) func() {
 				provider ddns.Provider
 				History  = models.OperationRecord{}
 			)
+			History.Value = addr.String()
+			History.Date = time.Now().Format("2006-01-02 15:04:05")
 
 			switch setting.Provider {
 			case "dnspod":
@@ -70,9 +72,10 @@ func DDnsSyncTask(roleID string) func() {
 			default:
 				glog.Error("unknown provider: ", setting.Provider)
 				History.Error = fmt.Sprintf("unknown provider: %s", setting.Provider)
-				History.Value = addr.String()
 				History.Status = 1
-				History.Date = time.Now().Format("2006-01-02 15:04:05")
+				if len(setting.History) >= 5 {
+					setting.History = setting.History[1:]
+				}
 				setting.History = append(setting.History, History)
 				filedb.DB.UpdateById(models.DDnsProviderSettingsTable, setting.ID, setting)
 				return
@@ -83,43 +86,28 @@ func DDnsSyncTask(roleID string) func() {
 				if err != nil {
 					glog.Errorf("create record error: %s", err.Error())
 					History.Error = err.Error()
-					History.Value = addr.String()
 					History.Status = 1
-					History.Date = time.Now().Format("2006-01-02 15:04:05")
-					setting.History = append(setting.History, History)
-					filedb.DB.UpdateById(models.DDnsProviderSettingsTable, setting.ID, setting)
 				} else {
 					History.Error = ""
-					History.Value = addr.String()
 					History.Status = 0
-					History.Date = time.Now().Format("2006-01-02 15:04:05")
 					setting.RecordID = recordID
-					setting.History = append(setting.History, History)
-					filedb.DB.UpdateById(models.DDnsProviderSettingsTable, setting.ID, setting)
 				}
 			default:
 				err := provider.RecordModify(setting.Domain, setting.RecordID, setting.SubDomain, addr)
 				if err != nil {
 					glog.Errorf("create record error: %s", err.Error())
 					History.Error = err.Error()
-					History.Value = addr.String()
 					History.Status = 1
-					History.Date = time.Now().Format("2006-01-02 15:04:05")
-					setting.History = append(setting.History, History)
-					if err := filedb.DB.UpdateById(models.DDnsProviderSettingsTable, setting.ID, setting); err != nil {
-						glog.Errorf("ddns save data error: %s", err.Error())
-					}
 				} else {
 					History.Error = ""
-					History.Value = addr.String()
 					History.Status = 0
-					History.Date = time.Now().Format("2006-01-02 15:04:05")
-					setting.History = append(setting.History, History)
-					if err := filedb.DB.UpdateById(models.DDnsProviderSettingsTable, setting.ID, setting); err != nil {
-						glog.Errorf("ddns save data error: %s", err.Error())
-					}
 				}
 			}
+			if len(setting.History) >= 5 {
+				setting.History = setting.History[1:]
+			}
+			setting.History = append(setting.History, History)
+			filedb.DB.UpdateById(models.DDnsProviderSettingsTable, setting.ID, setting)
 		}
 	}
 }
