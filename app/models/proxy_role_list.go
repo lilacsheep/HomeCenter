@@ -16,7 +16,7 @@ func init() {
 	setting := filedb.DefaultCollectionSettings()
 	setting.AutoDump = false
 	setting.MaxRecord = 1000
-	if err := filedb.DB.NewCollections(mallory.ProxyRoleAnalysisTable, nil); err != nil {
+	if err := filedb.DB.NewCollections(mallory.ProxyRoleAnalysisTable, setting); err != nil {
 		if err != filedb.ErrCollectionExist {
 			glog.Error("init collection error: %s", err.Error())
 		}
