@@ -1,9 +1,12 @@
 package mallory
 
 import (
+	"fmt"
 	"github.com/gogf/gf/frame/g"
+	"golang.org/x/net/publicsuffix"
 	"homeproxy/library/events"
 	"homeproxy/library/filedb"
+	"strings"
 	"time"
 )
 
@@ -36,8 +39,21 @@ type DomainErrorEvent struct {
 	Error  string
 }
 
+func (self *DomainErrorEvent) urlSplit(url string) (string, string) {
+	host := HostOnly(url)
+	domain, _ := publicsuffix.EffectiveTLDPlusOne(host)
+	subDomain := ""
+	t := strings.Split(host, fmt.Sprintf(".%s", domain))
+	subDomain = t[0]
+	if subDomain == domain {
+		return "", domain
+	}
+	return subDomain, domain
+}
+
 func (self *DomainErrorEvent) DoEvent() error {
-	params := g.Map{"domain": self.Domain, "error": self.Error}
+	_, domain := self.urlSplit(self.Domain)
+	params := g.Map{"domain": domain}
 	var data = ProxyRoleAnalysis{}
 	err := filedb.DB.QueryOne(ProxyRoleAnalysisTable, &data, params)
 	if err != nil {
@@ -54,6 +70,7 @@ func (self *DomainErrorEvent) DoEvent() error {
 		}
 	} else {
 		data.Times += 1
+		data.Error = self.Error
 		err := filedb.DB.UpdateById(ProxyRoleAnalysisTable, data.ID, data)
 		if err != nil {
 			return err
