@@ -86,7 +86,7 @@
       <el-tab-pane label="访问记录">
         <el-table :data="roleLogs" stripe border size="mini">
           <el-table-column prop="domain" label="站点"></el-table-column>
-          <el-table-column prop="error"  label="错误"></el-table-column>
+          <el-table-column prop="error"  :show-overflow-tooltip="true" label="错误"></el-table-column>
           <el-table-column prop="times"  label="次数"></el-table-column>
           <el-table-column label="操作" fixed="right" width="100">
             <template slot-scope="scope">
