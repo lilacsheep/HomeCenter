@@ -1,11 +1,11 @@
 package main
 
 import (
+	"homeproxy/library/config"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/os/grpool"
 	_ "homeproxy/app/server"
 	"homeproxy/library/events"
-	"homeproxy/library/filedb"
 	_ "homeproxy/packed"
 	_ "homeproxy/router"
 )
@@ -19,7 +19,7 @@ func main() {
 	s.SetClientMaxBodySize(2199023255552)
 	s.SetRouteOverWrite(true)
 	s.SetServerRoot("public")
-	s.SetAddr(filedb.WebHost)
+	s.SetAddr(config.WebHost)
 	s.AddStaticPath("/static", "public")
 	s.SetDumpRouterMap(false)
 	s.Run()
