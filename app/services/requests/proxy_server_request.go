@@ -1,13 +1,14 @@
 package requests
 
 import (
+	"homeproxy/app/models"
+	"homeproxy/app/server"
+	"homeproxy/library/filedb2"
+	"net/http"
+
 	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/ghttp"
-	"homeproxy/app/models"
-	"homeproxy/app/server"
-	"homeproxy/library/filedb"
-	"net/http"
 )
 
 type StartProxyServerRequest struct{}
@@ -52,43 +53,46 @@ type UpdateProxyServerRequest struct {
 }
 
 func (self *UpdateProxyServerRequest) Exec(r *ghttp.Request) (response MessageResponse) {
-	proxy, err := models.GetProxyServer()
+	server2, err := models.GetProxyServer()
 	if err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err)
 	} else {
 		data := g.Map{}
-		if self.Name != "" && proxy.Name != self.Name {
-			data["name"] = self.Name
+		if self.Name != "" && server2.Name != self.Name {
+			server2.Name = self.Name
 		}
-		if self.Port != 0 && proxy.Port != self.Port {
-			data["port"] = self.Port
+		if self.Port != 0 && server2.Port != self.Port {
+			server2.Port = self.Port
 		}
-		if self.Username != "" && proxy.Username == self.Username {
-			data["username"] = self.Username
+		if self.Username != "" && server2.Username == self.Username {
+			server2.Name = self.Username
 		}
-		if self.Password != "" && proxy.Password == self.Password {
-			data["password"] = self.Password
+		if self.Password != "" && server2.Password == self.Password {
+			server2.Password = self.Password
 		}
-		if self.Status != proxy.Status {
-			data["status"] = self.Status
+		if self.Status != server2.Status {
+			server2.Status = self.Status
 			if self.Status {
 				server.Mallory.SetBalance(1)
 			} else {
 				server.Mallory.SetBalance(0)
 			}
 		}
-		if self.AutoProxy != proxy.AutoProxy {
+		if self.AutoProxy != server2.AutoProxy {
 			data["auto_proxy"] = self.AutoProxy
 		}
-		if self.AllProxy != proxy.AllProxy {
+		if self.AllProxy != server2.AllProxy {
 			data["all_proxy"] = self.AllProxy
 			if server.Mallory.Status {
 				server.Mallory.ProxyHandler.AllProxy = self.AllProxy
 			}
 		}
-		c, _ := filedb.DB.Collection(models.ProxyServerTable)
-		c.UpdateById(proxy.ID, data)
-		response.Success()
+		err := filedb2.DB.Update(server2)
+		if err != nil {
+			response.ErrorWithMessage(http.StatusServiceUnavailable, err.Error())
+		} else {
+			response.Success()
+		}
 	}
 	return
 }
@@ -108,8 +112,7 @@ func (self *InfoProxyServerRequest) Exec(r *ghttp.Request) (response MessageResp
 		data.Append(g.Map{"key": "port", "name": "端口", "value": info.Port})
 		data.Append(g.Map{"key": "status", "name": "状态", "value": server.Mallory.Status})
 		data.Append(g.Map{"key": "balance", "name": "负载", "value": info.Status})
-		//TODO: 自动代理模式，
-		//data.Append(g.Map{"key": "auto_proxy", "name": "代理", "value": info.AutoProxy})
+		data.Append(g.Map{"key": "auto_start", "name": "启动", "value": info.AutoStart})
 		data.Append(g.Map{"key": "all_proxy", "name": "模式", "value": info.AllProxy})
 		if server.Mallory.Error != nil && server.Mallory.Error != http.ErrServerClosed {
 			data.Append(g.Map{"key": "error", "name": "错误", "value": server.Mallory.Error.Error()})

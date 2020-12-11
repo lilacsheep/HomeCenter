@@ -2,12 +2,13 @@ package mallory
 
 import (
 	"fmt"
-	"github.com/gogf/gf/frame/g"
-	"golang.org/x/net/publicsuffix"
 	"homeproxy/library/events"
-	"homeproxy/library/filedb"
+	"homeproxy/library/filedb2"
 	"strings"
 	"time"
+
+	"github.com/asdine/storm/v3"
+	"golang.org/x/net/publicsuffix"
 )
 
 const (
@@ -26,12 +27,8 @@ func (self *VisitLogEvent) DoEvent() error {
 	log := ProxyVisitLog{}
 	log.Address = self.Address
 	log.Host = self.Host
-	log.Datetime = self.DateTime.Format("2006-01-02 15:04:05")
-	_, err := filedb.DB.Insert(ProxyVisitLogTable, log)
-	if err != nil {
-		return err
-	}
-	return nil
+	log.Datetime = self.DateTime
+	return filedb2.DB.Save(&log)
 }
 
 type DomainErrorEvent struct {
@@ -53,17 +50,16 @@ func (self *DomainErrorEvent) urlSplit(url string) (string, string) {
 
 func (self *DomainErrorEvent) DoEvent() error {
 	_, domain := self.urlSplit(self.Domain)
-	params := g.Map{"domain": domain}
 	var data = ProxyRoleAnalysis{}
-	err := filedb.DB.QueryOne(ProxyRoleAnalysisTable, &data, params)
+	err := filedb2.DB.One("Domain", domain, &data)
 	if err != nil {
-		if err != filedb.ErrNoData {
+		if err == storm.ErrNotFound {
 			return err
 		} else {
 			data.Domain = domain
 			data.Times = 1
 			data.Error = self.Error
-			_, err := filedb.DB.Insert(ProxyRoleAnalysisTable, data)
+			err = filedb2.DB.Save(&data)
 			if err != nil {
 				return err
 			}
@@ -71,7 +67,7 @@ func (self *DomainErrorEvent) DoEvent() error {
 	} else {
 		data.Times += 1
 		data.Error = self.Error
-		err := filedb.DB.UpdateById(ProxyRoleAnalysisTable, data.ID, data)
+		err = filedb2.DB.Update(&data)
 		if err != nil {
 			return err
 		}

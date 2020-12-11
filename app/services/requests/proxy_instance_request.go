@@ -1,12 +1,15 @@
 package requests
 
 import (
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/net/ghttp"
 	"homeproxy/app/models"
 	"homeproxy/app/server"
-	"homeproxy/library/filedb"
+	"homeproxy/library/filedb2"
 	"net/http"
+
+	"github.com/asdine/storm/v3"
+	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/net/ghttp"
+	"github.com/gogf/gf/util/gconv"
 )
 
 type CreateProxyInstanceRequest struct {
@@ -24,19 +27,18 @@ func (self *CreateProxyInstanceRequest) Exec(r *ghttp.Request) (response Message
 	instance.PrivateKey = self.PrivateKey
 	instance.Status = true
 
-	c, err := filedb.DB.Collection(models.ProxyInstanceTable)
+	err := filedb2.DB.Save(&instance)
 	if err != nil {
-		response.ErrorWithMessage(http.StatusInternalServerError, err)
-	} else {
-		id, err := c.Insert(&instance)
-		if err != nil && err == filedb.ErrUnique {
+		if err == storm.ErrAlreadyExists {
 			response.ErrorWithMessage(http.StatusInternalServerError, "该记录已存在")
 		} else {
-			if server.Mallory.Status {
-				server.Mallory.AddInstances(instance.Url(), instance.Password, instance.PrivateKey, id)
-			}
-			response.SuccessWithDetail(instance)
+			response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 		}
+	} else {
+		if server.Mallory.Status {
+			server.Mallory.AddInstances(instance.Url(), instance.Password, instance.PrivateKey, gconv.String(instance.ID))
+		}
+		response.SuccessWithDetail(instance)
 	}
 	return
 }
@@ -45,22 +47,38 @@ func NewCreateProxyInstanceRequest() *CreateProxyInstanceRequest {
 	return &CreateProxyInstanceRequest{}
 }
 
-type QueryAllInstanceRequest struct{}
+type QueryAllInstanceRequest struct {
+	Limit int `json:"limit"`
+	Page  int `json:"page"`
+}
+
+func (self *QueryAllInstanceRequest) Pagination() (int, int) {
+	var (
+		limit  = 10
+		page   = 1
+		offset = 0
+	)
+	if self.Limit != 0 {
+		limit = self.Limit
+	}
+	if self.Page != 0 {
+		page = self.Page
+	}
+	offset = (page - 1) * limit
+	return offset, limit
+}
 
 func (self *QueryAllInstanceRequest) Exec(r *ghttp.Request) (response MessageResponse) {
 	var (
-		c         *filedb.Collection
 		err       error
 		instances []models.ProxyInstance
 	)
-	if c, err = filedb.DB.Collection(models.ProxyInstanceTable); err != nil {
+	offset, limit := self.Pagination()
+	err = filedb2.DB.Select().Limit(limit).Skip(offset).Find(&instances)
+	if err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
-		if err = c.Search(g.Map{}, &instances); err != nil {
-			response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
-		} else {
-			response.SuccessWithDetail(instances)
-		}
+		response.SuccessWithDetail(instances)
 	}
 	return
 }
@@ -70,56 +88,57 @@ func NewQueryAllInstanceRequest() *QueryAllInstanceRequest {
 }
 
 type UpdateInstanceRequest struct {
-	ID         string `v:"id @required"`
+	ID         int    `v:"id @required"`
 	Address    string `v:"address     @required"`
 	Username   string `v:"username    @required|length:4,32#请输入用户名称|用户名称长度非法"`
 	Password   string `v:"password    @required-without:private_key"`
 	PrivateKey string `v:"private_key @required-without:password"`
 }
 
+func (self *UpdateInstanceRequest) change(instance models.ProxyInstance) bool {
+	data := g.Map{}
+	if instance.Address != self.Address {
+		data["address"] = self.Address
+	}
+	if instance.Username != self.Username {
+		data["username"] = self.Username
+	}
+	if instance.Password != self.Password {
+		data["password"] = self.Password
+	}
+	if instance.PrivateKey != self.PrivateKey {
+		data["private_key"] = self.PrivateKey
+	}
+	return len(data) != 0
+}
+
 func (self *UpdateInstanceRequest) Exec(r *ghttp.Request) (response MessageResponse) {
 	var (
 		err      error
-		c        *filedb.Collection
 		instance models.ProxyInstance
 	)
-	if c, err = filedb.DB.Collection(models.ProxyInstanceTable); err != nil {
+	err = filedb2.DB.One("ID", self.ID, &instance)
+	if err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
-		if err = c.GetById(self.ID, &instance); err != nil {
-			response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
-		} else {
-			data := g.Map{}
-			if instance.Address != self.Address {
-				data["address"] = self.Address
-				instance.Address = self.Address
-			}
-			if instance.Username != self.Username {
-				data["username"] = self.Username
-				instance.Username = self.Username
-			}
-			if instance.Password != self.Password {
-				data["password"] = self.Password
-				instance.Password = self.Password
-			}
-			if instance.PrivateKey != self.PrivateKey {
-				data["private_key"] = self.PrivateKey
-				instance.PrivateKey = self.PrivateKey
-			}
-			if len(data) == 0 {
-				response.ErrorWithMessage(http.StatusInternalServerError, "没有改变")
+		if self.change(instance) {
+			err = filedb2.DB.Update(&models.ProxyInstance{
+				ID: self.ID,
+				Address: self.Address,
+				Username: self.Username,
+				Password: self.Password,
+			})
+			if err != nil {
+				response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 			} else {
-				err = c.UpdateById(self.ID, data)
-				if err != nil {
-					response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
-				} else {
-					if server.Mallory.Status {
-						server.Mallory.RemoveInstance(self.ID)
-						server.Mallory.AddInstances(instance.Url(), instance.Password, instance.PrivateKey, self.ID)
-					}
-					response.Success()
+				if server.Mallory.Status {
+					server.Mallory.RemoveInstance(gconv.String(self.ID))
+					server.Mallory.AddInstances(instance.Url(), instance.Password, instance.PrivateKey, gconv.String(instance.ID))
 				}
+				response.Success()
 			}
+		} else {
+			response.ErrorWithMessage(http.StatusInternalServerError, "没有改变")
 		}
 	}
 	return
@@ -136,16 +155,18 @@ type RemoveInstanceRequest struct {
 func (self *RemoveInstanceRequest) Exec(r *ghttp.Request) (response MessageResponse) {
 	var (
 		err error
-		c   *filedb.Collection
+		instance models.ProxyInstance
 	)
-	if c, err = filedb.DB.Collection(models.ProxyInstanceTable); err != nil {
+	err = filedb2.DB.One("ID", self.ID, &instance)
+	if err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
-		c.RemoveById(self.ID)
-		if server.Mallory.Status {
-			server.Mallory.RemoveInstance(self.ID)
+		err = filedb2.DB.DeleteStruct(&instance)
+		if err != nil {
+			response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
+		} else {
+			response.Success()
 		}
-		response.Success()
 	}
 	return
 }
@@ -155,21 +176,20 @@ func NewRemoveInstanceRequest() *RemoveInstanceRequest {
 }
 
 type RemoveInstanceFromPoolRequest struct {
-	ID string `v:"id @required"`
+	ID int `v:"id @required"`
 }
 
 func (self *RemoveInstanceFromPoolRequest) Exec(r *ghttp.Request) (response MessageResponse) {
 	var (
 		err error
-		c   *filedb.Collection
 	)
-	if c, err = filedb.DB.Collection(models.ProxyInstanceTable); err != nil {
+	err = filedb2.DB.UpdateField(models.ProxyInstance{ID: self.ID}, "status", false)
+	if err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
-		if err := c.UpdateById(self.ID, g.Map{"status": false}); err != nil {
-			response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
+		if server.Mallory.Status {
+			server.Mallory.RemoveInstance(gconv.String(self.ID))
 		}
-		server.Mallory.RemoveInstance(self.ID)
 		response.Success()
 	}
 	return
@@ -180,24 +200,24 @@ func NewRemoveInstanceFromPoolRequest() *RemoveInstanceFromPoolRequest {
 }
 
 type AddInstanceIntoPoolRequest struct {
-	ID string `v:"id @required"`
+	ID int `v:"id @required"`
 }
 
 func (self *AddInstanceIntoPoolRequest) Exec(r *ghttp.Request) (response MessageResponse) {
 	var (
 		err      error
-		c        *filedb.Collection
 		instance models.ProxyInstance
 	)
-	if c, err = filedb.DB.Collection(models.ProxyInstanceTable); err != nil {
+	err = filedb2.DB.One("ID", self.ID, &instance)
+	if err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
-		if err = c.GetById(self.ID, &instance); err != nil {
+		err = filedb2.DB.UpdateField(&instance, "Status", true)
+		if err != nil {
 			response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 		} else {
-			c.UpdateById(self.ID, g.Map{"status": true})
 			if server.Mallory.Status {
-				server.Mallory.AddInstances(instance.Url(), instance.Password, instance.PrivateKey, self.ID)
+				server.Mallory.AddInstances(instance.Url(), instance.Password, instance.PrivateKey, gconv.String(instance.ID))
 				response.Success()
 			} else {
 				response.ErrorWithMessage(http.StatusInternalServerError, "代理服务没有启动，但是会在代理启动时启动...")

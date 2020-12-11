@@ -20,7 +20,7 @@ func HostOnly(addr string) string {
 func CopyHeader(w http.ResponseWriter, r *http.Response) {
 	// copy headers
 	dst, src := w.Header(), r.Header
-	for k, _ := range dst {
+	for k := range dst {
 		dst.Del(k)
 	}
 	for k, vs := range src {

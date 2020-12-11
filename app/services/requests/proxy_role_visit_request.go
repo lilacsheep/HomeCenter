@@ -3,7 +3,7 @@ package requests
 import (
 	"github.com/gogf/gf/net/ghttp"
 	"homeproxy/app/models"
-	"homeproxy/library/filedb"
+	"homeproxy/library/filedb2"
 	"homeproxy/library/mallory"
 	"net/http"
 )
@@ -21,13 +21,14 @@ func NewGetRoleAllVisitRequest() *GetRoleAllVisitRequest {
 }
 
 type AddErrorSiteToProxyRequest struct {
-	ID         string `json:"id"`
-	InstanceID string `json:"instance_id"`
+	ID         int `json:"id"`
+	InstanceID int `json:"instance_id"`
 }
 
 func (self *AddErrorSiteToProxyRequest) Exec(r *ghttp.Request) (response MessageResponse) {
 	data := mallory.ProxyRoleAnalysis{}
-	err := filedb.DB.GetById(mallory.ProxyRoleAnalysisTable, self.ID, &data)
+	err := filedb2.DB.One("ID", self.ID, &data)
+
 	if err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
@@ -36,7 +37,7 @@ func (self *AddErrorSiteToProxyRequest) Exec(r *ghttp.Request) (response Message
 		request.Url = domain
 		response = request.Exec(r)
 		if response.ErrorCode == 200 {
-			filedb.DB.RemoveByID(mallory.ProxyRoleAnalysisTable, data.ID)
+			filedb2.DB.DeleteStruct(&data)
 		}
 	}
 	return

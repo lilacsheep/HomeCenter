@@ -92,5 +92,9 @@ func init() {
 		group.POST("/ddns/setting/stop", ddnsApi.StopSetting)
 		group.POST("/ddns/setting/remove", ddnsApi.DeleteSetting)
 		group.POST("/ddns/setting/refresh", ddnsApi.RefreshSetting)
+
+		// logs api
+		group.GET("/logs", proxyServerApi.Logs)
+
 	})
 }

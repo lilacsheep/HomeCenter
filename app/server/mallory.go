@@ -4,6 +4,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"homeproxy/app/models"
+	"homeproxy/library/filedb2"
+	"homeproxy/library/mallory"
+	"net"
+	"net/http"
+	"net/url"
+	"os/user"
+	"time"
+
+	"github.com/asdine/storm/v3"
 	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/frame/g"
@@ -12,28 +22,35 @@ import (
 	"github.com/gogf/gf/util/guid"
 	"github.com/gogf/gf/util/gutil"
 	"golang.org/x/crypto/ssh"
-	"homeproxy/app/models"
-	"homeproxy/library/mallory"
-	"net"
-	"net/http"
-	"net/url"
-	"os/user"
-	"time"
 )
 
 var Mallory *MalloryManger
+
+func DefaultServer() *models.ProxyServer {
+	return &models.ProxyServer{
+		Name:      "default",
+		Port:      1316,
+		Status:    true,
+		AutoProxy: false,
+		AutoStart: true,
+	}
+}
 
 func init() {
 	Mallory = &MalloryManger{}
 	server, err := models.GetProxyServer()
 	if err != nil {
-		panic(err)
-	} else {
-		if server.AutoStart {
-			glog.Info("proxy auto start, please wait...")
-			Mallory.Start()
-			glog.Info("[proxy] start ok...")
+		if err == storm.ErrNotFound {
+			server = DefaultServer()
+			filedb2.DB.Save(server)
+		} else {
+			panic(err)
 		}
+	}
+	if server.AutoStart {
+		glog.Info("proxy auto start, please wait...")
+		Mallory.Start()
+		glog.Info("[proxy] start ok...")
 	}
 }
 
@@ -65,7 +82,7 @@ func (self *MalloryManger) Init() error {
 	}
 	// init url role
 	for _, p := range models.AllRoles() {
-		self.ProxyHandler.AddUrlRole(p.Sub, p.Domain, p.Status, p.InstanceID)
+		self.ProxyHandler.AddUrlRole(p.Sub, p.Domain, p.Status, gconv.String(p.ID))
 	}
 
 	// get Proxy Server
@@ -96,7 +113,7 @@ func (self *MalloryManger) Init() error {
 
 	// add ssh instance
 	for _, instance := range instances {
-		self.AddInstances(instance.Url(), instance.Password, instance.PrivateKey, instance.ID)
+		self.AddInstances(instance.Url(), instance.Password, instance.PrivateKey, gconv.String(instance.ID))
 	}
 	self.ProxyHandler.Instances = self.Instances
 
@@ -207,7 +224,8 @@ func (self *MalloryManger) InstanceKeepAlive(instance *mallory.SSH, ctx context.
 				instance.Status = false
 				instance.Renew()
 			} else {
-				_ = models.UpdateProxyInstanceDelay(instance.UUID, gconv.Int(time.Now().Sub(t1).Milliseconds()))
+				ms := time.Now().Sub(t1).Milliseconds()
+				_ = models.UpdateProxyInstanceDelay(gconv.Int(instance.UUID), gconv.Int(ms))
 			}
 		}
 		time.Sleep(2 * time.Second)

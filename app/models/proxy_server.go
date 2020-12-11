@@ -1,8 +1,10 @@
 package models
 
 import (
-	"github.com/gogf/gf/os/glog"
 	"homeproxy/library/filedb"
+	"homeproxy/library/filedb2"
+
+	"github.com/gogf/gf/os/glog"
 )
 
 const ProxyServerTable = "proxy_server"
@@ -15,29 +17,10 @@ func init() {
 			glog.Error("init collection error: %s", err.Error())
 		}
 	}
-
-	if err := filedb.DB.NewCollections(ProxyServerTable, nil); err != nil {
-		if err != filedb.ErrCollectionExist {
-			glog.Error("init collection error: %s", err.Error())
-		}
-	} else {
-		server := ProxyServer{
-			Name:      "default",
-			Port:      1316,
-			Status:    true,
-			AutoProxy: false,
-			AutoStart: true,
-		}
-		c, _ := filedb.DB.Collection(ProxyServerTable)
-		_, err := c.Insert(server)
-		if err != nil {
-			glog.Errorf("init server info error: %s", err)
-		}
-	}
 }
 
 type ProxyServer struct {
-	ID        string `json:"id"`
+	ID        int    `json:"id" storm:"id,increment"`
 	Name      string `json:"name"`
 	Port      int    `json:"port"`
 	Username  string `json:"username"`
@@ -48,12 +31,8 @@ type ProxyServer struct {
 	AutoStart bool   `json:"auto_start"`
 }
 
-func GetProxyServer() (server ProxyServer, err error) {
-	var c *filedb.Collection
-	if c, err = filedb.DB.Collection(ProxyServerTable); err != nil {
-		return
-	} else {
-		err = c.GetFirst(&server)
-		return server, err
-	}
+func GetProxyServer() (*ProxyServer, error) {
+	server := ProxyServer{}
+	err := filedb2.DB.One("Name", "default", &server)
+	return &server, err
 }
