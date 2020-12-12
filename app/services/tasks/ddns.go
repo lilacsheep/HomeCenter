@@ -7,7 +7,7 @@ import (
 	"github.com/gogf/gf/util/gconv"
 	"homeproxy/app/models"
 	"homeproxy/library/ddns"
-	"homeproxy/library/filedb"
+	"homeproxy/library/filedb2"
 	"time"
 )
 
@@ -17,7 +17,7 @@ func init() {
 
 func InitDDnsTask() {
 	var roles []models.DDnsProviderSettings
-	err := filedb.DB.QueryAll(models.DDnsProviderSettingsTable, &roles)
+	err := filedb2.DB.All(&roles)
 	if err != nil {
 		glog.Error("init ddns task error: %s", err.Error())
 	} else {
@@ -25,20 +25,20 @@ func InitDDnsTask() {
 			if role.TimeInterval != "" && role.Status {
 				glog.Infof("start ddns task %s, %s.%s", role.ID, role.SubDomain, role.Domain)
 				DDnsSyncTask(role.ID)()
-				gcron.AddSingleton(role.TimeInterval, DDnsSyncTask(role.ID), role.ID)
+				gcron.AddSingleton(role.TimeInterval, DDnsSyncTask(role.ID), gconv.String(role.ID))
 			}
 		}
 	}
 }
 
-func DDnsSyncTask(roleID string) func() {
+func DDnsSyncTask(roleID int) func() {
 	return func() {
 		var (
 			addresses []ddns.Address
 			err       error
 		)
 		setting := models.DDnsProviderSettings{}
-		err = filedb.DB.GetById(models.DDnsProviderSettingsTable, roleID, &setting)
+		err = filedb2.DB.One("ID", roleID, &setting)
 		if err != nil {
 			glog.Errorf("error: %s", err.Error())
 			return
@@ -78,7 +78,7 @@ func DDnsSyncTask(roleID string) func() {
 					setting.History = setting.History[1:]
 				}
 				setting.History = append(setting.History, History)
-				filedb.DB.UpdateById(models.DDnsProviderSettingsTable, setting.ID, setting)
+				filedb2.DB.Update(&setting)
 				return
 			}
 			switch setting.RecordID {
@@ -106,7 +106,7 @@ func DDnsSyncTask(roleID string) func() {
 				setting.History = setting.History[1:]
 			}
 			setting.History = append(setting.History, History)
-			filedb.DB.UpdateById(models.DDnsProviderSettingsTable, setting.ID, setting)
+			filedb2.DB.Update(&setting)
 		}
 	}
 }

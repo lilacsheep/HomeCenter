@@ -123,8 +123,8 @@ func (self *UpdateInstanceRequest) Exec(r *ghttp.Request) (response MessageRespo
 	} else {
 		if self.change(instance) {
 			err = filedb2.DB.Update(&models.ProxyInstance{
-				ID: self.ID,
-				Address: self.Address,
+				ID:       self.ID,
+				Address:  self.Address,
 				Username: self.Username,
 				Password: self.Password,
 			})
@@ -149,12 +149,12 @@ func NewUpdateInstanceRequest() *UpdateInstanceRequest {
 }
 
 type RemoveInstanceRequest struct {
-	ID string `v:"id @required"`
+	ID int `v:"id @required"`
 }
 
 func (self *RemoveInstanceRequest) Exec(r *ghttp.Request) (response MessageResponse) {
 	var (
-		err error
+		err      error
 		instance models.ProxyInstance
 	)
 	err = filedb2.DB.One("ID", self.ID, &instance)

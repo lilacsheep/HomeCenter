@@ -11,12 +11,6 @@ import (
 	"golang.org/x/net/publicsuffix"
 )
 
-const (
-	ProxyRoleTable         = "proxy_role_list"
-	ProxyRoleAnalysisTable = "proxy_role_analysis_url"
-	ProxyVisitLogTable     = "proxy_visit_logs"
-)
-
 type VisitLogEvent struct {
 	Address  string
 	Host     string

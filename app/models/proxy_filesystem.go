@@ -1,34 +1,23 @@
 package models
 
 import (
-	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/os/glog"
-	"homeproxy/library/filedb"
+	"homeproxy/library/filedb2"
 	"io/ioutil"
 	"path/filepath"
 	"time"
-)
 
-const (
-	FilesystemNodeTable = "proxy_filesystem_node"
+	"github.com/gogf/gf/os/gfile"
 )
 
 func init() {
-	if err := filedb.DB.NewCollections(FilesystemNodeTable, nil); err != nil {
-		if err != filedb.ErrCollectionExist {
-			glog.Error("init collection error: %s", err.Error())
-		}
-	} else {
+	count, _ := filedb2.DB.Count(&ProxyFileSystemNode{})
+	if count == 0 {
 		node := ProxyFileSystemNode{
-			Path:     gfile.Join(gfile.SelfDir(), "download/"),
+			Path:     gfile.Abs("download/"),
 			Name:     "下载",
-			CreateAt: time.Now().Format("2006-01-02 15:04:05"),
+			CreateAt: time.Now(),
 		}
-		c, _ := filedb.DB.Collection(FilesystemNodeTable)
-		_, err := c.Insert(node)
-		if err != nil {
-			glog.Errorf("init filesystem info error: %s", err)
-		}
+		filedb2.DB.Save(&node)
 	}
 }
 
@@ -43,10 +32,10 @@ type FileInfo struct {
 }
 
 type ProxyFileSystemNode struct {
-	ID       string `json:"id"`
-	Path     string `json:"path"`
-	Name     string `json:"name"`
-	CreateAt string `json:"create_at"`
+	ID       int       `json:"id" storm:"id,increment"`
+	Path     string    `json:"path" storm:"unique"`
+	Name     string    `json:"name"`
+	CreateAt time.Time `json:"create_at"`
 }
 
 func (self *ProxyFileSystemNode) walk(p string) (files []FileInfo) {

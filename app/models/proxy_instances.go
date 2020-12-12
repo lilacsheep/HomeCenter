@@ -7,8 +7,6 @@ import (
 	"github.com/asdine/storm/v3/q"
 )
 
-const ProxyInstanceTable = "proxy_instances"
-
 type ProxyInstance struct {
 	ID         int    `json:"id" storm:"id,increment"`
 	Protocol   int    `json:"protocol"`               // default 0(SSH)

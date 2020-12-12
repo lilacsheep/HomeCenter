@@ -1,13 +1,16 @@
 package models
 
 import (
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/encoding/gjson"
-	"github.com/gogf/gf/os/glog"
-	"github.com/gogf/gf/util/gutil"
 	"homeproxy/app/server/download"
 	"homeproxy/library/filedb"
+	"homeproxy/library/filedb2"
 	"time"
+
+	"github.com/gogf/gf/container/gmap"
+	"github.com/gogf/gf/encoding/gjson"
+	"github.com/gogf/gf/os/gfile"
+	"github.com/gogf/gf/os/glog"
+	"github.com/gogf/gf/util/gutil"
 )
 
 const (
@@ -29,21 +32,16 @@ func init() {
 			glog.Error("init collection error: %s", err.Error())
 		}
 	}
-	if err := filedb.DB.NewCollections(DownloadSettingsTable, nil); err != nil {
-		if err != filedb.ErrCollectionExist {
-			glog.Error("init collection error: %s", err.Error())
-		}
-	} else {
-		settings := DownloadSettings{
-			Path:          "download/",
-			ThreadNum:     32,
-			NotifyOpen:    false,
-			NotifyMessage: "",
-		}
-		c, _ := filedb.DB.Collection(DownloadSettingsTable)
-		_, err := c.Insert(settings)
-		if err != nil {
-			glog.Errorf("init server info error: %s", err)
+	if found, _ := filedb2.DB.KeyExists("settings", "download"); !found {
+		if !found {
+			settings := DownloadSettings{
+				Path:          gfile.Abs("download/"),
+				ThreadNum:     32,
+				NotifyOpen:    false,
+				NotifyMessage: "",
+			}
+			filedb2.DB.Set("settings", "download", &settings)
+			glog.Info("init download settings")
 		}
 	}
 
@@ -54,10 +52,6 @@ func init() {
 
 func InitDownloadManager() error {
 	var err error
-	SettingsCollection, err = filedb.DB.Collection(DownloadSettingsTable)
-	if err != nil {
-		return err
-	}
 	TasksCollection, err = filedb.DB.Collection(DownloadListTable)
 	if err != nil {
 		return err
@@ -81,8 +75,8 @@ type downloadTaskManager struct {
 }
 
 func (self *downloadTaskManager) Init() error {
-	glog.Info("init download settings")
-	err := SettingsCollection.GetFirst(self.Settings)
+	glog.Info("init download settings")	
+	err := filedb2.DB.Get("settings", "download", self.Settings)
 	if err != nil {
 		return err
 	}

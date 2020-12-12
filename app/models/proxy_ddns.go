@@ -1,22 +1,5 @@
 package models
 
-import (
-	"github.com/gogf/gf/os/glog"
-	"homeproxy/library/filedb"
-)
-
-const (
-	DDnsProviderSettingsTable string = "ddns_provider_settings"
-)
-
-func init() {
-	if err := filedb.DB.NewCollections(DDnsProviderSettingsTable, nil); err != nil {
-		if err != filedb.ErrCollectionExist {
-			glog.Error("init collection error: %s", err.Error())
-		}
-	}
-}
-
 type OperationRecord struct {
 	Date   string `json:"date"`
 	Status int    `json:"status"`
@@ -25,7 +8,7 @@ type OperationRecord struct {
 }
 
 type DDnsProviderSettings struct {
-	ID           string            `json:"id"`
+	ID           int               `json:"id" storm:"id,increment"`
 	Provider     string            `json:"provider"`
 	Domain       string            `json:"domain"`
 	SubDomain    string            `json:"sub_domain"`

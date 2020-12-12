@@ -2,11 +2,8 @@ package requests
 
 import (
 	"fmt"
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/net/ghttp"
-	"github.com/gogf/gf/os/gfile"
 	"homeproxy/app/models"
-	"homeproxy/library/filedb"
+	"homeproxy/library/filedb2"
 	"image"
 	_ "image/gif"
 	_ "image/jpeg"
@@ -15,14 +12,20 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/net/ghttp"
+	"github.com/gogf/gf/os/gfile"
 )
 
 type AllFilesystemNodesRequest struct{}
 
 func (self *AllFilesystemNodesRequest) Exec(r *ghttp.Request) (response MessageResponse) {
-	c, _ := filedb.DB.Collection(models.FilesystemNodeTable)
-	var nodes []models.ProxyFileSystemNode
-	err := c.All(&nodes)
+	var (
+		nodes []models.ProxyFileSystemNode
+		err   error
+	)
+	err = filedb2.DB.All(&nodes)
 	if err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
@@ -36,13 +39,12 @@ func NewAllFileSystemNodesRequest() *AllFilesystemNodesRequest {
 }
 
 type AllFilesystemFilesRequest struct {
-	ID string `json:"id"`
+	ID int `json:"id"`
 }
 
 func (self *AllFilesystemFilesRequest) Exec(r *ghttp.Request) (response MessageResponse) {
-	c, _ := filedb.DB.Collection(models.FilesystemNodeTable)
 	var node models.ProxyFileSystemNode
-	err := c.GetById(self.ID, &node)
+	err := filedb2.DB.One("ID", self.ID, &node)
 	if err != nil {
 		response.ErrorWithMessage(http.StatusNotFound, err.Error())
 	} else {
@@ -103,12 +105,13 @@ func NewGetFilesystemFileInfoRequest() *GetFilesystemFileInfoRequest {
 
 type DownloadFilesystemFileRequest struct {
 	Path   string `json:"path"`
-	NodeID string `json:"node_id"`
+	NodeID int    `json:"node_id"`
 }
 
 func (self *DownloadFilesystemFileRequest) Exec(r *ghttp.Request) (response MessageResponse) {
 	var node models.ProxyFileSystemNode
-	err := filedb.DB.GetById(models.FilesystemNodeTable, self.NodeID, &node)
+	err := filedb2.DB.One("ID", self.NodeID, &node)
+
 	if err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 		return
@@ -143,14 +146,13 @@ func (self *DownloadFilesystemFileRequest) Exec(r *ghttp.Request) (response Mess
 }
 
 type RemoveFilesystemFileRequest struct {
-	NodeID string `json:"node_id"`
+	NodeID int    `json:"node_id"`
 	Path   string `json:"path"`
 }
 
 func (self *RemoveFilesystemFileRequest) Exec(r *ghttp.Request) (response MessageResponse) {
-	c, _ := filedb.DB.Collection(models.FilesystemNodeTable)
 	var node models.ProxyFileSystemNode
-	err := c.GetById(self.NodeID, &node)
+	err := filedb2.DB.One("ID", self.NodeID, &node)
 	if err != nil {
 		response.ErrorWithMessage(http.StatusNotFound, err.Error())
 	} else {
@@ -174,12 +176,11 @@ type CreateFilesystemNodeRequest struct {
 }
 
 func (self *CreateFilesystemNodeRequest) Exec(r *ghttp.Request) (response MessageResponse) {
-	node := models.ProxyFileSystemNode{Path: self.Path, Name: self.Name, CreateAt: time.Now().Format("2006-01-02 15:04:05")}
-	c, _ := filedb.DB.Collection(models.FilesystemNodeTable)
-	if id, err := c.Insert(node); err != nil {
+	node := models.ProxyFileSystemNode{Path: gfile.Abs(self.Path), Name: self.Name, CreateAt: time.Now()}
+	if err := filedb2.DB.Save(&node); err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
-		response.SuccessWithDetail(id)
+		response.SuccessWithDetail(node.ID)
 	}
 	return
 }
@@ -189,13 +190,16 @@ func NewCreateFilesystemNodeRequest() *CreateFilesystemNodeRequest {
 }
 
 type RemoveFilesystemNodeRequest struct {
-	ID string `json:"id"`
+	ID int `json:"id"`
 }
 
 func (self *RemoveFilesystemNodeRequest) Exec(r *ghttp.Request) (response MessageResponse) {
-	c, _ := filedb.DB.Collection(models.FilesystemNodeTable)
-	c.RemoveById(self.ID)
-	response.Success()
+	err := filedb2.DB.DeleteStruct(&models.ProxyFileSystemNode{ID: self.ID})
+	if err != nil {
+		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
+	} else {
+		response.Success()
+	}
 	return
 }
 
@@ -204,14 +208,13 @@ func NewRemoveFilesystemNodeRequest() *RemoveFilesystemNodeRequest {
 }
 
 type CreateFilesystemDirRequest struct {
-	NodeID string `json:"node_id"`
+	NodeID int    `json:"node_id"`
 	Path   string `json:"path"`
 }
 
 func (self *CreateFilesystemDirRequest) Exec(r *ghttp.Request) (response MessageResponse) {
-	c, _ := filedb.DB.Collection(models.FilesystemNodeTable)
 	var node models.ProxyFileSystemNode
-	if err := c.GetById(self.NodeID, &node); err != nil {
+	if err := filedb2.DB.One("ID", self.NodeID, &node); err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
 		path := gfile.Join(node.Path, self.Path)
@@ -234,14 +237,13 @@ func NewCreateFilesystemDirRequest() *CreateFilesystemDirRequest {
 }
 
 type RemoveFilesystemDirRequest struct {
-	NodeID string `json:"node_id"`
+	NodeID int    `json:"node_id"`
 	Path   string `json:"path"`
 }
 
 func (self *RemoveFilesystemDirRequest) Exec(r *ghttp.Request) (response MessageResponse) {
-	c, _ := filedb.DB.Collection(models.FilesystemNodeTable)
 	var node models.ProxyFileSystemNode
-	if err := c.GetById(self.NodeID, &node); err != nil {
+	if err := filedb2.DB.One("ID", self.NodeID, &node); err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
 		path := gfile.Join(node.Path, self.Path)
@@ -280,9 +282,8 @@ func (self *UploadFilesystemFileRequest) Exec(r *ghttp.Request) (response Messag
 				response.ErrorWithMessage(http.StatusInternalServerError, "路径不存在")
 			}
 		} else {
-			c, _ := filedb.DB.Collection(models.FilesystemNodeTable)
 			var node models.ProxyFileSystemNode
-			if err := c.GetById(nodeID, &node); err != nil {
+			if err := filedb2.DB.One("ID", nodeID, &node); err != nil {
 				response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 			} else {
 				file.Save(node.Path)

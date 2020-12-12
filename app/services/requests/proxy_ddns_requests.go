@@ -2,16 +2,18 @@ package requests
 
 import (
 	"fmt"
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/net/ghttp"
-	"github.com/gogf/gf/os/gcron"
-	"github.com/shirou/gopsutil/net"
 	"homeproxy/app/models"
 	"homeproxy/app/services/tasks"
 	"homeproxy/library/ddns"
-	"homeproxy/library/filedb"
+	"homeproxy/library/filedb2"
 	"net/http"
 	"time"
+
+	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/net/ghttp"
+	"github.com/gogf/gf/os/gcron"
+	"github.com/gogf/gf/util/gconv"
+	"github.com/shirou/gopsutil/net"
 )
 
 type ChooseNetCardRequest struct{}
@@ -34,7 +36,7 @@ type GetDDnsSettingsRequest struct{}
 
 func (self *GetDDnsSettingsRequest) Exec(r *ghttp.Request) (response MessageResponse) {
 	var data []models.DDnsProviderSettings
-	err := filedb.DB.QueryAll(models.DDnsProviderSettingsTable, &data)
+	err := filedb2.DB.All(&data)
 	if err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
@@ -85,16 +87,16 @@ func (self *CreateDDnsSettingRequest) Exec(r *ghttp.Request) (response MessageRe
 		setting.DNSPodToken = self.DNSPodToken
 	}
 
-	id, err := filedb.DB.Insert(models.DDnsProviderSettingsTable, setting)
+	err := filedb2.DB.Save(&setting)
 	if err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
-		tasks.DDnsSyncTask(id)()
-		_, err = gcron.AddSingleton(setting.TimeInterval, tasks.DDnsSyncTask(id), id)
+		tasks.DDnsSyncTask(setting.ID)()
+		_, err = gcron.AddSingleton(setting.TimeInterval, tasks.DDnsSyncTask(setting.ID), gconv.String(setting.ID))
 		if err != nil {
 			response.ErrorWithMessage(http.StatusInternalServerError, "任务不存在")
 		} else {
-			response.SuccessWithDetail(id)
+			response.SuccessWithDetail(setting.ID)
 		}
 	}
 	return
@@ -141,13 +143,13 @@ func NewGetProviderRecordsRequest() *GetProviderRecordsRequest {
 }
 
 type GetSettingsInfoRequest struct {
-	ID string `json:"id"`
+	ID int `json:"id"`
 }
 
 func (self *GetSettingsInfoRequest) Exec(r *ghttp.Request) (response MessageResponse) {
 	info := g.Map{}
 	entryInfo := g.Map{"name": "", "time": "", "status": -1}
-	entry := gcron.Search(self.ID)
+	entry := gcron.Search(gconv.String(self.ID))
 	if entry != nil {
 		entryInfo["name"] = entry.Name
 		entryInfo["time"] = entry.Time.Format("2006-01-02 15:04:05")
@@ -155,7 +157,7 @@ func (self *GetSettingsInfoRequest) Exec(r *ghttp.Request) (response MessageResp
 	}
 	info["entry"] = entryInfo
 	var setting models.DDnsProviderSettings
-	err := filedb.DB.GetById(models.DDnsProviderSettingsTable, self.ID, &setting)
+	err := filedb2.DB.One("ID", self.ID, &setting)
 	if err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
@@ -170,21 +172,20 @@ func NewGetSettingsInfoRequest() *GetSettingsInfoRequest {
 }
 
 type StopRoleTaskRequest struct {
-	ID string `json:"id"`
+	ID int `json:"id"`
 }
 
 func (self *StopRoleTaskRequest) Exec(r *ghttp.Request) (response MessageResponse) {
-	entry := gcron.Search(self.ID)
+	entry := gcron.Search(gconv.String(self.ID))
 	if entry == nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, "任务不存在")
 	} else {
 		var role models.DDnsProviderSettings
-		err := filedb.DB.GetById(models.DDnsProviderSettingsTable, self.ID, &role)
+		err := filedb2.DB.One("ID", self.ID, &role)
 		if err != nil {
 			response.ErrorWithMessage(http.StatusInternalServerError, "任务不存在")
 		} else {
-			role.Status = false
-			err := filedb.DB.UpdateById(models.DDnsProviderSettingsTable, self.ID, role)
+			err := filedb2.DB.UpdateField(&role, "Status", false)
 			if err != nil {
 				response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 			}
@@ -200,23 +201,22 @@ func NewStopRoleTaskRequest() *StopRoleTaskRequest {
 }
 
 type StartRoleTaskRequest struct {
-	ID string `json:"id"`
+	ID int `json:"id"`
 }
 
 func (self *StartRoleTaskRequest) Exec(r *ghttp.Request) (response MessageResponse) {
-	entry := gcron.Search(self.ID)
+	entry := gcron.Search(gconv.String(self.ID))
 	if entry == nil {
 		var role models.DDnsProviderSettings
-		err := filedb.DB.GetById(models.DDnsProviderSettingsTable, self.ID, &role)
+		err := filedb2.DB.One("ID", self.ID, &role)
 		if err != nil {
 			response.ErrorWithMessage(http.StatusInternalServerError, "任务不存在")
 		} else {
-			_, err = gcron.AddSingleton(role.TimeInterval, tasks.DDnsSyncTask(role.ID), role.ID)
+			_, err = gcron.AddSingleton(role.TimeInterval, tasks.DDnsSyncTask(role.ID), gconv.String(role.ID))
 			if err != nil {
 				response.ErrorWithMessage(http.StatusInternalServerError, "任务不存在")
 			} else {
-				role.Status = true
-				err := filedb.DB.UpdateById(models.DDnsProviderSettingsTable, self.ID, role)
+				err := filedb2.DB.UpdateField(&role, "Status", true)
 				if err != nil {
 					response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 				} else {
@@ -236,15 +236,15 @@ func NewStartRoleTaskRequest() *StartRoleTaskRequest {
 }
 
 type DeleteSettingRequest struct {
-	ID string
+	ID int `json:"id"`
 }
 
 func (self *DeleteSettingRequest) Exec(r *ghttp.Request) (response MessageResponse) {
-	entry := gcron.Search(self.ID)
+	entry := gcron.Search(gconv.String(self.ID))
 	if entry != nil {
 		entry.Close()
 	}
-	err := filedb.DB.RemoveByID(models.DDnsProviderSettingsTable, self.ID)
+	err := filedb2.DB.DeleteStruct(&models.DDnsProviderSettings{ID: self.ID})
 	if err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
@@ -258,20 +258,27 @@ func NewDeleteSettingRequest() *DeleteSettingRequest {
 }
 
 type RefreshSettingRequest struct {
-	ID           string `json:"id"`
+	ID           int    `json:"id"`
 	TimeInterval string `json:"time_interval"`
 }
 
 func (self *RefreshSettingRequest) Exec(r *ghttp.Request) (response MessageResponse) {
-	entry := gcron.Search(self.ID)
+	entry := gcron.Search(gconv.String(self.ID))
 	if entry != nil {
 		entry.Close()
 	}
-	err := filedb.DB.UpdateById(models.DDnsProviderSettingsTable, self.ID, g.Map{"time_interval": self.TimeInterval})
+	var setting models.DDnsProviderSettings
+	err := filedb2.DB.One("ID", self.ID, &setting)
+	if err != nil {
+		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
+		return
+	}
+	setting.TimeInterval = self.TimeInterval
+	err = filedb2.DB.UpdateField(&setting, "TimeInterval", self.TimeInterval)
 	if err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
-		_, err = gcron.AddSingleton(self.TimeInterval, tasks.DDnsSyncTask(self.ID), self.ID)
+		_, err = gcron.AddSingleton(self.TimeInterval, tasks.DDnsSyncTask(self.ID), gconv.String(self.ID))
 		if err != nil {
 			response.ErrorWithMessage(http.StatusInternalServerError, "添加任务失败")
 		} else {
