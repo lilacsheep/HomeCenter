@@ -16,7 +16,7 @@ type StartProxyServerRequest struct{}
 func (self *StartProxyServerRequest) Exec(r *ghttp.Request) (response MessageResponse) {
 	err := server.Mallory.Start()
 	if err != nil {
-		response.ErrorWithMessage(http.StatusInternalServerError, err)
+		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
 		response.Success()
 	}
@@ -57,7 +57,6 @@ func (self *UpdateProxyServerRequest) Exec(r *ghttp.Request) (response MessageRe
 	if err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err)
 	} else {
-		data := g.Map{}
 		if self.Name != "" && server2.Name != self.Name {
 			server2.Name = self.Name
 		}
@@ -71,23 +70,23 @@ func (self *UpdateProxyServerRequest) Exec(r *ghttp.Request) (response MessageRe
 			server2.Password = self.Password
 		}
 		if self.Status != server2.Status {
-			server2.Status = self.Status
 			if self.Status {
 				server.Mallory.SetBalance(1)
 			} else {
 				server.Mallory.SetBalance(0)
 			}
+			server2.Status = self.Status
 		}
 		if self.AutoProxy != server2.AutoProxy {
-			data["auto_proxy"] = self.AutoProxy
+			server2.AutoProxy = self.AutoProxy
 		}
 		if self.AllProxy != server2.AllProxy {
-			data["all_proxy"] = self.AllProxy
 			if server.Mallory.Status {
 				server.Mallory.ProxyHandler.AllProxy = self.AllProxy
 			}
+			server2.AllProxy = self.AllProxy
 		}
-		err := filedb2.DB.Update(server2)
+		err := filedb2.DB.Set("settings", "server", server2)
 		if err != nil {
 			response.ErrorWithMessage(http.StatusServiceUnavailable, err.Error())
 		} else {

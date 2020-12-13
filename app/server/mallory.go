@@ -42,7 +42,10 @@ func init() {
 	if err != nil {
 		if err == storm.ErrNotFound {
 			server = DefaultServer()
-			filedb2.DB.Save(server)
+			err = filedb2.DB.Set("settings", "server", server)
+			if err != nil {
+				panic(err)
+			}
 		} else {
 			panic(err)
 		}
@@ -92,10 +95,8 @@ func (self *MalloryManger) Init() error {
 	}
 
 	// get enable instances
-	instances, err := models.GetEnableProxyInstances()
-	if err != nil {
-		return err
-	}
+	instances, _ := models.GetEnableProxyInstances()
+
 	// set handler setting
 	self.ProxyHandler.Port = info.Port
 	self.ProxyHandler.Username = info.Username

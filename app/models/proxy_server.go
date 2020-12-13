@@ -4,8 +4,6 @@ import (
 	"homeproxy/library/filedb2"
 )
 
-const ProxyServerTable = "proxy_server"
-
 type ProxyServer struct {
 	ID        int    `json:"id" storm:"id,increment"`
 	Name      string `json:"name"`
@@ -20,6 +18,6 @@ type ProxyServer struct {
 
 func GetProxyServer() (*ProxyServer, error) {
 	server := ProxyServer{}
-	err := filedb2.DB.One("Name", "default", &server)
+	err := filedb2.DB.Get("settings", "server", &server)
 	return &server, err
 }
