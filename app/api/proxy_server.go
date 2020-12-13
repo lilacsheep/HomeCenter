@@ -31,7 +31,7 @@ func (self *ProxyServerApi) Info(r *ghttp.Request) {
 
 func (self *ProxyServerApi) Monitor(r *ghttp.Request) {
 	request := requests.NewQueryProxyMonitorInfoRequest()
-	self.DoRequest(request, r)
+	self.DoRequestValid(request, r)
 }
 
 func (self *ProxyServerApi) Logs(r *ghttp.Request) {

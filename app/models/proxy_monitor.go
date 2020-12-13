@@ -1,27 +1,11 @@
 package models
 
 import (
-	"github.com/gogf/gf/os/glog"
-	"homeproxy/library/filedb"
+	"homeproxy/library/filedb2"
 )
-
-const (
-	ProxyMonitorTable = "proxy_monitor_info"
-)
-
-func init() {
-	settings := filedb.DefaultCollectionSettings()
-	settings.AutoDump = false
-	settings.MaxRecord = 10
-	if err := filedb.DB.NewCollections(ProxyMonitorTable, settings); err != nil {
-		if err != filedb.ErrCollectionExist {
-			glog.Error("init collection error: %s", err.Error())
-		}
-	}
-}
 
 type ProxyMonitorInfo struct {
-	ID          string  `json:"id"`
+	ID          int     `json:"id" storm:"id,increment"`
 	CpuPercent  float64 `json:"cpu_percent"`
 	MemorySize  uint64  `json:"memory_size"`
 	ReadBytes   uint64  `json:"read_bytes"`
@@ -33,7 +17,6 @@ type ProxyMonitorInfo struct {
 }
 
 func GetAllProxyMonitorInfo() (info []ProxyMonitorInfo, err error) {
-	c, _ := filedb.DB.Collection(ProxyMonitorTable)
-	err = c.All(&info)
+	filedb2.DB.All(&info)
 	return
 }

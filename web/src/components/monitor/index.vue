@@ -83,7 +83,7 @@ export default {
     },
     get_info () {
       let that = this
-      this.$api.get("/proxy/server/monitor").then(function (response) {
+      this.$api.get("/proxy/server/monitor", {limit: 1}).then(function (response) {
         if (that.memoryChart.rows.length > 120) {
           that.memoryChart.rows.shift()
           that.cpuChart.rows.shift()
@@ -92,7 +92,7 @@ export default {
         }
         let item = response.detail.pop()
         let time = item.create_at.split(" ")[1]
-
+        console.log(time)
         that.memoryChart.rows.push({"create_at": time, "memory_size": item.memory_size})
         that.cpuChart.rows.push({"create_at": time, "cpu_percent": item.cpu_percent})
         that.connectionsChart.rows.push({"create_at": time, "connections": item.connections})
@@ -105,7 +105,7 @@ export default {
     },
     refresh_info () {
       let that = this
-      this.$api.get("/proxy/server/monitor").then(function (response) {
+      this.$api.get("/proxy/server/monitor",  {limit: 1}).then(function (response) {
         response.detail.forEach(function (item) {
           let time = item.create_at.split(" ")[1]
           that.memoryChart.rows.push({"create_at": time, "memory_size": item.memory_size})

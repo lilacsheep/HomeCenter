@@ -1,14 +1,16 @@
 package tasks
 
 import (
-	"github.com/gogf/gf/os/gcron"
-	"github.com/gogf/gf/util/gconv"
-	"github.com/shirou/gopsutil/process"
 	"homeproxy/app/models"
-	"homeproxy/library/filedb"
+	"homeproxy/library/filedb2"
 	"os"
 	"runtime"
 	"time"
+
+	"github.com/gogf/gf/os/gcron"
+	"github.com/gogf/gf/os/glog"
+	"github.com/gogf/gf/util/gconv"
+	"github.com/shirou/gopsutil/process"
 )
 
 var (
@@ -35,7 +37,6 @@ func QueryProxyMonitorInfoTask() {
 	mainProxy, _ = process.NewProcess(gconv.Int32(os.Getpid()))
 
 	if mainProxy != nil {
-		c, _ := filedb.DB.Collection(models.ProxyMonitorTable)
 		data := models.ProxyMonitorInfo{CreateAt: time.Now().Format("2006-01-02 15:04:05")}
 		data.CpuPercent, _ = mainProxy.CPUPercent()
 		if v, err := mainProxy.MemoryInfo(); err == nil {
@@ -57,7 +58,10 @@ func QueryProxyMonitorInfoTask() {
 			data.BytesSent = NowInfo.BytesSent - History.BytesSent
 			data.WriteBytes = NowInfo.WriteBytes - History.WriteBytes
 			data.ReadBytes = NowInfo.ReadBytes - History.ReadBytes
-			c.Insert(data)
+			err := filedb2.DB.Save(&data)
+			if err != nil {
+				glog.Errorf("save monitor info error: %s", err.Error())
+			}
 			History = NowInfo
 		} else {
 			History = NowInfo
