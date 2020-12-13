@@ -76,7 +76,11 @@ func (self *QueryAllInstanceRequest) Exec(r *ghttp.Request) (response MessageRes
 	offset, limit := self.Pagination()
 	err = filedb2.DB.Select().Limit(limit).Skip(offset).Find(&instances)
 	if err != nil {
-		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
+		if err == storm.ErrNotFound {
+			response.SuccessWithDetail([]models.ProxyInstance{})
+		} else {
+			response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
+		}
 	} else {
 		response.SuccessWithDetail(instances)
 	}

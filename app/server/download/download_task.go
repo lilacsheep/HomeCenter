@@ -1,27 +1,30 @@
 package download
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
+	"io"
+	url2 "net/url"
+	"os"
+	"sync"
+	"time"
+
 	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/crypto/gmd5"
 	"github.com/gogf/gf/net/ghttp"
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/os/glog"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/gogf/gf/util/gutil"
-	url2 "net/url"
-	"os"
-	"sync"
-	"time"
 )
 
 type Task struct {
-	ID          string           `json:"id"`
-	Url         string           `json:"url"`
+	ID          int              `json:"id" storm:"id,increment"`
+	Url         string           `json:"url" storm:"unique"`
 	FileName    string           `json:"file_name"`
 	FilePath    string           `json:"file_path"`
 	Multi       bool             `json:"multi"`  // 多线程下载
-	Status      int              `json:"status"` // 0 暂停 1 等待中 2 下载中 3 完成 99 失败
+	Status      uint             `json:"status"` // 1 暂停 2 等待中 3 下载中 4 完成 99 失败
 	Chunks      map[int64]*Chunk `json:"chunks"`
 	TotalSize   int64            `json:"total_size"`
 	Progress    string           `json:"progress"`
@@ -51,7 +54,7 @@ func (self *Task) singleDownload() {
 	if response, err := cli.Get(self.Url); err != nil {
 		glog.Errorf("init url err: %s", err.Error())
 	} else {
-		self.Status = 2
+		self.Status = 3
 		defer response.Body.Close()
 		var buf [512]byte
 		var end = false
@@ -92,8 +95,7 @@ func (self *Task) Cancel() {
 			return true
 		})
 	}
-
-	self.Status = 0
+	self.Status = 1
 }
 
 func (self *Task) checkChunk() (int64, int64) {
@@ -131,7 +133,7 @@ func (self *Task) sync() {
 		self.Progress = fmt.Sprintf("%.2f", (float64(self.DoneSize)/float64(self.TotalSize))*100)
 		self.Speed = 0
 		if !self.Canceled {
-			self.Status = 3
+			self.Status = 4
 		}
 	}()
 }
@@ -156,7 +158,7 @@ func (self *Task) Start() {
 		for k, v := range self.Chunks {
 			d.Set(k, v)
 		}
-		self.Status = 2
+		self.Status = 3
 		d.IteratorAsc(func(key, value interface{}) bool {
 			wg.Add(1)
 			go func() {
@@ -176,7 +178,15 @@ func (self *Task) Start() {
 	_ = self.fileHandler.Close()
 
 	if !self.Canceled {
-		self.MD5, _ = gmd5.EncryptFile(gfile.Join(self.FilePath, self.FileName))
+		h := sha256.New()
+		f, _ := gfile.Open(gfile.Join(self.FilePath, self.FileName))
+		defer f.Close()
+		_, err := io.Copy(h, f)
+		if err != nil {
+			glog.Errorf("check sum error: %s", err.Error())
+		} else {
+			self.MD5 = hex.EncodeToString(h.Sum(nil))
+		}
 	}
 }
 
@@ -205,5 +215,6 @@ func NewDownLoadTask(url string, threadNum int64, path string) (*Task, error) {
 		FilePath:  path,
 		ThreadNum: threadNum,
 		Chunks:    chunks,
+		Status:    1,
 	}, nil
 }

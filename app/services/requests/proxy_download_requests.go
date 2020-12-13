@@ -42,7 +42,7 @@ func NewQueryDownloadTaskRequest() *QueryDownloadTaskRequest {
 }
 
 type RemoveDownloadTaskRequest struct {
-	TaskId string `json:"id"`
+	TaskId int `json:"id"`
 }
 
 func (self *RemoveDownloadTaskRequest) Exec(r *ghttp.Request) (response MessageResponse) {
@@ -56,7 +56,7 @@ func NewRemoveDownloadTaskRequest() *RemoveDownloadTaskRequest {
 }
 
 type CancelDownloadTaskRequest struct {
-	TaskId string `json:"id"`
+	TaskId int `json:"id"`
 }
 
 func (self *CancelDownloadTaskRequest) Exec(r *ghttp.Request) (response MessageResponse) {
@@ -70,7 +70,7 @@ func NewCancelDownloadTaskRequest() *CancelDownloadTaskRequest {
 }
 
 type StartDownloadTaskRequest struct {
-	TaskId string `json:"id"`
+	TaskId int `json:"id"`
 }
 
 func (self *StartDownloadTaskRequest) Exec(r *ghttp.Request) (response MessageResponse) {

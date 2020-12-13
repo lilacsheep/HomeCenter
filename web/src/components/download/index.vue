@@ -19,10 +19,10 @@
             </el-table-column>
             <el-table-column prop="status" label="状态" width="80">
               <template slot-scope="scope">
-                <el-tag v-if="scope.row.status == 0" size="mini">暂停</el-tag>
-                <el-tag v-else-if="scope.row.status == 1" size="mini">等待中</el-tag>
-                <el-tag v-else-if="scope.row.status == 2" size="mini">下载中</el-tag>
-                <el-tag v-else-if="scope.row.status == 3" size="mini">已完成</el-tag>
+                <el-tag v-if="scope.row.status == 1" size="mini">暂停</el-tag>
+                <el-tag v-else-if="scope.row.status == 2" size="mini">等待中</el-tag>
+                <el-tag v-else-if="scope.row.status == 3" size="mini">下载中</el-tag>
+                <el-tag v-else-if="scope.row.status == 4" size="mini">已完成</el-tag>
                 <el-tag v-else-if="scope.row.status == 99" size="mini">错误</el-tag>
               </template>
             </el-table-column>
@@ -34,16 +34,16 @@
             </el-table-column>
             <el-table-column prop="speed" label="速度">
               <template slot-scope="scope">
-                <span v-if="scope.row.status == 2">{{scope.row.speed | diskSize}}/秒</span>
+                <span v-if="scope.row.status == 3">{{scope.row.speed | diskSize}}/秒</span>
                 <span v-else>-</span>
               </template>
             </el-table-column>
             <el-table-column label="操作" fixed="right" width="100">
               <template slot-scope="scope">
-                <el-popconfirm v-if="scope.row.status == 0" title="是否继续该任务？" @onConfirm="start_task(scope.row)">
+                <el-popconfirm v-if="scope.row.status == 1" title="是否继续该任务？" @onConfirm="start_task(scope.row)">
                   <el-button slot="reference" style="color: green" type="text" size="mini" icon="el-icon-caret-right"></el-button>
                 </el-popconfirm>
-                <el-popconfirm v-if="scope.row.status == 2" title="是否暂停该任务？" @onConfirm="cancel_task(scope.row)">
+                <el-popconfirm v-if="scope.row.status == 3" title="是否暂停该任务？" @onConfirm="cancel_task(scope.row)">
                   <el-button slot="reference" style="color: red" type="text" size="mini" icon="el-icon-switch-button"></el-button>
                 </el-popconfirm>
                 <el-popconfirm title="是否删除该任务？" @onConfirm="remove_task(scope.row)">
@@ -63,14 +63,14 @@
             </el-table-column>
             <el-table-column prop="status" label="状态"  width="80">
               <template slot-scope="scope">
-                <el-tag v-if="scope.row.status == 0" size="mini">暂停</el-tag>
-                <el-tag v-else-if="scope.row.status == 1" size="mini">等待中</el-tag>
-                <el-tag v-else-if="scope.row.status == 2" size="mini">下载中</el-tag>
-                <el-tag v-else-if="scope.row.status == 3" size="mini">已完成</el-tag>
+                <el-tag v-if="scope.row.status == 1" size="mini">暂停</el-tag>
+                <el-tag v-else-if="scope.row.status == 2" size="mini">等待中</el-tag>
+                <el-tag v-else-if="scope.row.status == 3" size="mini">下载中</el-tag>
+                <el-tag v-else-if="scope.row.status == 4" size="mini">已完成</el-tag>
                 <el-tag v-else-if="scope.row.status == 99" size="mini">错误</el-tag>
               </template>
             </el-table-column>
-            <el-table-column prop="md5" label="MD5"></el-table-column>
+            <el-table-column prop="md5" label="SH256"></el-table-column>
 
             <el-table-column label="操作" fixed="right" width="80">
               <template slot-scope="scope">
@@ -200,7 +200,7 @@ export default {
         that.download.tasks.not_finished = []
         if (response.detail) {
           response.detail.forEach(function (item) {
-            if (item.status == 3) {
+            if (item.status == 4) {
               that.download.tasks.done.push(item)
             } else {
               that.download.tasks.not_finished.push(item)

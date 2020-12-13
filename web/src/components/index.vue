@@ -22,6 +22,10 @@
                 <span v-else-if="scope.row.key === 'instances'">
                   <el-tag v-for="(item, i) in scope.row.value" size="mini" type="danger" effect="plain" :key="i">{{item.address}}</el-tag>
                 </span>
+                <span v-else-if="scope.row.key === 'auto_start'">
+                  <el-tag v-if="scope.row.value" type="success" size="mini" effect="plain">开机自启</el-tag>
+                  <el-tag v-else size="mini" type="danger" effect="plain">手动启动</el-tag>
+                </span>
                 <span v-else>{{scope.row.value}}</span>
               </template>
             </el-table-column>
