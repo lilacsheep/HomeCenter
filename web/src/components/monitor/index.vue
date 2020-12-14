@@ -3,8 +3,9 @@
     <el-col :span="24">
       <span style="float: right;">
         刷新间隔: 
-        <el-select size="small" v-model="timesleep" placeholder="请选择" style="margin-left: 10px" @change="monitor_interval">
+        <el-select size="small" v-model="timesleep" placeholder="请选择" style="margin-left: 10px" @change="monitor_interval">          
           <el-option label="1秒" value="1000"></el-option>
+          <el-option label="3秒" value="3000"></el-option>
           <el-option label="10秒" value="10000"></el-option>
           <el-option label="30秒" value="30000"></el-option>
           <el-option label="1分钟" value="60000"></el-option>
@@ -52,7 +53,7 @@
 export default {
   data() {
     return {
-      timesleep: '1000',
+      timesleep: '3000',
       ChartSettings: {
         yAxisType: ['0.0 b']
       },
@@ -127,7 +128,7 @@ export default {
   },
   created: function () {
     this.refresh_info()
-    this.timer = setInterval(this.get_info, 1000)
+    this.timer = setInterval(this.get_info, 3000)
   },
   beforeDestroy () {
     clearInterval(this.timer)

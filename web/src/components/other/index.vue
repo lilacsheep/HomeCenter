@@ -107,7 +107,7 @@
               <el-select size="small" v-model="ddns.setting.info.setting.time_interval" @change="setting_change" placeholder="请选择">
                 <el-option label="每小时" value="@hourly"></el-option>
                 <el-option label="半小时" value="@every 30m"></el-option>
-                <el-option label="每天" value="@every 1d"></el-option>
+                <el-option label="每天" value="@every 24h"></el-option>
               </el-select>
             </td>
           </tr>
