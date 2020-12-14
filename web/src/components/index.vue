@@ -563,12 +563,12 @@ export default {
     refresh_roles (page, limit) {
       let that = this
       let params = {page: page, limit: limit}
-      if (this.roles.logs.filter != "") {
-        params["filter"] = this.roles.logs.filter
-      }
+      // if (this.roles.logs.filter != "") {
+      //   params["filter"] = this.roles.logs.filter
+      // }
       this.$api.get("/proxy/roles", params).then(function (response) {
         that.rolesData = response.detail
-        that.roles.logs.pagination.total = response.hasOwnProperty("count") ? response.count : 0
+        // that.roles.logs.pagination.total = response.hasOwnProperty("count") ? response.count : 0
       })
     },
     filter_status(value, row) {

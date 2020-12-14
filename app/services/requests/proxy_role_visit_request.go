@@ -41,6 +41,8 @@ func (self *GetRoleAllVisitRequest) Exec(r *ghttp.Request) (response MessageResp
 	} else {
 		query = filedb2.DB.Select()
 	}
+	c, _ := query.Count(&mallory.ProxyRoleAnalysis{})
+
 	err := query.Skip(offset).Limit(limit).Find(&data)
 	if err != nil {
 		if err == storm.ErrNotFound {
@@ -49,7 +51,6 @@ func (self *GetRoleAllVisitRequest) Exec(r *ghttp.Request) (response MessageResp
 			response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 		}
 	} else {
-		c, _ := query.Count(&data)
 		response.DataTable(data, c)
 	}
 	return
