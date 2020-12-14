@@ -47,7 +47,7 @@ func (self *DomainErrorEvent) DoEvent() error {
 	var data = ProxyRoleAnalysis{}
 	err := filedb2.DB.One("Domain", domain, &data)
 	if err != nil {
-		if err == storm.ErrNotFound {
+		if err != storm.ErrNotFound {
 			return err
 		} else {
 			data.Domain = domain
