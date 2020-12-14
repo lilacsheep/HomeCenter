@@ -49,7 +49,8 @@ func (self *GetRoleAllVisitRequest) Exec(r *ghttp.Request) (response MessageResp
 			response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 		}
 	} else {
-		response.DataTable(data, len(data))
+		c, _ := query.Count(&data)
+		response.DataTable(data, c)
 	}
 	return
 }
