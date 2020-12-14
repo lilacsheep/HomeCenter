@@ -36,7 +36,7 @@ type ProxyRole struct {
 
 type ProxyRoleAnalysis struct {
 	ID     int    `json:"id" storm:"id,increment"`
-	Domain string `json:"domain"`
+	Domain string `json:"domain" storm:"unique"`
 	Times  int    `json:"times"`
 	Error  string `json:"error"`
 }

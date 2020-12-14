@@ -31,7 +31,7 @@ func (self *ProxyRoleApi) All(r *ghttp.Request) {
 
 func (self *ProxyRoleApi) RoleVisitLogs(r *ghttp.Request) {
 	request := requests.NewGetRoleAllVisitRequest()
-	self.DoRequest(request, r)
+	self.DoRequestValid(request, r)
 }
 
 func (self *ProxyRoleApi) AddLogToRole(r *ghttp.Request) {

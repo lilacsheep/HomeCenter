@@ -1,18 +1,56 @@
 package requests
 
 import (
-	"github.com/gogf/gf/net/ghttp"
-	"homeproxy/app/models"
 	"homeproxy/library/filedb2"
 	"homeproxy/library/mallory"
 	"net/http"
+
+	"github.com/asdine/storm/v3"
+	"github.com/asdine/storm/v3/q"
+	"github.com/gogf/gf/net/ghttp"
 )
 
-type GetRoleAllVisitRequest struct{}
+type GetRoleAllVisitRequest struct {
+	Page   int    `json:"page"`
+	Limit  int    `json:"limit"`
+	Filter string `json:"filter"`
+}
+
+func (self *GetRoleAllVisitRequest) pagination() (int, int) {
+	var (
+		limit  = 10
+		page   = 1
+		offset = 0
+	)
+	if self.Limit != 0 {
+		limit = self.Limit
+	}
+	if self.Page != 0 {
+		page = self.Page
+	}
+	offset = (page - 1) * limit
+	return offset, limit
+}
 
 func (self *GetRoleAllVisitRequest) Exec(r *ghttp.Request) (response MessageResponse) {
-	data := models.AllVisitLogs()
-	response.DataTable(data, len(data))
+	var data []mallory.ProxyRoleAnalysis
+	offset, limit := self.pagination()
+	var query storm.Query
+	if self.Filter != "" {
+		query = filedb2.DB.Select(q.Re("Domain", self.Filter))
+	} else {
+		query = filedb2.DB.Select()
+	}
+	err := query.Skip(offset).Limit(limit).Find(&data)
+	if err != nil {
+		if err == storm.ErrNotFound {
+			response.DataTable([]mallory.ProxyVisitLog{}, 0)
+		} else {
+			response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
+		}
+	} else {
+		response.DataTable(data, len(data))
+	}
 	return
 }
 

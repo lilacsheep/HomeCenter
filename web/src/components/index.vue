@@ -88,6 +88,9 @@
         </el-col>
       </el-tab-pane>
       <el-tab-pane label="访问记录">
+        <el-input placeholder="请输入内容" v-model="roles.logs.filter" style="width: 300px;float: right;margin-bottom: 10px;">
+          <el-button @click="submit_filter" slot="append" icon="el-icon-search"></el-button>
+        </el-input>
         <el-table :data="roleLogs" stripe border size="mini">
           <el-table-column prop="domain" label="站点"></el-table-column>
           <el-table-column prop="error"  :show-overflow-tooltip="true" label="错误"></el-table-column>
@@ -100,6 +103,7 @@
             </template>
           </el-table-column>
         </el-table>
+        <el-pagination class="pagination" background layout="prev, pager, next" :total="roles.logs.pagination.total" @current-change="role_pagination_change"></el-pagination>
       </el-tab-pane>
       <el-tab-pane label="规则配置">
         <el-button-group>
@@ -305,6 +309,14 @@ export default {
       instanceData: [],
       roleLogs: [],
       roles: {
+        logs:{
+          filter: undefined,
+          pagination: {
+            total: 1000,
+            page: 1,
+            limit: 10
+          }
+        },
         filter: undefined,
         create: {
           visit: false,
@@ -333,7 +345,7 @@ export default {
         this.refresh_instances()
         this.refresh_server()
       } else if (tab.index === '1') {
-        this.refresh_visit_logs()
+        this.refresh_visit_logs(this.roles.logs.pagination.page, this.roles.logs.pagination.limit)
       } else if (tab.index === '2') {
         this.refresh_roles()
       }
@@ -432,10 +444,15 @@ export default {
         that.instanceData = response.detail
       })
     },
-    refresh_visit_logs () {
+    refresh_visit_logs (page, limit) {
       let that = this
-      this.$api.get("/proxy/logs").then(function (response) {
+      let params = {limit: limit, page: page}
+      if (this.roles.logs.filter != "") {
+        params["filter"] = this.roles.logs.filter
+      }
+      this.$api.get("/proxy/logs", params).then(function (response) {
         that.roleLogs = response.detail
+        that.roles.logs.pagination.total = response.hasOwnProperty("count") ? response.count : 0
       })
     },
     add_log_to_role(row) {
@@ -446,7 +463,7 @@ export default {
           message: '添加规则成功',
           type: 'success'
         });
-        that.refresh_visit_logs()
+        that.refresh_visit_logs(this.roles.logs.pagination.page, this.roles.logs.pagination.limit)
       }).catch(function (response) {
         that.$notify({
           title: '添加失败',
@@ -514,7 +531,7 @@ export default {
       this.$api.post('/proxy/role/add', this.roles.create.form).then(function (response) {
         that.roles.create.visit = false
         that.$message({message: '修改成功', type: 'success'})
-        that.refresh_roles()
+        that.refresh_roles(that.roles.logs.pagination.page, that.roles.logs.pagination.limit)
       }).catch(function (response) {
         that.$message.error({message: response.message, type: 'error'})
       })
@@ -523,7 +540,7 @@ export default {
       let that = this
       this.$api.post('/proxy/role/remove', {id: item.id}).then(function (response) {
         that.$message({message: '删除成功', type: 'success'})
-        that.refresh_roles()
+        that.refresh_roles(that.roles.logs.pagination.page, that.roles.logs.pagination.limit)
       }).catch(function (response) {
         that.$message.error({message: response.message, type: 'error'})
       })
@@ -537,16 +554,21 @@ export default {
       let that = this
       this.$api.post("/proxy/role/change", this.roles.change.form).then(function (response) {
         that.$message({message: '修改成功', type: 'success'})
-        that.refresh_roles()
+        that.refresh_roles(that.roles.logs.pagination.page, that.roles.logs.pagination.limit)
       }).catch(function (response) {
         that.$message({message: '修改失败', type: 'error'})
       })
       this.roles.change.visit = false
     },
-    refresh_roles () {
+    refresh_roles (page, limit) {
       let that = this
-      this.$api.get("/proxy/roles").then(function (response) {
+      let params = {page: page, limit: limit}
+      if (this.roles.logs.filter != "") {
+        params["filter"] = this.roles.logs.filter
+      }
+      this.$api.get("/proxy/roles", params).then(function (response) {
         that.rolesData = response.detail
+        that.roles.logs.pagination.total = response.hasOwnProperty("count") ? response.count : 0
       })
     },
     filter_status(value, row) {
@@ -575,14 +597,20 @@ export default {
         })
       }
       return name
+    },
+    role_pagination_change(value) {
+      this.roles.logs.pagination.page = value
+      this.refresh_visit_logs(this.roles.logs.pagination.page, this.roles.logs.pagination.limit)
+    },
+    submit_filter() {
+      this.refresh_visit_logs(this.roles.logs.pagination.page, this.roles.logs.pagination.limit)
     }
-  
   },
   created: function () {
     this.refresh_instances()
     this.refresh_server()
-    this.refresh_roles()
-    this.refresh_visit_logs()
+    this.refresh_roles(this.roles.logs.pagination.page, this.roles.logs.pagination.limit)
+    this.refresh_visit_logs(this.roles.logs.pagination.page, this.roles.logs.pagination.limit)
   },
   mounted: function () {}
 };
@@ -611,5 +639,10 @@ export default {
 
 .el-divider--horizontal {
   margin: 3px 0;
+}
+
+.pagination {
+  margin-top: 10px;
+  float: right;
 }
 </style>
