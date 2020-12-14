@@ -13,9 +13,9 @@
       <el-button size="small" type="warning" @click="open_create_dir_dialog" plain>新增目录</el-button>
     </el-col>
     
-    <el-col :span="4" v-for="(node, index) in nodes" :key="index">
+    <el-col :span="3" v-for="(node, index) in nodes" :key="index">
       <el-card style="margin-top: 15px;" :body-style="{ padding: '0' }">
-        <img :src="icon.folder" style="margin: 0 5px" @click="select_node(node)">
+        <img :src="icon.folder" style="margin: 0" @click="select_node(node)">
         <div style="padding: 0 5px;">
           <span @click="select_node(node)">{{node.name}}</span>
           <el-dropdown style="float: right;">

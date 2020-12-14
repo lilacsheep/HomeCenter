@@ -42,13 +42,13 @@ html body #app{
 }
 
 .el-menu {
-  width: 960px;
+  width: 1200px;
   margin: 0 auto;
 }
 
 .el-main {
   height: 100%;
-  width: 960px;
+  width: 1200px;
   margin: 0 auto;
 }
 
