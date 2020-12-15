@@ -82,7 +82,10 @@ func (self *MalloryManger) Init() error {
 	// init http server
 	self.HttpServer = &http.Server{}
 	self.HttpServer.SetKeepAlivesEnabled(false)
-
+	if info.DNSAddr == "" {
+		info.DNSAddr = "8.8.8.8"
+		filedb2.DB.Set("settings", "server", info)
+	}
 	// init Handler
 	self.ProxyHandler = &mallory.Server{
 		Direct:       mallory.NewDirect(30*time.Second, info.DNSAddr),
