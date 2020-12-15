@@ -3,8 +3,10 @@ package mallory
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"fmt"
+	"net"
 	"net/http"
 	"strings"
 	"sync"
@@ -73,6 +75,8 @@ type Server struct {
 	mutex sync.RWMutex
 	// ssh instances
 	Instances *gmap.TreeMap
+	// custom dns
+	DNS       *net.Resolver
 }
 
 func (self *Server) UrlSplit(url string) (string, string) {
@@ -225,6 +229,14 @@ func (self *Server) BasicAuth(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusUnauthorized)
 }
 
+func (self *Server) lookup(addr string) {
+	glog.Debugf("lookup %s", addr)
+	ips, _ := self.DNS.LookupHost(context.Background(), addr)
+	for _, ip := range ips {
+		glog.Info(ip)
+	}
+}
+
 func (self *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if self.Black(r.URL.Host) {
 		return
@@ -241,9 +253,8 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		t, instanceId = self.Blocked(r.URL.Host)
 		use = t && r.URL.Host != "" && self.Instances.Size() != 0
 	}
-
-	glog.Infof("%s", r.RemoteAddr)
-	glog.Infof("[%s] %d %s %s %s", AccessType(use), self.Mode, r.Method, r.RequestURI, r.Proto)
+	self.lookup(r.URL.Hostname())
+	glog.Debugf("[%s] %d %s %s %s", AccessType(use), self.Mode, r.Method, r.RequestURI, r.Proto)
 	// add visit log
 	visitLogEvent(r.RemoteAddr, r.URL.Hostname())
 	if use {

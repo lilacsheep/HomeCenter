@@ -33,6 +33,7 @@ func DefaultServer() *models.ProxyServer {
 		Status:    true,
 		AutoProxy: false,
 		AutoStart: true,
+		DNSAddr:   "8.8.8.8",
 	}
 }
 
@@ -67,7 +68,12 @@ type MalloryManger struct {
 }
 
 func (self *MalloryManger) Init() error {
-	// init
+	// init get Proxy Server
+	info, err := models.GetProxyServer()
+	if err != nil {
+		return err
+	}
+
 	self.Instances = gmap.NewTreeMap(gutil.ComparatorString, true)
 	self.Status = false
 	self.HttpServer = nil
@@ -79,19 +85,22 @@ func (self *MalloryManger) Init() error {
 
 	// init Handler
 	self.ProxyHandler = &mallory.Server{
-		Direct:       mallory.NewDirect(30 * time.Second),
+		Direct:       mallory.NewDirect(30*time.Second, info.DNSAddr),
 		BlockedHosts: gmap.NewTreeMap(gutil.ComparatorString, true),
 		BlackHosts:   gmap.NewTreeMap(gutil.ComparatorString, true),
+		DNS: &net.Resolver{
+				PreferGo: true,
+				Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
+				d := net.Dialer{
+					Timeout: 10 * time.Second,
+				}
+				return d.DialContext(ctx, "udp", fmt.Sprintf("%s:53", info.DNSAddr))
+			},
+		},
 	}
 	// init url role
 	for _, p := range models.AllRoles() {
 		self.ProxyHandler.AddUrlRole(p.Sub, p.Domain, p.Status, gconv.String(p.ID))
-	}
-
-	// get Proxy Server
-	info, err := models.GetProxyServer()
-	if err != nil {
-		return err
 	}
 
 	// get enable instances

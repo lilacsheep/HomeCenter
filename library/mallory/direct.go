@@ -1,7 +1,9 @@
 package mallory
 
 import (
+	"context"
 	"errors"
+	"fmt"
 	"github.com/gogf/gf/os/glog"
 	"io"
 	"net"
@@ -23,7 +25,7 @@ type Direct struct {
 }
 
 // Create and initialize
-func NewDirect(shouldProxyTimeout time.Duration) *Direct {
+func NewDirect(shouldProxyTimeout time.Duration, dnsAddr string) *Direct {
 	if shouldProxyTimeout == 0 {
 		shouldProxyTimeout = 200 * time.Millisecond
 	}
@@ -31,6 +33,15 @@ func NewDirect(shouldProxyTimeout time.Duration) *Direct {
 
 	tr.Dial = (&net.Dialer{
 		Timeout: shouldProxyTimeout,
+		Resolver: &net.Resolver{
+			PreferGo: true,
+			Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
+				d := net.Dialer{
+					Timeout: 10 * time.Second,
+				}
+				return d.DialContext(ctx, "udp", fmt.Sprintf("%s:53", dnsAddr))
+			},
+		},
 	}).Dial
 	return &Direct{Tr: tr}
 }

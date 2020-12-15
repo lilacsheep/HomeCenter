@@ -9,6 +9,7 @@ type ProxyServer struct {
 	Name      string `json:"name"`
 	Port      int    `json:"port"`
 	Username  string `json:"username"`
+	DNSAddr   string `json:"dns_addr"`
 	Password  string `json:"password"`
 	Status    bool   `json:"status"`
 	AutoProxy bool   `json:"auto_proxy"`
