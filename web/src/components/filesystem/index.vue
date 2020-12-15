@@ -31,7 +31,7 @@
 
     <el-col v-if="node.files !== null && node.files.length > 0" :span="24" style="margin-top: 15px;">
       <el-table :data="node.files" :highlight-current-row="true" stripe row-key="path" size="mini" :tree-props="{children: 'children', hasChildren: 'hasChildren'}" @row-click="table_row_click"	:default-sort="{prop: 'is_dir', order: 'descending'}">
-        <el-table-column prop="name" label="名称" width="300" :show-overflow-tooltip="true">
+        <el-table-column prop="name" label="名称" :show-overflow-tooltip="true">
           <template slot-scope="scope">
             <span v-if="scope.row.is_dir">
               <i class="el-icon-folder"> {{scope.row.name}}</i>
@@ -45,8 +45,8 @@
             <span v-else>-</span>
           </template>
         </el-table-column>
-        <el-table-column label="类型" prop="is_dir" sortable></el-table-column>
-        <el-table-column label="日期" prop="create_at"></el-table-column>
+        <el-table-column label="类型" prop="is_dir" sortable  width="80"></el-table-column>
+        <el-table-column label="日期" prop="create_at" width="150"></el-table-column>
         <el-table-column label="操作" fixed="right" width="80">
           <template slot-scope="scope">
             <el-popconfirm v-if="!scope.row.has_children" title="是否删除该文件"  @onConfirm="remove_file(scope.row)">
