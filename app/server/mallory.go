@@ -82,6 +82,7 @@ func (self *MalloryManger) Init() error {
 	// init http server
 	self.HttpServer = &http.Server{}
 	self.HttpServer.SetKeepAlivesEnabled(false)
+	//fix 老的客户端无此配置导致的域名解析异常
 	if info.DNSAddr == "" {
 		info.DNSAddr = "8.8.8.8"
 		filedb2.DB.Set("settings", "server", info)
