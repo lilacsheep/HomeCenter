@@ -5,7 +5,7 @@
         <el-col :span="8">
           <el-table :data="server.info.data" size="mini" :stripe="true" :show-header="false" style="width: 100%">
             <el-table-column prop="name" label="配置" width="60"></el-table-column>
-            <el-table-column prop="value" label="值" width="110">
+            <el-table-column prop="value" label="值" width="130">
               <template slot-scope="scope">
                 <span v-if="scope.row.key === 'status'">
                   <el-tag v-if="scope.row.value" type="success" size="mini" effect="plain">运行中</el-tag>
@@ -147,12 +147,11 @@
         <el-form-item label="端口" label-width="100px">
           <el-input-number :min="81" :max="65534" controls-position="right" v-model="server.edit.form.port" size="small" autocomplete="off"></el-input-number>
         </el-form-item>
+        <el-form-item label="DNS" label-width="100px">
+          <el-input v-model="server.edit.form.dns_addr" size="small" autocomplete="off"></el-input>
+        </el-form-item>
         <el-form-item label="负载" label-width="100px">
-          <el-switch
-            v-model="server.edit.form.status"
-            active-text="轮训"
-            inactive-text="随机">
-          </el-switch>
+          <el-switch v-model="server.edit.form.status" active-text="轮训" inactive-text="随机"></el-switch>
         </el-form-item>
         <el-form-item label="模式" label-width="100px">
           <el-switch
@@ -272,6 +271,7 @@ export default {
           form: {
             name: "",
             port: 0,
+            dns_addr: "",
             status: false,
             username: "",
             password: "",
@@ -360,12 +360,19 @@ export default {
         switch (row.key) {
           case "name":
             that.server.edit.form.name = row.value
+            break
           case "port":
             that.server.edit.form.port = row.value
+            break
+          case "dns_addr":
+            that.server.edit.form.dns_addr = row.value
+            break
           case "balance":
             that.server.edit.form.status = row.value
+            break
           case "all_proxy":
             that.server.edit.form.all_proxy = row.value
+            break
         }
       })
       this.server.edit.visit = true

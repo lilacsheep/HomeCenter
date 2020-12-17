@@ -48,6 +48,7 @@ type UpdateProxyServerRequest struct {
 	Username  string `json:"username"`
 	Password  string `json:"password"`
 	Status    bool   `json:"status"`
+	DNSAddr   string `json:"dns_addr"`
 	AutoProxy bool   `json:"auto_proxy"`
 	AllProxy  bool   `json:"all_proxy"`
 }
@@ -68,6 +69,9 @@ func (self *UpdateProxyServerRequest) Exec(r *ghttp.Request) (response MessageRe
 		}
 		if self.Password != "" && server2.Password == self.Password {
 			server2.Password = self.Password
+		}
+		if self.DNSAddr != "" && server2.DNSAddr != self.DNSAddr {
+			server2.DNSAddr = self.DNSAddr
 		}
 		if self.Status != server2.Status {
 			if self.Status {
@@ -110,6 +114,7 @@ func (self *InfoProxyServerRequest) Exec(r *ghttp.Request) (response MessageResp
 		data := garray.New(true)
 		data.Append(g.Map{"key": "port", "name": "端口", "value": info.Port})
 		data.Append(g.Map{"key": "status", "name": "状态", "value": server.Mallory.Status})
+		data.Append(g.Map{"key": "dns_addr", "name": "DNS", "value": info.DNSAddr})
 		data.Append(g.Map{"key": "balance", "name": "负载", "value": info.Status})
 		data.Append(g.Map{"key": "auto_start", "name": "启动", "value": info.AutoStart})
 		data.Append(g.Map{"key": "all_proxy", "name": "模式", "value": info.AllProxy})
