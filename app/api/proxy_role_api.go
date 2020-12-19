@@ -26,7 +26,7 @@ func (self *ProxyRoleApi) Change(r *ghttp.Request) {
 
 func (self *ProxyRoleApi) All(r *ghttp.Request) {
 	request := requests.NewQueryAllRoleRequest()
-	self.DoRequest(request, r)
+	self.DoRequestValid(request, r)
 }
 
 func (self *ProxyRoleApi) RoleVisitLogs(r *ghttp.Request) {
