@@ -593,7 +593,7 @@ export default {
       this.refresh_visit_logs(this.roles.logs.pagination.page, this.roles.logs.pagination.limit)
     },
     submit_roles_filter() {
-      this.refresh_roles(this.roles.logs.pagination.page, this.roles.logs.pagination.limit)
+      this.refresh_roles(this.roles.pagination.page, this.roles.pagination.limit)
     },
     roles_pagination_change(value) {
       this.roles.pagination.page = value
