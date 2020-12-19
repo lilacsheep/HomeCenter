@@ -110,7 +110,7 @@
           <el-button size="small" type="primary" icon="el-icon-edit" @click="roles.create.visit = true">新增规则</el-button>
         </el-button-group>
         <el-input size="small" placeholder="请输入内容" v-model="roles.filter" style="width: 250px;float: right;">
-          <el-button slot="append" icon="el-icon-search"></el-button>
+          <el-button slot="append" icon="el-icon-search" @click="submit_roles_filter"></el-button>
         </el-input>
 
         <el-table :data="rolesData" stripe border size="mini" style="margin-top: 10px;">
