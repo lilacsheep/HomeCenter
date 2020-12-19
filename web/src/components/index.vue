@@ -157,11 +157,7 @@
           <el-switch v-model="server.edit.form.status" active-text="轮训" inactive-text="随机"></el-switch>
         </el-form-item>
         <el-form-item label="模式" label-width="100px">
-          <el-switch
-            v-model="server.edit.form.all_proxy"
-            active-text="全部转发"
-            inactive-text="规则转发">
-          </el-switch>
+          <el-switch v-model="server.edit.form.all_proxy" active-text="全部转发" inactive-text="规则转发"></el-switch>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -355,7 +351,7 @@ export default {
       } else if (tab.index === '1') {
         this.refresh_visit_logs(this.roles.logs.pagination.page, this.roles.logs.pagination.limit)
       } else if (tab.index === '2') {
-        this.refresh_roles()
+        this.refresh_roles(this.roles.pagination.page, this.roles.pagination.limit)
       }
     },
     edit_instance (item) {
