@@ -88,13 +88,13 @@
         </el-col>
       </el-tab-pane>
       <el-tab-pane label="访问记录">
-        <el-input placeholder="请输入内容" v-model="roles.logs.filter" style="width: 300px;float: right;margin-bottom: 10px;">
-          <el-button @click="submit_filter" slot="append" icon="el-icon-search"></el-button>
+        <el-input size="small" placeholder="请输入内容" v-model="roles.logs.filter" style="width: 300px;float: right;margin-bottom: 10px;">
+          <el-button @click="submit_roles_logs_filter" slot="append" icon="el-icon-search"></el-button>
         </el-input>
         <el-table :data="roleLogs" stripe border size="mini">
           <el-table-column prop="domain" label="站点"></el-table-column>
-          <el-table-column prop="error"  :show-overflow-tooltip="true" label="错误"></el-table-column>
-          <el-table-column prop="times"  label="次数"></el-table-column>
+          <el-table-column prop="error" :show-overflow-tooltip="true" label="错误"></el-table-column>
+          <el-table-column prop="times" label="次数" width="100"></el-table-column>
           <el-table-column label="操作" fixed="right" width="100">
             <template slot-scope="scope">
               <el-popconfirm title="是否将站点加入负载策略？" @onConfirm="add_log_to_role(scope.row)">
@@ -107,11 +107,11 @@
       </el-tab-pane>
       <el-tab-pane label="规则配置">
         <el-button-group>
-          <el-button size="mini" type="primary" icon="el-icon-edit" @click="roles.create.visit = true">新增规则</el-button>
+          <el-button size="small" type="primary" icon="el-icon-edit" @click="roles.create.visit = true">新增规则</el-button>
         </el-button-group>
-        <!-- <el-input size="mini" placeholder="请输入内容" v-model="roles.filter" style="width: 250px;float: right;">
+        <el-input size="small" placeholder="请输入内容" v-model="roles.filter" style="width: 250px;float: right;">
           <el-button slot="append" icon="el-icon-search"></el-button>
-        </el-input> -->
+        </el-input>
 
         <el-table :data="rolesData" stripe border size="mini" style="margin-top: 10px;">
           <el-table-column prop="sub" label="域名" width="300">
@@ -139,6 +139,9 @@
             </template>
           </el-table-column>
         </el-table>
+
+        <el-pagination class="pagination" background layout="prev, pager, next" :total="roles.pagination.total" @current-change="roles_pagination_change"></el-pagination>
+
       </el-tab-pane>
     </el-tabs>
 
@@ -309,13 +312,10 @@ export default {
       instanceData: [],
       roleLogs: [],
       roles: {
-        logs:{
-          filter: undefined,
-          pagination: {
-            total: 1000,
-            page: 1,
-            limit: 10
-          }
+        pagination: {
+          total: 1000,
+          page: 1,
+          limit: 10
         },
         filter: undefined,
         create: {
@@ -335,7 +335,15 @@ export default {
             status: undefined,
             instance_id: ""
           },
-        }
+        },
+        logs:{
+          filter: undefined,
+          pagination: {
+            total: 1000,
+            page: 1,
+            limit: 10
+          }
+        },
       }
     }
   },
@@ -465,18 +473,10 @@ export default {
     add_log_to_role(row) {
       let that = this
       this.$api.post("/proxy/log/add", {id: row.id}).then(function (response) {
-        that.$notify({
-          title: '添加成功',
-          message: '添加规则成功',
-          type: 'success'
-        });
+        that.$notify({title: '添加成功', message: '添加规则成功', type: 'success'});
         that.refresh_visit_logs(this.roles.logs.pagination.page, this.roles.logs.pagination.limit)
       }).catch(function (response) {
-        that.$notify({
-          title: '添加失败',
-          message: response.message,
-          type: 'error'
-        });
+        that.$notify({title: '添加失败', message: response.message, type: 'error'});
       })
     },
     start_server () {
@@ -485,17 +485,9 @@ export default {
       this.$api.post("/proxy/server/start").then(function (response) {
         that.refresh_server()
         that.loading = false
-        that.$notify({
-          title: '启动成功',
-          message: '服务器启动成功',
-          type: 'success'
-        });
+        that.$notify({title: '启动成功', message: '服务器启动成功', type: 'success'});
       }).then(function (response) {
-        that.$notify({
-          title: '启动失败',
-          message: response.message,
-          type: 'warning'
-        });
+        that.$notify({title: '启动失败', message: response.message, type: 'warning'});
         that.loading = false
       })
     },
@@ -505,17 +497,9 @@ export default {
       this.$api.post("/proxy/server/stop").then(function (response) {
         that.refresh_server()
         that.loading = false
-        that.$notify({
-          title: '停止成功',
-          message: '服务器启动成功',
-          type: 'success'
-        });
+        that.$notify({title: '停止成功', message: '服务器启动成功', type: 'success'});
       }).then(function (response) {
-        that.$notify({
-          title: '停止失败',
-          message: response.message,
-          type: 'warning'
-        });
+        that.$notify({title: '停止失败', message: response.message, type: 'warning'});
         that.loading = false
       })
     },
@@ -570,12 +554,12 @@ export default {
     refresh_roles (page, limit) {
       let that = this
       let params = {page: page, limit: limit}
-      // if (this.roles.logs.filter != "") {
-      //   params["filter"] = this.roles.logs.filter
-      // }
+      if (this.roles.filter != "") {
+        params["filter"] = this.roles.filter
+      }
       this.$api.get("/proxy/roles", params).then(function (response) {
         that.rolesData = response.detail
-        // that.roles.logs.pagination.total = response.hasOwnProperty("count") ? response.count : 0
+        that.roles.pagination.total = response.hasOwnProperty("count") ? response.count : 0
       })
     },
     filter_status(value, row) {
@@ -605,13 +589,20 @@ export default {
       }
       return name
     },
-    role_pagination_change(value) {
+    role_logs_pagination_change(value) {
       this.roles.logs.pagination.page = value
       this.refresh_visit_logs(this.roles.logs.pagination.page, this.roles.logs.pagination.limit)
     },
-    submit_filter() {
+    submit_roles_logs_filter() {
       this.refresh_visit_logs(this.roles.logs.pagination.page, this.roles.logs.pagination.limit)
-    }
+    },
+    submit_roles_filter() {
+      this.refresh_roles(this.roles.logs.pagination.page, this.roles.logs.pagination.limit)
+    },
+    roles_pagination_change(value) {
+      this.roles.pagination.page = value
+      this.refresh_roles(this.roles.pagination.page, this.roles.pagination.limit)
+    },
   },
   created: function () {
     this.refresh_instances()

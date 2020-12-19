@@ -2,7 +2,6 @@ package requests
 
 import (
 	"fmt"
-	"homeproxy/app/models"
 	"homeproxy/app/server"
 	"homeproxy/library/filedb2"
 	"homeproxy/library/mallory"
@@ -95,11 +94,49 @@ func NewRemoveUrlRoleRequest() *RemoveUrlRoleRequest {
 	return &RemoveUrlRoleRequest{}
 }
 
-type QueryAllRoleRequest struct{}
+type QueryAllRoleRequest struct {
+	Limit  int    `json:"limit"`
+	Page   int    `json:"page"`
+	Filter string `json:"filter"`
+}
+
+func (self *QueryAllRoleRequest) pagination() (int, int) {
+	var (
+		limit  = 10
+		page   = 1
+		offset = 0
+	)
+	if self.Limit != 0 {
+		limit = self.Limit
+	}
+	if self.Page != 0 {
+		page = self.Page
+	}
+	offset = (page - 1) * limit
+	return offset, limit
+}
 
 func (self *QueryAllRoleRequest) Exec(r *ghttp.Request) (response MessageResponse) {
-	roles := models.AllRoles()
-	response.DataTable(roles, len(roles))
+	var data []mallory.ProxyRole
+	offset, limit := self.pagination()
+	var query storm.Query
+	if self.Filter != "" {
+		query = filedb2.DB.Select(q.Re("Domain", self.Filter))
+	} else {
+		query = filedb2.DB.Select()
+	}
+	c, _ := query.Count(&mallory.ProxyRole{})
+
+	err := query.Skip(offset).Limit(limit).Find(&data)
+	if err != nil {
+		if err == storm.ErrNotFound {
+			response.DataTable([]mallory.ProxyRole{}, 0)
+		} else {
+			response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
+		}
+	} else {
+		response.DataTable(data, c)
+	}
 	return
 }
 
