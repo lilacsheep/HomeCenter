@@ -49,3 +49,25 @@ func (resp *MessageResponse) ErrorWithMessage(code int, message interface{}) {
 	resp.Message = "失败"
 	resp.Detail = message
 }
+
+type Pagination struct {
+	Limit  int                    `json:"limit"`
+	Page   int                    `json:"page"`
+}
+
+func (self *Pagination) Next() (int, int) {
+	var (
+		limit  = 10
+		page   = 1
+		offset = 0
+	)
+	if self.Limit != 0 {
+		limit = self.Limit
+	}
+	if self.Page != 0 {
+		page = self.Page
+	}
+	offset = (page - 1) * limit
+	return offset, limit
+}
+

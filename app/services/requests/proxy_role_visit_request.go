@@ -11,30 +11,13 @@ import (
 )
 
 type GetRoleAllVisitRequest struct {
-	Page   int    `json:"page"`
-	Limit  int    `json:"limit"`
+	*Pagination
 	Filter string `json:"filter"`
-}
-
-func (self *GetRoleAllVisitRequest) pagination() (int, int) {
-	var (
-		limit  = 10
-		page   = 1
-		offset = 0
-	)
-	if self.Limit != 0 {
-		limit = self.Limit
-	}
-	if self.Page != 0 {
-		page = self.Page
-	}
-	offset = (page - 1) * limit
-	return offset, limit
 }
 
 func (self *GetRoleAllVisitRequest) Exec(r *ghttp.Request) (response MessageResponse) {
 	var data []mallory.ProxyRoleAnalysis
-	offset, limit := self.pagination()
+	offset, limit := self.Next()
 	var query storm.Query
 	if self.Filter != "" {
 		query = filedb2.DB.Select(q.Re("Domain", self.Filter))
