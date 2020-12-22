@@ -34,11 +34,9 @@ export default {
     login_submit: function() {
       let that = this
       this.$api.post("/login", this.login.form).then(function (response) {
-        if (response.status != 200) {
-          that.$message({"message": response.detail, "type": "warning"})
-        } else {
-          that.$route.push({key: "/dashboard"})
-        }
+        window.location.href = "/dashboard"
+      }).catch(function (response) {
+        that.$message({"message": "用户名或密码错误", "type": "warning"})
       })
     }
   },

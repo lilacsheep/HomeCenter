@@ -35,6 +35,7 @@ func init() {
 		"/message":    "/",
 		"/other":      "/",
 		"/login":      "/",
+		"/user":      "/",
 	})
 	proxyInstanceApi := &api.ProxyInstanceApi{}
 	proxyServerApi := &api.ProxyServerApi{}
@@ -44,6 +45,11 @@ func init() {
 	s.BindHandler("POST:/api/login", auth.LoginUser)
 	s.Group("/api", func(group *ghttp.RouterGroup) {
 		group.Middleware(MiddlewareCORS, AuthMiddleware)
+		// user auth
+		group.POST("/auth/self", auth.Self)
+		group.GET("/auth/logout", auth.Logout)
+		group.POST("/auth/create/user", auth.CreateUser)
+		group.POST("/auth/change/self/password", auth.ChangeSelfPassword)
 		// proxy instance api
 		group.POST("/proxy/instance/create", proxyInstanceApi.Create)
 		group.POST("/proxy/instance/update", proxyInstanceApi.Update)

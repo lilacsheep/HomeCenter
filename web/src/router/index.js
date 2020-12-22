@@ -6,8 +6,15 @@ import Download from '../components/download/index.vue'
 import Filesystem from '../components/filesystem/index.vue'
 import Other from '../components/other/index.vue'
 import Login from '../components/login/index.vue'
+import User from '../components/user/index.vue'
 import Vue from 'vue'
 
+
+// 解决ElementUI导航栏中的vue-router在3.0版本以上重复点菜单报错问题
+const originalPush = Router.prototype.push
+Router.prototype.push = function push(location) {
+  return originalPush.call(this, location).catch(err => err)
+}
 
 Vue.use(Router)
 
@@ -58,6 +65,14 @@ const router = new Router({
             component: Other,
             meta: {
               title: '其他功能'
+            }
+          },
+          {
+            path: '/user',
+            name: 'user',
+            component: User,
+            meta: {
+              title: '登录'
             }
           },
           {

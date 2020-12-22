@@ -5,7 +5,7 @@ HTTP/HTTPS proxy over SSH. 在家庭使用的功能中心
 782391570
 
 ## Future
-- [ ] 支持控制台需要账号访问
+- [x] 支持控制台需要账号访问
 - [x] 服务与主机监控信息展示
 - [x] 自定义dns
 - [ ] IP访问控制，访问黑名单
@@ -37,6 +37,10 @@ systemct start proxy
 ```
 ## 访问
 访问http://your_address:port
+
+## 默认账号
+> username: admin
+> password: !QAZ2wsx
 
 ## 代理
 ![](/pic/start.jpg)

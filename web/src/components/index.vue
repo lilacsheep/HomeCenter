@@ -103,7 +103,7 @@
             </template>
           </el-table-column>
         </el-table>
-        <el-pagination class="pagination" background layout="prev, pager, next" :total="roles.logs.pagination.total" @current-change="role_pagination_change"></el-pagination>
+        <el-pagination class="pagination" background layout="prev, pager, next" :total="roles.logs.pagination.total" @current-change="role_logs_pagination_change"></el-pagination>
       </el-tab-pane>
       <el-tab-pane label="规则配置">
         <el-button-group>

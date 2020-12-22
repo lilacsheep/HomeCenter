@@ -22,12 +22,17 @@ type User struct {
 	CreateAt time.Time `json:"create_at"`
 }
 
-func UserLogin(username, password string) (user *User, err error) {
-	err = filedb2.DB.Select(q.And(q.Eq("Username", username), q.Eq("Password", password))).Find(&user)
-	return
+func UserLogin(username, password string) (*User, error) {
+	var (
+		user = User{}
+	)
+	query := filedb2.DB.Select(q.And(q.Eq("Username", username), q.Eq("Password", password)))
+	err := query.First(&user)
+	return &user, err
 }
 
 func CreateUser(username, password string) (user *User, err error) {
+	user = &User{}
 	user.Username = username
 	user.Password = password
 	user.Status = true
