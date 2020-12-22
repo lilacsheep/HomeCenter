@@ -1,14 +1,24 @@
 package router
 
 import (
+	"homeproxy/app/api"
+	"net/http"
+
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/ghttp"
-	"homeproxy/app/api"
 )
 
 func MiddlewareCORS(r *ghttp.Request) {
 	r.Response.CORSDefault()
 	r.Middleware.Next()
+}
+
+func AuthMiddleware(r *ghttp.Request) {
+	if user := r.Session.Get("user"); user == nil {
+		r.Response.WriteStatus(http.StatusUnauthorized)
+	} else {
+		r.Middleware.Next()
+	}
 }
 
 func init() {
@@ -24,13 +34,16 @@ func init() {
 		"/filesystem": "/",
 		"/message":    "/",
 		"/other":      "/",
+		"/login":      "/",
 	})
 	proxyInstanceApi := &api.ProxyInstanceApi{}
 	proxyServerApi := &api.ProxyServerApi{}
 	proxyRoleApi := &api.ProxyRoleApi{}
+	auth := &api.AuthController{}
 
+	s.BindHandler("POST:/api/login", auth.LoginUser)
 	s.Group("/api", func(group *ghttp.RouterGroup) {
-		group.Middleware(MiddlewareCORS)
+		group.Middleware(MiddlewareCORS, AuthMiddleware)
 		// proxy instance api
 		group.POST("/proxy/instance/create", proxyInstanceApi.Create)
 		group.POST("/proxy/instance/update", proxyInstanceApi.Update)

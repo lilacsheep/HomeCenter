@@ -5,6 +5,7 @@ import Monitor from '../components/monitor/index.vue'
 import Download from '../components/download/index.vue'
 import Filesystem from '../components/filesystem/index.vue'
 import Other from '../components/other/index.vue'
+import Login from '../components/login/index.vue'
 import Vue from 'vue'
 
 
@@ -57,6 +58,14 @@ const router = new Router({
             component: Other,
             meta: {
               title: '其他功能'
+            }
+          },
+          {
+            path: '/login',
+            name: 'login',
+            component: Login,
+            meta: {
+              title: '登录'
             }
           },
         ],
