@@ -7,6 +7,7 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/asdine/storm/v3/q"
 	"github.com/gogf/gf/os/gcron"
 	"github.com/gogf/gf/os/glog"
 	"github.com/gogf/gf/util/gconv"
@@ -20,6 +21,7 @@ var (
 
 func init() {
 	gcron.AddSingleton("* * * * * *", QueryProxyMonitorInfoTask)
+	gcron.AddSingleton("0 1 */1 * * *", CleanupMonitorInfo)
 }
 
 type HistoryInfo struct {
@@ -67,4 +69,10 @@ func QueryProxyMonitorInfoTask() {
 			History = NowInfo
 		}
 	}
+}
+
+func CleanupMonitorInfo() {
+	h, _ := time.ParseDuration("-1h")
+	s := time.Now().Add(h).Format("2006-01-02 15")
+	filedb2.DB.Select(q.Re("CreateAt", s)).Delete(&models.ProxyMonitorInfo{})
 }
