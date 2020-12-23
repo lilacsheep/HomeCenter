@@ -10,7 +10,7 @@ HTTP/HTTPS proxy over SSH. 在家庭使用的功能中心
 - [x] 自定义dns
 - [ ] IP访问控制，访问黑名单
 - [x] 新增：DDNS
-- [ ] SS实例的添加
+- [ ] SS实例的添加（被封的概率太大，暂时不添加）
 
 ## 更新预告
 1. DDNS (aliDNS)
