@@ -17,6 +17,8 @@ require (
 	github.com/kr/text v0.2.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.1 // indirect
+	github.com/mzz2017/shadowsocksR v1.0.0 // indirect
+	github.com/nadoo/glider v0.13.0 // indirect
 	github.com/olekukonko/tablewriter v0.0.4 // indirect
 	github.com/shirou/gopsutil v3.20.11+incompatible
 	github.com/stretchr/testify v1.6.1 // indirect
