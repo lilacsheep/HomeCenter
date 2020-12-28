@@ -211,7 +211,7 @@ func init() {
 		c := &Country{
 			EN: i[0],
 			CN: i[1],
-			Code: i[3],
+			Code: i[2],
 			TimeZone: i[4],
 		}
 		Countrys.Set(c.Code, c)
