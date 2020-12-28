@@ -41,6 +41,7 @@ func (self *ProxyInstance) RefreshCountry() {
 	v := strings.Split(self.Address, ":")
 	glog.Debugf("start refresh instance: %s info", self.Address)
 	if common.CheckIp(v[0]) {
+		glog.Debugf("check ip address: %s", v[0])
 		code, _ = common.LookupCountry(v[0])
 	} else {
 		serverInfo, _ := GetProxyServer()
@@ -55,6 +56,7 @@ func (self *ProxyInstance) RefreshCountry() {
 		}
 		addrs, _ := dns.LookupHost(context.Background(), v[0])
 		for _, addr := range addrs {
+			glog.Debugf("domain: %s resolv addr: %s", v[0], addr)
 			code, _ = common.LookupCountry(addr)
 			break
 		}
