@@ -12,13 +12,13 @@ import (
 
 func LookupCountry(addr string) (string, error) {
 	client := ghttp.NewClient()
-	resp, err := client.Get("https://www.dukeshi.com/ip/location", g.Map{"ip": addr})
+	resp, err := client.Get("https://www.dukeshi.com/api/location", g.Map{"ip": addr})
 	if err != nil {
 		return "", err
 	}
 	defer resp.Close()
-	j := gjson.New(resp.ReadAllString())
-	glog.Debug(j.ToMap())
+	data := resp.ReadAllString()
+	j := gjson.New(data)
 	return j.GetString("country"), nil
 }
 
