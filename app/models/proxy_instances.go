@@ -65,7 +65,7 @@ func (self *ProxyInstance) RefreshCountry() {
 		self.Country = info.CN
 		filedb2.DB.Update(self)
 	}
-	glog.Debugf("refresh instance: %s info done", self.Address)
+	glog.Debugf("refresh instance: %s info done %s", self.Address, code)
 }
 
 func UpdateProxyInstanceDelay(id int, delay int) error {
