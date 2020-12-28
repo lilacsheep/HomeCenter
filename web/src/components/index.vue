@@ -67,6 +67,11 @@
                     {{`ssh://${scope.row.username}@${scope.row.address}`}}</el-button>
               </template>
             </el-table-column>
+            <el-table-column prop="country" label="国家" width="180">
+              <template slot-scope="scope">
+                  {{scope.row.country}}
+              </template>
+            </el-table-column>
             <el-table-column prop="delay" label="延迟" width="100">
               <template slot-scope="scope" >
                 <el-tag v-if="scope.row.delay < 100" size="mini" type="success" effect="plain">{{scope.row.delay}} ms</el-tag>

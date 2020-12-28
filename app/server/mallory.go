@@ -127,6 +127,7 @@ func (self *MalloryManger) Init() error {
 
 	// add ssh instance
 	for _, instance := range instances {
+		instance.RefreshCountry()
 		self.AddInstances(instance.Url(), instance.Password, instance.PrivateKey, gconv.String(instance.ID))
 	}
 	self.ProxyHandler.Instances = self.Instances
