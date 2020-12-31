@@ -192,21 +192,29 @@
       </div>
     </el-dialog>
 
-    <el-dialog title="修改实例" :visible.sync="instaces.edit.visit">
+    <el-dialog title="修改实例" :visible.sync="instaces.edit.visit" width="450px">
       <el-form :model="instaces.edit.form" label-position="right">
-        <el-form-item style="display: none" label="ID" label-width="100px">
+        <el-form-item style="display: none" label="ID" label-width="80px">
           <el-input v-model="instaces.edit.form.ID" size="small" autocomplete="off"></el-input>
         </el-form-item>
-        <el-form-item label="地址" label-width="100px">
+        <el-form-item label="地址" label-width="80px">
           <el-input v-model="instaces.edit.form.address" size="small" autocomplete="off"></el-input>
         </el-form-item>
-        <el-form-item label="用户" label-width="100px">
+        <el-form-item label="归属" label-width="80px">
+          <el-select size="small" v-model="instaces.edit.form.country_code" filterable placeholder="请选择">
+            <el-option v-for="item in countrys" :key="item.code" :label="item.cn" :value="item.code"></el-option>
+          </el-select>
+          <el-tooltip content="选择后将强制使用你选择的国家不在自动判断" placement="top">
+            <el-checkbox v-model="instaces.edit.form.force_country">强制</el-checkbox>
+          </el-tooltip>
+        </el-form-item>
+        <el-form-item label="用户" label-width="80px">
           <el-input v-model="instaces.edit.form.username" size="small" autocomplete="off"></el-input>
         </el-form-item>
-        <el-form-item label="密码" label-width="100px">
+        <el-form-item label="密码" label-width="80px">
           <el-input v-model="instaces.edit.form.password" size="small" autocomplete="off"></el-input>
         </el-form-item>
-        <el-form-item label="秘钥" label-width="100px">
+        <el-form-item label="秘钥" label-width="80px">
           <el-input type="textarea" :autosize="{ minRows: 3, maxRows: 6}" placeholder="请输入内容" v-model="instaces.edit.form.private_key"></el-input>
         </el-form-item>
       </el-form>
@@ -265,6 +273,7 @@ export default {
       loading: false,
       instanceData: [],
       serverData: [],
+      countrys: [],
       proxy: {
         Status: false,
         Error: null
@@ -295,7 +304,7 @@ export default {
             address: undefined,
             username: undefined,
             password: undefined,
-            privateKey: undefined
+            privateKey: undefined,
           },
         },
         edit: {
@@ -305,7 +314,9 @@ export default {
             address: undefined,
             username: undefined,
             password: undefined,
-            private_key: undefined
+            private_key: undefined,
+            force_country: false,
+            country_code: undefined,
           },
         }
       },
@@ -360,6 +371,7 @@ export default {
       }
     },
     edit_instance (item) {
+      this.refresh_countrys()
       this.instaces.edit.visit = true
       this.instaces.edit.form = item
     },
@@ -604,6 +616,14 @@ export default {
       this.roles.pagination.page = value
       this.refresh_roles(this.roles.pagination.page, this.roles.pagination.limit)
     },
+    refresh_countrys() {
+      let that = this
+      this.$api.get("/common/countrys").then(function (response) {
+        that.countrys = response.detail
+      }).catch(function (response) {
+        that.$message({message: response.message, type: 'error'})
+      })
+    }
   },
   created: function () {
     this.refresh_instances()

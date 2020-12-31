@@ -3,6 +3,7 @@ package requests
 import (
 	"homeproxy/app/models"
 	"homeproxy/app/server"
+	"homeproxy/library/common"
 	"homeproxy/library/filedb2"
 	"net/http"
 
@@ -35,6 +36,7 @@ func (self *CreateProxyInstanceRequest) Exec(r *ghttp.Request) (response Message
 			response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 		}
 	} else {
+		instance.RefreshCountry()
 		if server.Mallory.Status {
 			server.Mallory.AddInstances(instance.Url(), instance.Password, instance.PrivateKey, gconv.String(instance.ID))
 		}
@@ -92,11 +94,13 @@ func NewQueryAllInstanceRequest() *QueryAllInstanceRequest {
 }
 
 type UpdateInstanceRequest struct {
-	ID         int    `v:"id @required"`
-	Address    string `v:"address     @required"`
-	Username   string `v:"username    @required|length:4,32#请输入用户名称|用户名称长度非法"`
-	Password   string `v:"password    @required-without:private_key"`
-	PrivateKey string `v:"private_key @required-without:password"`
+	ID           int    `v:"id @required"`
+	Address      string `v:"address     @required"`
+	Username     string `v:"username    @required|length:4,32#请输入用户名称|用户名称长度非法"`
+	Password     string `v:"password    @required-without:private_key"`
+	PrivateKey   string `v:"private_key @required-without:password"`
+	CountryCode  string `json:"country_code"`
+	ForceCountry bool   `json:"force_country"`
 }
 
 func (self *UpdateInstanceRequest) change(instance models.ProxyInstance) bool {
@@ -113,6 +117,12 @@ func (self *UpdateInstanceRequest) change(instance models.ProxyInstance) bool {
 	if instance.PrivateKey != self.PrivateKey {
 		data["private_key"] = self.PrivateKey
 	}
+	if instance.CountryCode != self.CountryCode {
+		data["country_code"] = self.CountryCode
+	}
+	if instance.ForceCountry != self.ForceCountry {
+		data["force_country"] = self.ForceCountry
+	}
 	return len(data) != 0
 }
 
@@ -126,11 +136,15 @@ func (self *UpdateInstanceRequest) Exec(r *ghttp.Request) (response MessageRespo
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
 		if self.change(instance) {
+			c, _ := common.LookupCountry(self.CountryCode)
 			err = filedb2.DB.Update(&models.ProxyInstance{
 				ID:       self.ID,
 				Address:  self.Address,
 				Username: self.Username,
 				Password: self.Password,
+				CountryCode: self.CountryCode,
+				ForceCountry: self.ForceCountry,
+				Country: c,
 			})
 			if err != nil {
 				response.ErrorWithMessage(http.StatusInternalServerError, err.Error())

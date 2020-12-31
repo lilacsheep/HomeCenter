@@ -41,6 +41,7 @@ func init() {
 	proxyServerApi := &api.ProxyServerApi{}
 	proxyRoleApi := &api.ProxyRoleApi{}
 	auth := &api.AuthController{}
+	common := &api.CommonApi{}
 
 	s.BindHandler("POST:/api/login", auth.LoginUser)
 	s.Group("/api", func(group *ghttp.RouterGroup) {
@@ -115,5 +116,7 @@ func init() {
 		// logs api
 		group.GET("/logs", proxyServerApi.Logs)
 
+		// common api
+		group.GET("/common/countrys", common.Countrys)
 	})
 }

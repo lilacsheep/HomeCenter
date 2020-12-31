@@ -14,16 +14,17 @@ import (
 )
 
 type ProxyInstance struct {
-	ID          int    `json:"id" storm:"id,increment"`
-	Protocol    int    `json:"protocol"`               // default 0(SSH)
-	Address     string `json:"address" storm:"unique"` //
-	Username    string `json:"username"`
-	Password    string `json:"password"`
-	PrivateKey  string `json:"private_key"`
-	Status      bool   `json:"status"`
-	CountryCode string `json:"country_code"`
-	Country     string `json:"country"`
-	Delay       int    `json:"delay"`
+	ID           int    `json:"id" storm:"id,increment"`
+	Protocol     int    `json:"protocol"`               // default 0(SSH)
+	Address      string `json:"address" storm:"unique"` //
+	Username     string `json:"username"`
+	Password     string `json:"password"`
+	PrivateKey   string `json:"private_key"`
+	Status       bool   `json:"status"`
+	ForceCountry bool   `json:"force_country"`
+	CountryCode  string `json:"country_code"`
+	Country      string `json:"country"`
+	Delay        int    `json:"delay"`
 }
 
 func (self *ProxyInstance) Url() string {
@@ -38,6 +39,9 @@ func (self *ProxyInstance) RefreshCountry() {
 	var (
 		code string
 	)
+	if self.ForceCountry {
+		return
+	}
 	v := strings.Split(self.Address, ":")
 	glog.Debugf("start refresh instance: %s info", self.Address)
 	if common.CheckIp(v[0]) {
