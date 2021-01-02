@@ -103,7 +103,7 @@ type UpdateInstanceRequest struct {
 	ForceCountry bool   `json:"force_country"`
 }
 
-func (self *UpdateInstanceRequest) change(instance models.ProxyInstance) bool {
+func (self *UpdateInstanceRequest) change(instance *models.ProxyInstance) bool {
 	data := g.Map{}
 	if instance.Address != self.Address {
 		data["address"] = self.Address
@@ -129,23 +129,31 @@ func (self *UpdateInstanceRequest) change(instance models.ProxyInstance) bool {
 func (self *UpdateInstanceRequest) Exec(r *ghttp.Request) (response MessageResponse) {
 	var (
 		err      error
-		instance models.ProxyInstance
+		instance = &models.ProxyInstance{}
 	)
-	err = filedb2.DB.One("ID", self.ID, &instance)
+	err = filedb2.DB.One("ID", self.ID, instance)
 	if err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
 		if self.change(instance) {
-			c, _ := common.LookupCountry(self.CountryCode)
-			err = filedb2.DB.Update(&models.ProxyInstance{
-				ID:       self.ID,
-				Address:  self.Address,
-				Username: self.Username,
-				Password: self.Password,
-				CountryCode: self.CountryCode,
-				ForceCountry: self.ForceCountry,
-				Country: c,
-			})
+			c := common.SearchCountryFromCode(self.CountryCode)
+			instance.Address = self.Address
+			instance.Username = self.Username
+			instance.Password = self.Password
+			instance.PrivateKey = self.PrivateKey
+			instance.Status = true
+			if self.ForceCountry {
+				instance.Country = c.CN
+				instance.CountryCode = self.CountryCode
+				instance.ForceCountry = self.ForceCountry
+				err = filedb2.DB.Update(instance)
+			} else {
+				instance.ForceCountry = self.ForceCountry
+				err = filedb2.DB.Update(instance)
+				filedb2.DB.UpdateField(&models.ProxyInstance{ID: self.ID}, "ForceCountry", self.ForceCountry)
+				instance.RefreshCountry()
+			}
+
 			if err != nil {
 				response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 			} else {
