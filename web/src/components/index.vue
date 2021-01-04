@@ -15,9 +15,10 @@
                   <el-tag v-if="!scope.row.value" type="success" size="mini" effect="plain">随机模式</el-tag>
                   <el-tag v-else size="mini" type="danger" effect="plain">循环模式</el-tag>
                 </span>
-                <span v-else-if="scope.row.key === 'all_proxy'">
-                  <el-tag v-if="scope.row.value" type="success" size="mini" effect="plain">全部转发</el-tag>
-                  <el-tag v-else size="mini" type="danger" effect="plain">规则转发</el-tag>
+                <span v-else-if="scope.row.key === 'proxy_mode'">
+                  <el-tag v-if="scope.row.value == 1" type="success" size="mini" effect="plain">全部转发</el-tag>
+                  <el-tag v-else-if="scope.row.value == 2" size="mini" type="danger" effect="plain">规则转发</el-tag>
+                  <el-tag v-else size="mini" type="danger" effect="plain">DNS转发</el-tag>
                 </span>
                 <span v-else-if="scope.row.key === 'instances'">
                   <el-tag v-for="(item, i) in scope.row.value" size="mini" type="danger" effect="plain" :key="i">{{item.address}}</el-tag>
@@ -150,19 +151,23 @@
       </el-tab-pane>
     </el-tabs>
 
-    <el-dialog title="修改服务" :visible.sync="server.edit.visit">
+    <el-dialog title="修改服务" :visible.sync="server.edit.visit" width="450px">
       <el-form :model="server.edit.form" label-position="right">
-        <el-form-item label="端口" label-width="100px">
+        <el-form-item label="端口" label-width="80px">
           <el-input-number :min="81" :max="65534" controls-position="right" v-model="server.edit.form.port" size="small" autocomplete="off"></el-input-number>
         </el-form-item>
-        <el-form-item label="DNS" label-width="100px">
-          <el-input v-model="server.edit.form.dns_addr" size="small" autocomplete="off"></el-input>
+        <el-form-item label="DNS" label-width="80px">
+          <el-input v-model="server.edit.form.dns_addr" size="small" autocomplete="off" style="width: 300px"></el-input>
         </el-form-item>
-        <el-form-item label="负载" label-width="100px">
+        <el-form-item label="负载" label-width="80px">
           <el-switch v-model="server.edit.form.status" active-text="轮训" inactive-text="随机"></el-switch>
         </el-form-item>
-        <el-form-item label="模式" label-width="100px">
-          <el-switch v-model="server.edit.form.all_proxy" active-text="全部转发" inactive-text="规则转发"></el-switch>
+        <el-form-item label="模式" label-width="80px">
+          <el-select v-model="server.edit.form.proxy_mode" size="small" placeholder="请选择">
+            <el-option label="全代理模式" :value="1"></el-option>
+            <el-option label="规则代理" :value="2"></el-option>
+            <el-option label="DNS代理" :value="3"></el-option>
+          </el-select>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -288,8 +293,7 @@ export default {
             status: false,
             username: "",
             password: "",
-            auto_proxy: false,
-            all_proxy: false
+            proxy_mode: "",
           }
         },
         info: {
@@ -391,8 +395,8 @@ export default {
           case "balance":
             that.server.edit.form.status = row.value
             break
-          case "all_proxy":
-            that.server.edit.form.all_proxy = row.value
+          case "proxy_mode":
+            that.server.edit.form.proxy_mode = row.value
             break
         }
       })

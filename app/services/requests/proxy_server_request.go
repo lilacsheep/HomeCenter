@@ -50,7 +50,7 @@ type UpdateProxyServerRequest struct {
 	Status    bool   `json:"status"`
 	DNSAddr   string `json:"dns_addr"`
 	AutoProxy bool   `json:"auto_proxy"`
-	AllProxy  bool   `json:"all_proxy"`
+	ProxyMode int    `json:"proxy_mode"`
 }
 
 func (self *UpdateProxyServerRequest) Exec(r *ghttp.Request) (response MessageResponse) {
@@ -81,14 +81,11 @@ func (self *UpdateProxyServerRequest) Exec(r *ghttp.Request) (response MessageRe
 			}
 			server2.Status = self.Status
 		}
-		if self.AutoProxy != server2.AutoProxy {
-			server2.AutoProxy = self.AutoProxy
-		}
-		if self.AllProxy != server2.AllProxy {
+		if self.ProxyMode != server2.ProxyMode {
 			if server.Mallory.Status {
-				server.Mallory.ProxyHandler.AllProxy = self.AllProxy
+				server.Mallory.ProxyHandler.ProxyMode = self.ProxyMode
 			}
-			server2.AllProxy = self.AllProxy
+			server2.ProxyMode = self.ProxyMode
 		}
 		err := filedb2.DB.Set("settings", "server", server2)
 		if err != nil {
@@ -117,7 +114,7 @@ func (self *InfoProxyServerRequest) Exec(r *ghttp.Request) (response MessageResp
 		data.Append(g.Map{"key": "dns_addr", "name": "DNS", "value": info.DNSAddr})
 		data.Append(g.Map{"key": "balance", "name": "负载", "value": info.Status})
 		data.Append(g.Map{"key": "auto_start", "name": "启动", "value": info.AutoStart})
-		data.Append(g.Map{"key": "all_proxy", "name": "模式", "value": info.AllProxy})
+		data.Append(g.Map{"key": "proxy_mode", "name": "模式", "value": info.ProxyMode})
 		if server.Mallory.Error != nil && server.Mallory.Error != http.ErrServerClosed {
 			data.Append(g.Map{"key": "error", "name": "错误", "value": server.Mallory.Error.Error()})
 		}

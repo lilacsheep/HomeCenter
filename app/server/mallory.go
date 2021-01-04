@@ -17,6 +17,7 @@ import (
 	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/os/gcache"
 	"github.com/gogf/gf/os/glog"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/gogf/gf/util/guid"
@@ -31,9 +32,9 @@ func DefaultServer() *models.ProxyServer {
 		Name:      "default",
 		Port:      1316,
 		Status:    true,
-		AutoProxy: false,
 		AutoStart: true,
 		DNSAddr:   "8.8.8.8",
+		ProxyMode: 2,
 	}
 }
 
@@ -87,20 +88,27 @@ func (self *MalloryManger) Init() error {
 		info.DNSAddr = "8.8.8.8"
 		filedb2.DB.Set("settings", "server", info)
 	}
+	if info.ProxyMode == 0 {
+		info.ProxyMode = 2
+		filedb2.DB.Set("settings", "server", info)
+	}
 	// init Handler
-	self.ProxyHandler = &mallory.Server{
-		Direct:       mallory.NewDirect(30*time.Second, info.DNSAddr),
-		BlockedHosts: gmap.NewTreeMap(gutil.ComparatorString, true),
-		BlackHosts:   gmap.NewTreeMap(gutil.ComparatorString, true),
+	dnsCache := &mallory.DnsCache{
 		DNS: &net.Resolver{
-				PreferGo: true,
-				Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
+			PreferGo: true,
+			Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
 				d := net.Dialer{
 					Timeout: 10 * time.Second,
 				}
 				return d.DialContext(ctx, "udp", fmt.Sprintf("%s:53", info.DNSAddr))
-			},
-		},
+			}},
+		Cache: gcache.New(),
+	}
+	self.ProxyHandler = &mallory.Server{
+		Direct:       mallory.NewDirect(30*time.Second, info.DNSAddr),
+		BlockedHosts: gmap.NewTreeMap(gutil.ComparatorString, true),
+		BlackHosts:   gmap.NewTreeMap(gutil.ComparatorString, true),
+		DNSCache:     dnsCache,
 	}
 	// init url role
 	for _, p := range models.AllRoles() {
@@ -114,8 +122,7 @@ func (self *MalloryManger) Init() error {
 	self.ProxyHandler.Port = info.Port
 	self.ProxyHandler.Username = info.Username
 	self.ProxyHandler.Password = info.Password
-	self.ProxyHandler.AutoProxy = info.AutoProxy
-	self.ProxyHandler.AllProxy = info.AllProxy
+	self.ProxyHandler.ProxyMode = info.ProxyMode
 
 	// set proxy Balance
 	switch self.BalanceType {

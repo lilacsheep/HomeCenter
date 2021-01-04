@@ -3,10 +3,8 @@ package mallory
 
 import (
 	"bytes"
-	"context"
 	"encoding/base64"
 	"fmt"
-	"net"
 	"net/http"
 	"strings"
 	"sync"
@@ -67,16 +65,14 @@ type Server struct {
 	Username string
 	// Password
 	Password string
-	// Auto Proxy
-	AutoProxy bool
-	// All http to Proxy
-	AllProxy bool
+	// Proxy mode
+	ProxyMode int // 1 全代理模式 2 规则代理模式 3 DNS 代理模式
 	// for serve http
 	mutex sync.RWMutex
 	// ssh instances
 	Instances *gmap.TreeMap
 	// custom dns
-	DNS       *net.Resolver
+	DNSCache *DnsCache
 }
 
 func (self *Server) UrlSplit(url string) (string, string) {
@@ -229,11 +225,54 @@ func (self *Server) BasicAuth(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusUnauthorized)
 }
 
-func (self *Server) lookup(addr string) {
-	glog.Debugf("lookup %s", addr)
-	ips, _ := self.DNS.LookupHost(context.Background(), addr)
-	for _, ip := range ips {
-		glog.Info(ip)
+func (self *Server) local(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "CONNECT" {
+		if err := self.Direct.Connect(w, r); err != nil {
+			// add error visit log
+			errorEvent(r.URL.Hostname(), err)
+		}
+	} else if r.URL.IsAbs() {
+		r.RequestURI = ""
+		RemoveHopHeaders(r.Header)
+		if err := self.Direct.ServeHTTP(w, r); err != nil {
+			// add error visit log
+			errorEvent(r.URL.Hostname(), err)
+		}
+	} else {
+		glog.Infof("%s is not a full URL path", r.RequestURI)
+	}
+}
+
+func (self *Server) overseas(w http.ResponseWriter, r *http.Request, instanceIDs ...string) {
+	var (
+		instanceID string
+		connect    *SSH
+	)
+	if len(instanceIDs) > 0 {
+		instanceID = instanceIDs[0]
+	}
+	if v, ok := self.Instances.Search(instanceID); ok {
+		connect = v.(*SSH)
+	} else {
+		instance, err := self.Balance.DoBalance(self.Instances)
+		if err != nil {
+			glog.Errorf("get proxy connect error: %s", err.Error())
+		} else {
+			connect = instance.(*SSH)
+		}
+	}
+	if connect == nil {
+		glog.Errorf("get proxy connect is nil")
+	} else {
+		if r.Method == "CONNECT" && connect.Status {
+			connect.Connect(w, r)
+		} else if r.URL.IsAbs() && connect.Status {
+			r.RequestURI = ""
+			RemoveHopHeaders(r.Header)
+			connect.ServeHTTP(w, r)
+		} else {
+			glog.Infof("%s is not a full URL path", r.RequestURI)
+		}
 	}
 }
 
@@ -245,57 +284,31 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		use        bool
 		instanceId string
 		t          bool
-		connect    *SSH
 	)
-	if self.AutoProxy {
-		use = true
-	} else {
+	// self.AutoProxy {
+	if self.ProxyMode == 3 {
+		if self.DNSCache.IsChina(r.URL.Hostname()) {
+			self.local(w, r)
+		} else {
+			self.overseas(w, r, instanceId)
+		}
+	} else if self.ProxyMode == 2 {
 		t, instanceId = self.Blocked(r.URL.Host)
 		use = t && r.URL.Host != "" && self.Instances.Size() != 0
-	}
-	self.lookup(r.URL.Hostname())
-	glog.Debugf("[%s] %d %s %s %s", AccessType(use), self.Mode, r.Method, r.RequestURI, r.Proto)
-	// add visit log
-	visitLogEvent(r.RemoteAddr, r.URL.Hostname())
-	if use {
-		if v, ok := self.Instances.Search(instanceId); ok {
-			connect = v.(*SSH)
-		} else {
-			instance, err := self.Balance.DoBalance(self.Instances)
-			if err != nil {
-				glog.Errorf("get proxy connect error: %s", err.Error())
+		if use {
+			// auto proxy is china used local proxy
+			if self.DNSCache.IsChina(r.URL.Hostname()) {
+				self.local(w, r)
 			} else {
-				connect = instance.(*SSH)
+				self.overseas(w, r, instanceId)
 			}
-		}
-		if connect == nil {
-			glog.Errorf("get proxy connect is nil")
 		} else {
-			if r.Method == "CONNECT" && connect.Status {
-				connect.Connect(w, r)
-			} else if r.URL.IsAbs() && connect.Status {
-				r.RequestURI = ""
-				RemoveHopHeaders(r.Header)
-				connect.ServeHTTP(w, r)
-			} else {
-				glog.Infof("%s is not a full URL path", r.RequestURI)
-			}
+			self.local(w, r)
 		}
 	} else {
-		if r.Method == "CONNECT" {
-			if err := self.Direct.Connect(w, r); err != nil {
-				// add error visit log
-				errorEvent(r.URL.Hostname(), err)
-			}
-		} else if r.URL.IsAbs() {
-			r.RequestURI = ""
-			RemoveHopHeaders(r.Header)
-			if err := self.Direct.ServeHTTP(w, r); err != nil {
-				// add error visit log
-				errorEvent(r.URL.Hostname(), err)
-			}
-		} else {
-			glog.Infof("%s is not a full URL path", r.RequestURI)
-		}
+		self.overseas(w, r, instanceId)
 	}
+	
+	// glog.Debugf("[%s] %d %s %s %s", AccessType(use), self.Mode, r.Method, r.RequestURI, r.Proto)
+	// add visit log
 }

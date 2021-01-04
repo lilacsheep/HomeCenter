@@ -12,8 +12,7 @@ type ProxyServer struct {
 	DNSAddr   string `json:"dns_addr"`
 	Password  string `json:"password"`
 	Status    bool   `json:"status"`
-	AutoProxy bool   `json:"auto_proxy"`
-	AllProxy  bool   `json:"all_proxy"`
+	ProxyMode int    `json:"auto_proxy"`
 	AutoStart bool   `json:"auto_start"`
 }
 
