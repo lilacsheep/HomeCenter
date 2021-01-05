@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
+	"homeproxy/library/common"
 	"net/http"
 	"strings"
 	"sync"
@@ -285,29 +286,32 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		instanceId string
 		t          bool
 	)
-	// self.AutoProxy {
-	if self.ProxyMode == 3 {
-		if self.DNSCache.IsChina(r.URL.Hostname()) {
-			self.local(w, r)
-		} else {
-			self.overseas(w, r, instanceId)
-		}
-	} else if self.ProxyMode == 2 {
-		t, instanceId = self.Blocked(r.URL.Host)
-		use = t && r.URL.Host != "" && self.Instances.Size() != 0
-		if use {
-			// auto proxy is china used local proxy
+	host := common.Address(r.URL.Hostname())
+	if !host.IsPublic() {
+		self.local(w, r)
+	} else {
+		// dns 路由模式
+		if self.ProxyMode == 3 {
 			if self.DNSCache.IsChina(r.URL.Hostname()) {
 				self.local(w, r)
 			} else {
 				self.overseas(w, r, instanceId)
 			}
+		} else if self.ProxyMode == 2 { // 规则代理模式
+			t, instanceId = self.Blocked(r.URL.Host)
+			use = t && r.URL.Host != "" && self.Instances.Size() != 0
+			if use {
+				self.overseas(w, r, instanceId)
+			} else {
+				self.local(w, r)
+			}
 		} else {
-			self.local(w, r)
+			// 纯代理模式
+			self.overseas(w, r, instanceId)
 		}
-	} else {
-		self.overseas(w, r, instanceId)
 	}
+	
+	
 	
 	// glog.Debugf("[%s] %d %s %s %s", AccessType(use), self.Mode, r.Method, r.RequestURI, r.Proto)
 	// add visit log
