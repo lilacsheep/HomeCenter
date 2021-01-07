@@ -2,12 +2,15 @@ package common
 
 import (
 	"net"
-	"regexp"
 	"strings"
 )
 
 
 type Address string
+
+func (self Address) ip() net.IP {
+	return net.ParseIP(self.ip().String())
+}
 
 func (self Address) String() string {
 	c := strings.Index(string(self), "/")
@@ -21,47 +24,43 @@ func (self Address) String() string {
 }
 
 func (self Address) Verify() bool {
-	if strings.Index(string(self), "/") > 0 {
-		_, IPNet, _ := net.ParseCIDR(string(self))
-		if c, b := IPNet.Mask.Size(); c == 64 && b == 128 {
-			return true
-		}
-	} else {
-		address := net.ParseIP(string(self))
-		if address != nil {
-			return true
-		}
-	}
-	return false
+	address := self.ip()
+	return address != nil
 }
 
 func (self Address) IsIpv4() bool {
-	addr := strings.Trim(string(self), " ")
-	regStr := `^(([1-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.)(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){2}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$`
-	if match, _ := regexp.MatchString(regStr, addr); match {
-		return true
+	ip := self.ip()
+	if ip != nil {
+		return ip.To4() != nil
 	}
 	return false
 }
 
 func (self Address) IsIpv6() bool {
-	return strings.Count(string(self), ":") >= 2
+	return strings.Count(self.ip().String(), ":") >= 2
 }
 
 func (self Address) IsPublic() bool {
-	address := string(self)
-	if self.IsIpv4() {
-		index := []string{"192.168.", "172.16.", "10.", "127.0."}
-		for _, i := range index {
-			if strings.HasPrefix(address, i) {
-				return false
-			}
-		}
+	ip := self.ip()
+	if ip.IsLoopback() || ip.IsLinkLocalMulticast() || ip.IsLinkLocalUnicast() {
+		return false
+	}
+    if ip4 := ip.To4(); ip4 != nil {
+        switch true {
+        case ip4[0] == 10:
+            return false
+        case ip4[0] == 172 && ip4[1] >= 16 && ip4[1] <= 31:
+            return false
+        case ip4[0] == 192 && ip4[1] == 168:
+            return false
+        default:
+            return true
+        }
 	}
 	if self.IsIpv6() {
 		index := []string{"fe80::"}
 		for _, i := range index {
-			if strings.HasPrefix(address, i) {
+			if strings.HasPrefix(self.ip().String(), i) {
 				return false
 			}
 		}
