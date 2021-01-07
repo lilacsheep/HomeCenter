@@ -286,7 +286,7 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		instanceId string
 		t          bool
 	)
-	host := common.Address(r.URL.Hostname())
+	host := common.IPAddress(r.URL.Hostname())
 	if !host.IsPublic() {
 		self.local(w, r)
 	} else {

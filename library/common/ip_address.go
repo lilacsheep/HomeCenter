@@ -6,13 +6,13 @@ import (
 )
 
 
-type Address string
+type IPAddress string
 
-func (self Address) ip() net.IP {
+func (self IPAddress) ip() net.IP {
 	return net.ParseIP(self.ip().String())
 }
 
-func (self Address) String() string {
+func (self IPAddress) String() string {
 	c := strings.Index(string(self), "/")
 	switch c {
 	case 0:
@@ -23,12 +23,12 @@ func (self Address) String() string {
 	}
 }
 
-func (self Address) Verify() bool {
+func (self IPAddress) Verify() bool {
 	address := self.ip()
 	return address != nil
 }
 
-func (self Address) IsIpv4() bool {
+func (self IPAddress) IsIpv4() bool {
 	ip := self.ip()
 	if ip != nil {
 		return ip.To4() != nil
@@ -36,11 +36,11 @@ func (self Address) IsIpv4() bool {
 	return false
 }
 
-func (self Address) IsIpv6() bool {
+func (self IPAddress) IsIpv6() bool {
 	return strings.Count(self.ip().String(), ":") >= 2
 }
 
-func (self Address) IsPublic() bool {
+func (self IPAddress) IsPublic() bool {
 	ip := self.ip()
 	if ip.IsLoopback() || ip.IsLinkLocalMulticast() || ip.IsLinkLocalUnicast() {
 		return false
