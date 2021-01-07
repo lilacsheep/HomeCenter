@@ -2,8 +2,6 @@
 package mallory
 
 import (
-	"bytes"
-	"encoding/base64"
 	"fmt"
 	"homeproxy/library/common"
 	"net/http"
@@ -196,36 +194,6 @@ func (self *Server) Black(host string) bool {
 //      GET /justmao945/... HTTP/1.1
 //    Because we can be sure that all of them are http request, we can only redo the request
 //    to the remote server and copy the reponse to client.
-//
-func (self *Server) BasicAuth(w http.ResponseWriter, r *http.Request) {
-	basicAuthPrefix := "Basic "
-
-	// 获取 request header
-	auth := r.Header.Get("Authorization")
-	// 如果是 http basic auth
-	if strings.HasPrefix(auth, basicAuthPrefix) {
-		// 解码认证信息
-		payload, err := base64.StdEncoding.DecodeString(
-			auth[len(basicAuthPrefix):],
-		)
-		if err == nil {
-			pair := bytes.SplitN(payload, []byte(":"), 2)
-			if len(pair) == 2 && bytes.Equal(pair[0], []byte(self.Username)) &&
-				bytes.Equal(pair[1], []byte(self.Password)) {
-				// 执行被装饰的函数
-				//self.ServeProxy(w, r)
-				return
-			}
-		}
-	}
-
-	// 认证失败，提示 401 Unauthorized
-	// Restricted 可以改成其他的值
-	w.Header().Set("WWW-Authenticate", `Basic realm="Restricted"`)
-	// 401 状态码
-	w.WriteHeader(http.StatusUnauthorized)
-}
-
 func (self *Server) local(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "CONNECT" {
 		if err := self.Direct.Connect(w, r); err != nil {
@@ -310,9 +278,4 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			self.overseas(w, r, instanceId)
 		}
 	}
-	
-	
-	
-	// glog.Debugf("[%s] %d %s %s %s", AccessType(use), self.Mode, r.Method, r.RequestURI, r.Proto)
-	// add visit log
 }
