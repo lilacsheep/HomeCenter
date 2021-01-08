@@ -39,7 +39,7 @@ func (self *DnsCache) LookupHost(domain string) (string, error) {
 }
 
 func (self *DnsCache) IsLocal(domain string) (bool, error) {
-	addr, err:= self.LookupHost(domain)
+	addr, err := self.LookupHost(domain)
 	if err != nil {
 		return false, err
 	}
