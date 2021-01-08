@@ -38,6 +38,18 @@ func (self *DnsCache) LookupHost(domain string) (string, error) {
 	return addrs[0], nil
 }
 
+func (self *DnsCache) IsLocal(domain string) (bool, error) {
+	addr, err:= self.LookupHost(domain)
+	if err != nil {
+		return false, err
+	}
+	ip := common.IPAddress(addr)
+	if ip.Verify() {
+		return !ip.IsPublic(), nil
+	}
+	return false, nil
+}
+
 func (self *DnsCache) lookupCountry(domain string) (string, error) {
 	addr, err:= self.LookupHost(domain)
 	if err != nil {

@@ -256,23 +256,25 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	)
 	
 	ip := common.IPAddress(r.URL.Hostname())
-	if !ip.Verify() {
-		addr, err := self.DNSCache.LookupHost(r.URL.Hostname())
-		if err != nil {
-			glog.Errorf("search dns error: %v", err)
-		} else {
-			ip = common.IPAddress(addr)
-		}
-	}
 	if !ip.IsPublic() {
 		self.local(w, r)
 	} else {
 		// dns 路由模式
 		if self.ProxyMode == 3 {
-			if self.DNSCache.IsChina(r.URL.Hostname()) {
+			// dns解析到本地地址后使用本地网络访问，报错默认走本地
+			if v, err := self.DNSCache.IsLocal(r.URL.Hostname()); err != nil {
+				glog.Error(err)
 				self.local(w, r)
 			} else {
-				self.overseas(w, r, instanceId)
+				if v {
+					self.local(w, r)
+				} else {
+					if self.DNSCache.IsChina(r.URL.Hostname()) {
+						self.local(w, r)
+					} else {
+						self.overseas(w, r, instanceId)
+					}
+				}
 			}
 		} else if self.ProxyMode == 2 { // 规则代理模式
 			t, instanceId = self.Blocked(r.URL.Host)
