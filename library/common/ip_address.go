@@ -9,7 +9,7 @@ import (
 type IPAddress string
 
 func (self IPAddress) ip() net.IP {
-	return net.ParseIP(self.ip().String())
+	return net.ParseIP(self.String())
 }
 
 func (self IPAddress) String() string {
@@ -37,7 +37,7 @@ func (self IPAddress) IsIpv4() bool {
 }
 
 func (self IPAddress) IsIpv6() bool {
-	return strings.Count(self.ip().String(), ":") >= 2
+	return strings.Count(self.String(), ":") >= 2
 }
 
 func (self IPAddress) IsPublic() bool {
@@ -60,7 +60,7 @@ func (self IPAddress) IsPublic() bool {
 	if self.IsIpv6() {
 		index := []string{"fe80::"}
 		for _, i := range index {
-			if strings.HasPrefix(self.ip().String(), i) {
+			if strings.HasPrefix(self.String(), i) {
 				return false
 			}
 		}
