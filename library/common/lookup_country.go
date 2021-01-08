@@ -9,9 +9,13 @@ import (
 	"github.com/gogf/gf/net/ghttp"
 )
 
+const (
+	apiUrl string = "http://106.15.95.3:29090/api/location"
+)
+
 func LookupCountry(addr string) (string, error) {
 	client := ghttp.NewClient()
-	resp, err := client.Get("https://www.dukeshi.com/api/location", g.Map{"ip": addr})
+	resp, err := client.Get(apiUrl, g.Map{"ip": addr})
 	if err != nil {
 		return "", err
 	}
