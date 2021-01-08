@@ -263,6 +263,7 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if self.ProxyMode == 3 {
 			// dns解析到本地地址后使用本地网络访问，报错默认走本地
 			if v, _ := self.DNSCache.IsLocal(r.URL.Hostname()); v {
+				glog.Debugf("domain is local address: %s ", r.URL.Hostname())
 				self.local(w, r)
 			} else {
 				if self.DNSCache.IsChina(r.URL.Hostname()) {
