@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	apiUrl string = "http://106.15.95.3:29090/api/location"
+	apiUrl string = "http://api.dukeshi.cn:29090/api/location"
 )
 
 func LookupCountry(addr string) (string, error) {
