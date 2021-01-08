@@ -19,7 +19,7 @@ func (self *DnsCache) search(domain string) (string, error) {
 	if found, err := self.Cache.Contains(domain); err != nil {
 		return "", err
 	} else if !found {
-		if country, err := self.lookupHost(domain); err != nil {
+		if country, err := self.lookupCountry(domain); err != nil {
 			return "", err
 		} else {
 			return country, nil
@@ -30,12 +30,20 @@ func (self *DnsCache) search(domain string) (string, error) {
 	}
 }
 
-func (self *DnsCache) lookupHost(domain string) (string, error) {
+func (self *DnsCache) LookupHost(domain string) (string, error) {
 	addrs, err := self.DNS.LookupHost(context.Background(), domain)
 	if err != nil {
 		return "", err
 	}
-	country, err := common.LookupCountry(addrs[0])
+	return addrs[0], nil
+}
+
+func (self *DnsCache) lookupCountry(domain string) (string, error) {
+	addr, err:= self.LookupHost(domain)
+	if err != nil {
+		return "", err
+	}
+	country, err := common.LookupCountry(addr)
 	if err != nil {
 		return "", err
 	}

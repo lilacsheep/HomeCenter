@@ -254,8 +254,17 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		instanceId string
 		t          bool
 	)
-	host := common.IPAddress(r.URL.Hostname())
-	if !host.IsPublic() {
+	
+	ip := common.IPAddress(r.URL.Hostname())
+	if !ip.Verify() {
+		addr, err := self.DNSCache.LookupHost(r.URL.Hostname())
+		if err != nil {
+			glog.Errorf("search dns error: %v", err)
+		} else {
+			ip = common.IPAddress(addr)
+		}
+	}
+	if !ip.IsPublic() {
 		self.local(w, r)
 	} else {
 		// dns 路由模式
