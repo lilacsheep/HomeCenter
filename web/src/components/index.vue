@@ -80,7 +80,7 @@
                 <el-tag v-else size="mini" type="danger" effect="plain">{{scope.row.delay}} ms</el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="操作">
+            <el-table-column label="操作" width="100">
               <template slot-scope="scope" >
                 <el-popconfirm title="是否将实例删除？" @onConfirm="instance_remove(scope.row.id)">
                   <el-button slot="reference" style="color: red" type="text" size="mini" icon="el-icon-error"></el-button>
