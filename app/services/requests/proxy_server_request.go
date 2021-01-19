@@ -72,6 +72,7 @@ func (self *UpdateProxyServerRequest) Exec(r *ghttp.Request) (response MessageRe
 		}
 		if self.DNSAddr != "" && server2.DNSAddr != self.DNSAddr {
 			server2.DNSAddr = self.DNSAddr
+			server.Mallory.SwitchDNS(self.DNSAddr)
 		}
 		if self.Status != server2.Status {
 			if self.Status {

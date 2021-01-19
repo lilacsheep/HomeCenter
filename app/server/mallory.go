@@ -146,6 +146,23 @@ func (self *MalloryManger) Init() error {
 	return nil
 }
 
+// 切换dns地址
+func (self *MalloryManger) SwitchDNS(addr string) {
+	dnsCache := &mallory.DnsCache{
+		DNS: &net.Resolver{
+			PreferGo: true,
+			Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
+				d := net.Dialer{
+					Timeout: 10 * time.Second,
+				}
+				return d.DialContext(ctx, "udp", fmt.Sprintf("%s:53", addr))
+			}},
+		Cache: gcache.New(),
+	}
+	self.ProxyHandler.DNSCache = dnsCache
+	self.ProxyHandler.Direct = mallory.NewDirect(30*time.Second, addr)
+}
+
 func (self *MalloryManger) SetBalance(balanceType int) {
 	if balanceType != self.BalanceType {
 		self.BalanceType = balanceType
