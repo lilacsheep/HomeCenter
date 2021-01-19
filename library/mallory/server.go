@@ -72,6 +72,8 @@ type Server struct {
 	Instances *gmap.TreeMap
 	// custom dns
 	DNSCache *DnsCache
+	// Authentication
+	Authentication common.Authentication
 }
 
 func (self *Server) UrlSplit(url string) (string, string) {
@@ -195,7 +197,7 @@ func (self *Server) Black(host string) bool {
 //    Because we can be sure that all of them are http request, we can only redo the request
 //    to the remote server and copy the reponse to client.
 func (self *Server) local(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "CONNECT" {
+	if r.Method == http.MethodConnect {
 		if err := self.Direct.Connect(w, r); err != nil {
 			// add error visit log
 			errorEvent(r.URL.Hostname(), err)
@@ -233,7 +235,7 @@ func (self *Server) overseas(w http.ResponseWriter, r *http.Request, instanceIDs
 	if connect == nil {
 		glog.Errorf("get proxy connect is nil")
 	} else {
-		if r.Method == "CONNECT" && connect.Status {
+		if r.Method == http.MethodConnect && connect.Status {
 			connect.Connect(w, r)
 		} else if r.URL.IsAbs() && connect.Status {
 			r.RequestURI = ""
@@ -254,7 +256,9 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		instanceId string
 		t          bool
 	)
-	
+	if self.Authentication != nil && !self.Authentication.Auth(w, r) {
+		return
+	}
 	ip := common.IPAddress(r.URL.Hostname())
 	if !ip.IsPublic() {
 		self.local(w, r)
