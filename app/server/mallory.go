@@ -111,7 +111,7 @@ func (self *MalloryManger) Init() error {
 		DNSCache:     dnsCache,
 	}
 	// init url role
-	for _, p := range models.AllRoles() {
+	for _, p := range mallory.AllRoles() {
 		self.ProxyHandler.AddUrlRole(p.Sub, p.Domain, p.Status, gconv.String(p.ID))
 	}
 
@@ -142,7 +142,9 @@ func (self *MalloryManger) Init() error {
 	// set http server Handler
 	self.HttpServer.Handler = self.ProxyHandler
 	self.HttpServer.Addr = fmt.Sprintf(":%d", info.Port)
-
+	if info.EnableAuth {
+		self.ProxyHandler.Authentication = mallory.BasicAuth()
+	}
 	return nil
 }
 

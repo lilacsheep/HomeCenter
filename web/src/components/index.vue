@@ -29,6 +29,10 @@
                     >停止</el-tag
                   >
                 </span>
+                <span v-else-if="scope.row.key === 'enable_auth'">
+                  <el-tag v-if="scope.row.value" type="success" size="mini" effect="plain">开启</el-tag>
+                  <el-tag v-else type="danger" size="mini" effect="plain">关闭</el-tag>
+                </span>
                 <span v-else-if="scope.row.key === 'balance'">
                   <el-tag
                     v-if="!scope.row.value"
@@ -382,6 +386,9 @@
             autocomplete="off"
           ></el-input-number>
         </el-form-item>
+        <el-form-item label="认证" label-width="80px">
+          <el-switch v-model="server.edit.form.enable_auth" active-text="开启" inactive-text="关闭"></el-switch>
+        </el-form-item>
         <el-form-item label="DNS" label-width="80px">
           <el-autocomplete size="small" popper-class="my-autocomplete" v-model="server.edit.form.dns_addr" :fetch-suggestions="querySearch" placeholder="请输入内容">
             <i class="el-icon-edit el-input__icon" slot="suffix"> </i>
@@ -635,6 +642,7 @@ export default {
             username: "",
             password: "",
             proxy_mode: "",
+            enable_auth: false,
           },
         },
         info: {
@@ -760,6 +768,9 @@ export default {
             break;
           case "proxy_mode":
             that.server.edit.form.proxy_mode = row.value;
+            break;
+          case "enable_auth":
+            that.server.edit.form.enable_auth = row.value;
             break;
         }
       });

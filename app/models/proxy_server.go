@@ -5,15 +5,16 @@ import (
 )
 
 type ProxyServer struct {
-	ID        int    `json:"id" storm:"id,increment"`
-	Name      string `json:"name"`
-	Port      int    `json:"port"`
-	Username  string `json:"username"`
-	DNSAddr   string `json:"dns_addr"`
-	Password  string `json:"password"`
-	Status    bool   `json:"status"`
-	ProxyMode int    `json:"proxy_mode"`
-	AutoStart bool   `json:"auto_start"`
+	ID         int    `json:"id" storm:"id,increment"`
+	Name       string `json:"name"`
+	Port       int    `json:"port"`
+	Username   string `json:"username"`
+	DNSAddr    string `json:"dns_addr"`
+	Password   string `json:"password"`
+	Status     bool   `json:"status"`
+	ProxyMode  int    `json:"proxy_mode"`
+	AutoStart  bool   `json:"auto_start"`
+	EnableAuth bool   `json:"enable_auth"`
 }
 
 func GetProxyServer() (*ProxyServer, error) {

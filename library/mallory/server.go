@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/container/gmap"
@@ -25,27 +24,6 @@ func (t AccessType) String() string {
 	}
 }
 
-type ProxyRole struct {
-	ID         int    `json:"id" storm:"id,increment"`
-	InstanceID int    `json:"instance_id"`
-	Status     bool   `json:"status"`
-	Sub        string `json:"sub"`
-	Domain     string `json:"domain"`
-}
-
-type ProxyRoleAnalysis struct {
-	ID     int    `json:"id" storm:"id,increment"`
-	Domain string `json:"domain" storm:"unique"`
-	Times  int    `json:"times"`
-	Error  string `json:"error"`
-}
-
-type ProxyVisitLog struct {
-	ID       int       `json:"id" storm:"id,increment"`
-	Address  string    `json:"address" storm:"index"`
-	Host     string    `json:"host" storm:"index"`
-	Datetime time.Time `json:"datetime"`
-}
 
 type Server struct {
 	// SmartSrv or NormalSrv
@@ -73,7 +51,7 @@ type Server struct {
 	// custom dns
 	DNSCache *DnsCache
 	// Authentication
-	Authentication common.Authentication
+	Authentication Authentication
 }
 
 func (self *Server) UrlSplit(url string) (string, string) {
@@ -289,4 +267,13 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			self.overseas(w, r, instanceId)
 		}
 	}
+}
+
+
+func (self *Server) EnableAuth() {
+	self.Authentication = BasicAuth()
+}
+
+func (self *Server) DisableAuth() {
+	self.Authentication = nil
 }

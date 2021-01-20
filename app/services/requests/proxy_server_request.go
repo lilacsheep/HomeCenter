@@ -43,14 +43,15 @@ func NewStopProxyServerRequest() *StopProxyServerRequest {
 }
 
 type UpdateProxyServerRequest struct {
-	Name      string `json:"name"`
-	Port      int    `json:"port"`
-	Username  string `json:"username"`
-	Password  string `json:"password"`
-	Status    bool   `json:"status"`
-	DNSAddr   string `json:"dns_addr"`
-	AutoProxy bool   `json:"auto_proxy"`
-	ProxyMode int    `json:"proxy_mode"`
+	Name       string `json:"name"`
+	Port       int    `json:"port"`
+	Username   string `json:"username"`
+	Password   string `json:"password"`
+	Status     bool   `json:"status"`
+	DNSAddr    string `json:"dns_addr"`
+	AutoProxy  bool   `json:"auto_proxy"`
+	ProxyMode  int    `json:"proxy_mode"`
+	EnableAuth bool   `json:"enable_auth"`
 }
 
 func (self *UpdateProxyServerRequest) Exec(r *ghttp.Request) (response MessageResponse) {
@@ -88,6 +89,14 @@ func (self *UpdateProxyServerRequest) Exec(r *ghttp.Request) (response MessageRe
 			}
 			server2.ProxyMode = self.ProxyMode
 		}
+		if self.EnableAuth != server2.EnableAuth {
+			if self.EnableAuth {
+				server.Mallory.ProxyHandler.EnableAuth()
+			} else {
+				server.Mallory.ProxyHandler.DisableAuth()
+			}
+			server2.EnableAuth = self.EnableAuth
+		}
 		err := filedb2.DB.Set("settings", "server", server2)
 		if err != nil {
 			response.ErrorWithMessage(http.StatusServiceUnavailable, err.Error())
@@ -116,6 +125,7 @@ func (self *InfoProxyServerRequest) Exec(r *ghttp.Request) (response MessageResp
 		data.Append(g.Map{"key": "balance", "name": "负载", "value": info.Status})
 		data.Append(g.Map{"key": "auto_start", "name": "启动", "value": info.AutoStart})
 		data.Append(g.Map{"key": "proxy_mode", "name": "模式", "value": info.ProxyMode})
+		data.Append(g.Map{"key": "enable_auth", "name": "认证", "value": info.EnableAuth})
 		if server.Mallory.Error != nil && server.Mallory.Error != http.ErrServerClosed {
 			data.Append(g.Map{"key": "error", "name": "错误", "value": server.Mallory.Error.Error()})
 		}
