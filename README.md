@@ -5,7 +5,7 @@
     * [Detailed](#Detailed)
     * [Using](#Using)
         * [Start process](#Start)
-        * [AutoStart] (#AutoStart)
+        * [AutoStart](#AutoStart)
         * [configuration](#configuration)
 
 ## 中文
