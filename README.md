@@ -1,9 +1,9 @@
-* [Start] (#Begins)
+* [Start]
     * [Project](#Link)
     * [UpdateRecord](#Update)
     * [Contact](#Contact)
     * [Detailed](#Detailed)
-    * [Use](#Using)
+    * [Using](#Using)
         * [Start process](#Start)
         * [AutoStart] (#AutoStart)
         * [configuration](#configuration)
@@ -19,7 +19,7 @@ Often tinker with small things at home, such as:
 There are so many complicated things, and there is no unified tool to complete my needs. I just have a Raspberry Pi 3b+, and I intend to let this thing play its final value. 
 
 
-## Project Link
+## Link
 > [Github download](https://github.com/lilacsheep/HomeCenter/releases)
 
 > [Gitee download](https://gitee.com/Dukeshi/HomeCenter)
