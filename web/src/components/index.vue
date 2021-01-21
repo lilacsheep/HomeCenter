@@ -60,8 +60,22 @@
                     effect="plain"
                     >规则转发</el-tag
                   >
+                  <el-tag
+                    v-else-if="scope.row.value == 3"
+                    size="mini"
+                    type="warning"
+                    effect="plain"
+                    >DNS智能代理</el-tag
+                  >
+                  <el-tag
+                    v-else-if="scope.row.value == 4"
+                    size="mini"
+                    type="warning"
+                    effect="plain"
+                    >规则&DNS代理</el-tag
+                  >
                   <el-tag v-else size="mini" type="danger" effect="plain"
-                    >DNS转发</el-tag
+                    >只本地</el-tag
                   >
                 </span>
                 <span v-else-if="scope.row.key === 'instances'">
