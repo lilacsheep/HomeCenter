@@ -7,8 +7,8 @@
 东西又多有繁杂，没有一个统一的工具来完成自己的需求，刚刚好手上有个树莓派3b+， 打算让此物发挥最后的价值。所以自己做一个简单易用的小工具。
 
 ## 仓库地址
-[Github下载](https://github.com/lilacsheep/HomeCenter/releases)
-[Gitee下载](https://gitee.com/Dukeshi/HomeCenter)
+> [Github下载](https://github.com/lilacsheep/HomeCenter/releases)
+> [Gitee下载](https://gitee.com/Dukeshi/HomeCenter)
 
 ## 更新记录
 > [更新记录](/doc/update.md)
