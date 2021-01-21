@@ -59,8 +59,11 @@ systemct start proxy
 Visit http://your_address:port
 
 ## Default account
-> username: admin
-> password: !QAZ2wsx
+```
+username: admin
+password: !QAZ2wsx
+```
+
 
 ## Configuration
 [Win Help](https://jingyan.baidu.com/article/72ee561a053a87e16138dfed.html)
