@@ -8,6 +8,7 @@
 
 ## 仓库地址
 > [Github下载](https://github.com/lilacsheep/HomeCenter/releases)
+
 > [Gitee下载](https://gitee.com/Dukeshi/HomeCenter)
 
 ## 更新记录
@@ -39,6 +40,7 @@ cp systemd/system/proxy.service /lib/systemd/system/
 systemctl enable proxy
 systemct start proxy
 ```
+
 ## 访问
 访问http://your_address:port
 
