@@ -38,10 +38,6 @@ type Server struct {
 	BlockedHosts *gmap.TreeMap
 	// black list
 	BlackHosts *gmap.TreeMap
-	// username
-	Username string
-	// Password
-	Password string
 	// Proxy mode
 	ProxyMode int // 1 全代理模式 2 规则代理模式 3 DNS 代理模式
 	// for serve http
