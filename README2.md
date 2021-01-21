@@ -60,3 +60,4 @@ systemct start proxy
 
 ## 代理配置使用帮助
 [Win帮助](https://jingyan.baidu.com/article/72ee561a053a87e16138dfed.html)
+[Google游览器](https://www.cnblogs.com/wukai66/p/12599362.html)
