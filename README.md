@@ -1,17 +1,17 @@
-* [Story Start] (#Story Start)
-    * [Warehouse address](#Warehouse address)
-    * [Update Record](#Update Record)
-    * [Contact author](#Contact author)
-    * [Detailed function](#Detailed function)
-    * [Use help](#use help)
-        * [Start process](#Start process)
-        * [Start-up self-start] (# Start-up self-start)
-        * [Proxy configuration](#Proxy configuration)
+* [Start] (#Begins)
+    * [Project](#Link)
+    * [UpdateRecord](#Update)
+    * [Contact](#Contact)
+    * [Detailed](#Detailed)
+    * [Use](#Using)
+        * [Start process](#Start)
+        * [AutoStart] (#AutoStart)
+        * [configuration](#configuration)
 
 ## 中文
 [中文文档](/README2.md)
 
-## The story begins
+## Begins
 Often tinker with small things at home, such as:
 1. SkyDrive Seafile, h5ai, nextcloud, Cloudreve
 2. ssr of proxy class
@@ -19,15 +19,15 @@ Often tinker with small things at home, such as:
 There are so many complicated things, and there is no unified tool to complete my needs. I just have a Raspberry Pi 3b+, and I intend to let this thing play its final value. 
 
 
-## Warehouse Address
+## Project Link
 > [Github download](https://github.com/lilacsheep/HomeCenter/releases)
 
 > [Gitee download](https://gitee.com/Dukeshi/HomeCenter)
 
-## update record
+## Update
 > [Update Record](/doc/update.md)
 
-## Contact the author
+## Contact
 QQ: 521287094
 Email: lilacsheep@hotmail.com
 
@@ -41,12 +41,12 @@ Email: lilacsheep@hotmail.com
 ## Manually build
 See build.sh for details
 
-# Using help
-## Start the process
+# Using
+## Start
 ```bash
 ./proxy -h 0.0.0.0:80 -path db
 ```
-## Linux (Raspberry Pi) Boot from boot (Centos7 and above)
+## AutoStart
 Modify the specific path that /path/to/proxy in systemd/system/proxy.service is deployed for you
 
 ```bash
@@ -62,5 +62,5 @@ Visit http://your_address:port
 > username: admin
 > password: !QAZ2wsx
 
-## Proxy configuration help
+## Configuration
 [Win Help](https://jingyan.baidu.com/article/72ee561a053a87e16138dfed.html)
