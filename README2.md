@@ -25,6 +25,7 @@
 
 ## 联系作者
 QQ: 521287094
+Email: lilacsheep@hotmail.com
 
 ## 详细功能
 1. Http代理功能，基于ssh协议,提供支持多规则分发，后期也会新增其他的协议。
