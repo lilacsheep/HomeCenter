@@ -403,9 +403,11 @@
         </el-form-item>
         <el-form-item label="模式" label-width="80px">
           <el-select v-model="server.edit.form.proxy_mode" size="small" placeholder="请选择">
-            <el-option label="全代理模式" :value="1"></el-option>
+            <el-option label="全代理" :value="1"></el-option>
             <el-option label="规则代理" :value="2"></el-option>
-            <el-option label="DNS代理" :value="3"></el-option>
+            <el-option label="DNS" :value="3"></el-option>
+            <el-option label="规则&DNS" :value="4"></el-option>
+            <el-option label="只本地" :value="99"></el-option>
           </el-select>
         </el-form-item>
       </el-form>

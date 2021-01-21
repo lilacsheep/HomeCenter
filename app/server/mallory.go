@@ -34,7 +34,7 @@ func DefaultServer() *models.ProxyServer {
 		Status:    true,
 		AutoStart: true,
 		DNSAddr:   "8.8.8.8",
-		ProxyMode: 2,
+		ProxyMode: 4,
 	}
 }
 

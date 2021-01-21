@@ -54,6 +54,7 @@ type Server struct {
 	Authentication Authentication
 }
 
+// split url
 func (self *Server) UrlSplit(url string) (string, string) {
 	host := HostOnly(url)
 	domain, _ := publicsuffix.EffectiveTLDPlusOne(host)
@@ -242,10 +243,25 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		self.local(w, r)
 	} else {
 		// dns 路由模式
-		if self.ProxyMode == 3 {
-			// dns解析到本地地址后使用本地网络访问，报错默认走本地
+		switch self.ProxyMode {
+		case 4: // 规则+DNS智能代理
+			t, instanceId = self.Blocked(r.URL.Host)
+			use = t && r.URL.Host != "" && self.Instances.Size() != 0
+			if use {
+				self.overseas(w, r, instanceId)
+			} else {
+				if v, _ := self.DNSCache.IsLocal(r.URL.Hostname()); v {
+					self.local(w, r)
+				} else {
+					if self.DNSCache.IsChina(r.URL.Hostname()) {
+						self.local(w, r)
+					} else {
+						self.overseas(w, r, instanceId)
+					}
+				}
+			}
+		case 3: // DNS智能代理
 			if v, _ := self.DNSCache.IsLocal(r.URL.Hostname()); v {
-				glog.Debugf("domain is local address: %s ", r.URL.Hostname())
 				self.local(w, r)
 			} else {
 				if self.DNSCache.IsChina(r.URL.Hostname()) {
@@ -254,7 +270,7 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					self.overseas(w, r, instanceId)
 				}
 			}
-		} else if self.ProxyMode == 2 { // 规则代理模式
+		case 2: // 规则代理
 			t, instanceId = self.Blocked(r.URL.Host)
 			use = t && r.URL.Host != "" && self.Instances.Size() != 0
 			if use {
@@ -262,9 +278,10 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			} else {
 				self.local(w, r)
 			}
-		} else {
-			// 纯代理模式
+		case 1: // 只代理
 			self.overseas(w, r, instanceId)
+		default: // 只走本地代理
+			self.local(w, r)
 		}
 	}
 }
