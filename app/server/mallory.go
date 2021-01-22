@@ -103,6 +103,7 @@ func (self *MalloryManger) Init() error {
 				return d.DialContext(ctx, "udp", fmt.Sprintf("%s:53", info.DNSAddr))
 			}},
 		Cache: gcache.New(),
+		ForceCountry: mallory.DefaultForceCountry(),
 	}
 	self.ProxyHandler = &mallory.Server{
 		Direct:       mallory.NewDirect(30*time.Second, info.DNSAddr),

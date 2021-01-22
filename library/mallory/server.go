@@ -2,15 +2,12 @@
 package mallory
 
 import (
-	"fmt"
 	"net/http"
-	"strings"
 	"sync"
 
 	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/os/glog"
-	"golang.org/x/net/publicsuffix"
 )
 
 type AccessType bool
@@ -50,17 +47,6 @@ type Server struct {
 }
 
 // split url
-func (self *Server) UrlSplit(url string) (string, string) {
-	host := HostOnly(url)
-	domain, _ := publicsuffix.EffectiveTLDPlusOne(host)
-	subDomain := ""
-	t := strings.Split(host, fmt.Sprintf(".%s", domain))
-	subDomain = t[0]
-	if subDomain == domain {
-		return "", domain
-	}
-	return subDomain, domain
-}
 
 func (self *Server) AddUrlRole(sub, domain string, status bool, instances ...string) {
 	instanceId := ""
@@ -117,7 +103,7 @@ func (self *Server) RemoveUrlRole(sub, domain string, status bool) {
 func (self *Server) Blocked(host string) (bool, string) {
 	blocked := false
 	instance := ""
-	sub, domain := self.UrlSplit(host)
+	sub, domain := UrlSplit(host)
 
 	if value, f := self.BlockedHosts.Search(domain); f {
 		value.(*gmap.StrStrMap).Iterator(func(k string, v string) bool {
@@ -134,7 +120,7 @@ func (self *Server) Blocked(host string) (bool, string) {
 
 func (self *Server) Black(host string) bool {
 	blocked := false
-	sub, domain := self.UrlSplit(host)
+	sub, domain := UrlSplit(host)
 
 	if value, f := self.BlackHosts.Search(domain); f {
 		value.(*garray.StrArray).Iterator(func(k int, v string) bool {

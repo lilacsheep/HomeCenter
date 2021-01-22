@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"strings"
+
+	"golang.org/x/net/publicsuffix"
 )
 
 // HostOnly returns host if has port in addr, or addr if missing port
@@ -56,4 +59,17 @@ func RemoveHopHeaders(h http.Header) {
 	for _, k := range hopHeaders {
 		h.Del(k)
 	}
+}
+
+
+func UrlSplit(url string) (string, string) {
+	host := HostOnly(url)
+	domain, _ := publicsuffix.EffectiveTLDPlusOne(host)
+	subDomain := ""
+	t := strings.Split(host, fmt.Sprintf(".%s", domain))
+	subDomain = t[0]
+	if subDomain == domain {
+		return "", domain
+	}
+	return subDomain, domain
 }

@@ -13,9 +13,15 @@ import (
 type DnsCache struct {
 	DNS   *net.Resolver
 	Cache *gcache.Cache
+	ForceCountry *gcache.Cache
 }
 
 func (self *DnsCache) search(domain string) (string, error) {
+	_, host := UrlSplit(domain)
+	if v, _ := self.ForceCountry.Contains(host); v {
+		c, _ := self.ForceCountry.Get(host)
+		return c.(string), nil
+	}
 	if found, err := self.Cache.Contains(domain); err != nil {
 		return "", err
 	} else if !found {
@@ -71,4 +77,10 @@ func (self *DnsCache) IsChina(domain string) bool {
 	} else {
 		return country == "CN"
 	}
+}
+
+func DefaultForceCountry() *gcache.Cache {
+	cache := gcache.New()
+	cache.Set("baidu.com", "CN", 0)
+	return cache
 }
