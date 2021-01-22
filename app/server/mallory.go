@@ -120,8 +120,6 @@ func (self *MalloryManger) Init() error {
 
 	// set handler setting
 	self.ProxyHandler.Port = info.Port
-	self.ProxyHandler.Username = info.Username
-	self.ProxyHandler.Password = info.Password
 	self.ProxyHandler.ProxyMode = info.ProxyMode
 
 	// set proxy Balance

@@ -3,7 +3,6 @@ package mallory
 
 import (
 	"fmt"
-	"homeproxy/library/common"
 	"net/http"
 	"strings"
 	"sync"
@@ -234,29 +233,14 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if self.Authentication != nil && !self.Authentication.Auth(w, r) {
 		return
 	}
-	ip := common.IPAddress(r.URL.Hostname())
-	if !ip.IsPublic() {
-		self.local(w, r)
-	} else {
-		// dns 路由模式
-		switch self.ProxyMode {
-		case 4: // 规则+DNS智能代理
-			t, instanceId = self.Blocked(r.URL.Host)
-			use = t && r.URL.Host != "" && self.Instances.Size() != 0
-			if use {
-				self.overseas(w, r, instanceId)
-			} else {
-				if v, _ := self.DNSCache.IsLocal(r.URL.Hostname()); v {
-					self.local(w, r)
-				} else {
-					if self.DNSCache.IsChina(r.URL.Hostname()) {
-						self.local(w, r)
-					} else {
-						self.overseas(w, r, instanceId)
-					}
-				}
-			}
-		case 3: // DNS智能代理
+	// dns 路由模式
+	switch self.ProxyMode {
+	case 4: // 规则+DNS智能代理
+		t, instanceId = self.Blocked(r.URL.Host)
+		use = t && r.URL.Host != "" && self.Instances.Size() != 0
+		if use {
+			self.overseas(w, r, instanceId)
+		} else {
 			if v, _ := self.DNSCache.IsLocal(r.URL.Hostname()); v {
 				self.local(w, r)
 			} else {
@@ -266,20 +250,31 @@ func (self *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					self.overseas(w, r, instanceId)
 				}
 			}
-		case 2: // 规则代理
-			t, instanceId = self.Blocked(r.URL.Host)
-			use = t && r.URL.Host != "" && self.Instances.Size() != 0
-			if use {
-				self.overseas(w, r, instanceId)
-			} else {
+		}
+	case 3: // DNS智能代理
+		if v, _ := self.DNSCache.IsLocal(r.URL.Hostname()); v {
+			self.local(w, r)
+		} else {
+			if self.DNSCache.IsChina(r.URL.Hostname()) {
 				self.local(w, r)
+			} else {
+				self.overseas(w, r, instanceId)
 			}
-		case 1: // 只代理
+		}
+	case 2: // 规则代理
+		t, instanceId = self.Blocked(r.URL.Host)
+		use = t && r.URL.Host != "" && self.Instances.Size() != 0
+		if use {
 			self.overseas(w, r, instanceId)
-		default: // 只走本地代理
+		} else {
 			self.local(w, r)
 		}
+	case 1: // 只代理
+		self.overseas(w, r, instanceId)
+	default: // 只走本地代理
+		self.local(w, r)
 	}
+	
 }
 
 
