@@ -4,10 +4,13 @@ import (
 	"fmt"
 	"homeproxy/library/events"
 	"homeproxy/library/filedb2"
+	"net"
+	"os"
 	"strings"
 	"time"
 
 	"github.com/asdine/storm/v3"
+	"github.com/gogf/gf/os/glog"
 	"golang.org/x/net/publicsuffix"
 )
 
@@ -70,6 +73,26 @@ func (self *DomainErrorEvent) DoEvent() error {
 }
 
 func errorEvent(host string, err error) {
+	netErr, ok := err.(net.Error)
+    if !ok {
+		glog.Error("unknow error: ", err.Error())
+        return
+	}
+	if netErr.Timeout() {
+		glog.Error("unknow error: timeout")
+        return
+	}
+	opErr, ok := netErr.(*net.OpError)
+    if !ok {
+		glog.Error("unknow net error: ", netErr.Error())
+        return
+    }
+	switch t := opErr.Err.(type) {
+    case *net.DNSError:
+		glog.Printf("net.DNSError:%+v", t)
+	case *os.SyscallError:
+		glog.Printf("os.SyscallError:%+v", t)
+	}
 	event := &DomainErrorEvent{host, err.Error()}
 	events.EventChan <- event
 }

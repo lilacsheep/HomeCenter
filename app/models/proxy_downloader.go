@@ -47,6 +47,9 @@ type DownloadSettings struct {
 	ThreadNum     int64  `json:"thread_num"`     // 默认的线程大小
 	NotifyOpen    bool   `json:"notify_open"`    // 是否开启通知
 	NotifyMessage string `json:"notify_message"` // 通知消息
+	Aria2Enable   int64  `json:"aria2_enable"`   // 是否使用aria2 -- 1使用 --2不使用
+	Aria2Url      string `json:"aria2_url"`      // aria2地址
+	Aria2Token    string `json:"aria2_token"`    // aria2的Token
 }
 
 type downloadTaskManager struct {
