@@ -98,8 +98,11 @@ func NewGetDownloadSettingsRequest() *GetDownloadSettingsRequest {
 type UpdateDownloadSettingsRequest struct {
 	Path          string `json:"path"`           // 下载路径
 	ThreadNum     int64  `json:"thread_num"`     // 默认的线程大小
-	NotifyOpen    bool   `json:"notify_open"`    // 是否开启通知
-	NotifyMessage string `json:"notify_message"` // 通知消息
+	NotifyOpen    bool   `json:"notify_open"`    
+	NotifyMessage string `json:"notify_message"`
+	Aria2Enable   bool   `json:"aria2_enable"`
+	Aria2Url      string `json:"aria2_url"`
+	Aria2Token    string `json:"aria2_token"`
 }
 
 func (self *UpdateDownloadSettingsRequest) Exec(r *ghttp.Request) (response MessageResponse) {

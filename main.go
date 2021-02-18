@@ -6,6 +6,7 @@ import (
 	"homeproxy/library/events"
 	_ "homeproxy/packed"
 	_ "homeproxy/router"
+	_ "homeproxy/app/server/aria2"
 	"time"
 
 	"github.com/gogf/gf/frame/g"

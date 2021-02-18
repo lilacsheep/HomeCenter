@@ -92,11 +92,14 @@
               <el-form-item label="线程数量" prop="thread_num">
                 <el-input-number size="small" v-model="settings.form.thread_num" :min="1" :step="2" :max="64"></el-input-number>
               </el-form-item>
-              <el-form-item label="通知开关" prop="notify_open">
-                <el-switch size="small" v-model="settings.form.notify_open"></el-switch>
+              <el-form-item label="Aira2" prop="aria2_enable">
+                <el-switch size="small" v-model="settings.form.aria2_enable"></el-switch>
               </el-form-item>
-              <el-form-item label="通知消息" prop="notify_message">
-                <el-input size="small" type="textarea" v-model="settings.form.notify_message"></el-input>
+              <el-form-item label="地址" label-width="100px">
+                <el-input size="small" v-model="settings.form.aria2_url" style="width: 220px"></el-input>
+              </el-form-item>
+              <el-form-item label="Token" label-width="100px">
+                <el-input size="small" v-model="settings.form.aria2_token" style="width: 220px"></el-input>
               </el-form-item>
               <el-form-item>
                 <el-button size="small" type="primary"  @click="submit_update_settings">立即更新</el-button>
@@ -157,8 +160,9 @@ export default {
         form: {
           path: "",
           thread_num: 0,
-          notify_open: true,
-          notify_message: ""
+          aria2_enable: false,
+          aria2_url: "",
+          aria2_token: ""
         },
         nodes: []
       }

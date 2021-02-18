@@ -24,6 +24,7 @@ func init() {
 				ThreadNum:     32,
 				NotifyOpen:    false,
 				NotifyMessage: "",
+				Aria2Enable:   false,
 			}
 			filedb2.DB.Set("settings", "download", &settings)
 			glog.Info("init download settings")
@@ -47,7 +48,7 @@ type DownloadSettings struct {
 	ThreadNum     int64  `json:"thread_num"`     // 默认的线程大小
 	NotifyOpen    bool   `json:"notify_open"`    // 是否开启通知
 	NotifyMessage string `json:"notify_message"` // 通知消息
-	Aria2Enable   int64  `json:"aria2_enable"`   // 是否使用aria2 -- 1使用 --2不使用
+	Aria2Enable   bool   `json:"aria2_enable"`   // 是否使用aria2
 	Aria2Url      string `json:"aria2_url"`      // aria2地址
 	Aria2Token    string `json:"aria2_token"`    // aria2的Token
 }
@@ -91,8 +92,9 @@ func (self *downloadTaskManager) UpdateSettings(data interface{}) error {
 	new_ := gjson.New(data)
 	self.Settings.Path = new_.GetString("path", self.Settings.Path)
 	self.Settings.ThreadNum = new_.GetInt64("thread_num", self.Settings.ThreadNum)
-	self.Settings.NotifyOpen = new_.GetBool("notify_open", self.Settings.NotifyOpen)
-	self.Settings.NotifyMessage = new_.GetString("notify_message", self.Settings.NotifyMessage)
+	self.Settings.Aria2Enable = new_.GetBool("aria2_enable", self.Settings.Aria2Enable)
+	self.Settings.Aria2Url = new_.GetString("aria2_url", self.Settings.Aria2Url)
+	self.Settings.Aria2Token = new_.GetString("aria2_token", self.Settings.Aria2Token)
 	return filedb2.DB.Set("settings", "download", self.Settings)
 }
 
