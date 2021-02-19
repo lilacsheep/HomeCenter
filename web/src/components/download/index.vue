@@ -12,7 +12,11 @@
           </el-input> -->
 
           <el-table :data="download.tasks.not_finished" stripe size="mini" style="margin-top: 10px;">
-            <el-table-column prop="file_name" label="文件名" width="300"></el-table-column>
+            <el-table-column prop="gid" label="文件名" width="300">
+              <template slot-scope="scope">
+              {{getTaskName(scope.row)}}
+              </template>
+            </el-table-column>
             <el-table-column prop="totalLength" label="大小" width="100">
               <template slot-scope="scope">
                 {{scope.row.totalLength | diskSize}}
@@ -46,7 +50,11 @@
         </el-tab-pane>
         <el-tab-pane label="已完成">
           <el-table :data="download.tasks.done" stripe size="mini" style="margin-top: 10px;">
-            <el-table-column prop="file_name" label="文件名" width="300"></el-table-column>
+            <el-table-column prop="gid" label="文件名" width="300">
+              <template slot-scope="scope">
+              {{getTaskName(scope.row)}}
+              </template>
+            </el-table-column>
             <el-table-column prop="totalLength" label="大小" width="100">
               <template slot-scope="scope">
                 {{scope.row.totalLength | diskSize}}
@@ -231,10 +239,53 @@ export default {
       if (tab.index === '0') {
         this.timer = setInterval(this.refresh_tasks, 1000)
       } else if (tab.index === '1') {
-
+        clearInterval(this.timer)
       } else if (tab.index === '2') {
         clearInterval(this.timer)
       }
+    },
+    getTaskName: function(info) {
+      let taskName = "Unknown"
+      if (info.bittorrent && info.bittorrent.info) {
+        taskName = info.bittorrent.info.name;
+      }
+      if (!taskName && info.files && info.files.length > 0) {
+        taskName = this.getFileName(info.files[0]);
+      }
+      return taskName
+    },
+    getFileName: function (file) {
+      if (!file) {
+          return '';
+      }
+
+      var path = file.path;
+      var needUrlDecode = false;
+
+      if (!path && file.uris && file.uris.length > 0) {
+          path = file.uris[0].uri;
+          needUrlDecode = true;
+      }
+
+      var index = path.lastIndexOf('/');
+
+      if (index <= 0 || index === path.length) {
+          return path;
+      }
+
+      var fileNameAndQueryString = path.substring(index + 1);
+      var queryStringStartPos = fileNameAndQueryString.indexOf('?');
+      var fileName = fileNameAndQueryString;
+
+      if (queryStringStartPos > 0) {
+          fileName = fileNameAndQueryString.substring(0, queryStringStartPos);
+      }
+
+      if (needUrlDecode) {
+        fileName = decodeURI(fileName);
+      }
+
+      return fileName;
     }
   },
   created: function () {
