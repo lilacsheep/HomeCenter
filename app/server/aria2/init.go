@@ -11,14 +11,11 @@ import (
 )
 
 
-var Server rpc.Client
+var server rpc.Client
 
 func init() {
 	if err := InitClient(); err != nil {
 		glog.Errorf("init aria2 client error: %s", err.Error())
-	} else {
-		options, _ := Server.GetGlobalOption()
-		glog.Info(options)
 	}
 }
 
@@ -30,10 +27,11 @@ func InitClient() error {
 		return err
 	}
 	if settings.Aria2Enable {
-		Server, err = rpc.New(context.Background(), settings.Aria2Url, settings.Aria2Token, time.Second, rpc.DummyNotifier{})
+		server, err = rpc.New(context.Background(), settings.Aria2Url, settings.Aria2Token, time.Second, rpc.DummyNotifier{})
 		if err != nil {
 			return err
 		}
+		Manager = &manager{}
 		glog.Info("aria2 connection success")
 	} else {
 		glog.Info("Aria2 not enabled")

@@ -5,6 +5,7 @@
         <el-tab-pane label="下载中">
           <el-button-group>
             <el-button size="mini" type="primary" icon="el-icon-edit" @click="download.create.visit = true">创建下载</el-button>
+            <el-button size="mini" type="primary" icon="el-icon-upload" @click="torrent.sync = true">上传种子</el-button>
           </el-button-group>
           <!-- <el-input size="mini" placeholder="请输入内容" v-model="roles.filter" style="width: 250px;float: right;">
             <el-button slot="append" icon="el-icon-search"></el-button>
@@ -12,30 +13,20 @@
 
           <el-table :data="download.tasks.not_finished" stripe size="mini" style="margin-top: 10px;">
             <el-table-column prop="file_name" label="文件名" width="300"></el-table-column>
-            <el-table-column prop="total_size" label="大小" width="100">
+            <el-table-column prop="totalLength" label="大小" width="100">
               <template slot-scope="scope">
-                {{scope.row.total_size | diskSize}}
+                {{scope.row.totalLength | diskSize}}
               </template>
             </el-table-column>
-            <el-table-column prop="status" label="状态" width="80">
+            <el-table-column prop="completedLength" label="进度" width="80">
               <template slot-scope="scope">
-                <el-tag v-if="scope.row.status == 1" size="mini">暂停</el-tag>
-                <el-tag v-else-if="scope.row.status == 2" size="mini">等待中</el-tag>
-                <el-tag v-else-if="scope.row.status == 3" size="mini">下载中</el-tag>
-                <el-tag v-else-if="scope.row.status == 4" size="mini">已完成</el-tag>
-                <el-tag v-else-if="scope.row.status == 99" size="mini">错误</el-tag>
+                <span v-if="scope.row.completedLength == 0">0</span>
+                <span v-else>{{(scope.row.completedLength / scope.row.totalLength * 100).toFixed(2)}} %</span>
               </template>
             </el-table-column>
-            <el-table-column prop="progress" label="进度" width="80">
+            <el-table-column prop="downloadSpeed" label="速度">
               <template slot-scope="scope">
-                <span v-if="scope.row.progress == 0">0</span>
-                <span v-else>{{scope.row.progress}} %</span>
-              </template>
-            </el-table-column>
-            <el-table-column prop="speed" label="速度">
-              <template slot-scope="scope">
-                <span v-if="scope.row.status == 3">{{scope.row.speed | diskSize}}/秒</span>
-                <span v-else>-</span>
+                {{scope.row.downloadSpeed | diskSize}}/秒
               </template>
             </el-table-column>
             <el-table-column label="操作" fixed="right" width="100">
@@ -56,22 +47,12 @@
         <el-tab-pane label="已完成">
           <el-table :data="download.tasks.done" stripe size="mini" style="margin-top: 10px;">
             <el-table-column prop="file_name" label="文件名" width="300"></el-table-column>
-            <el-table-column prop="total_size" label="大小" width="100">
+            <el-table-column prop="totalLength" label="大小" width="100">
               <template slot-scope="scope">
-                {{scope.row.total_size | diskSize}}
-              </template>
-            </el-table-column>
-            <el-table-column prop="status" label="状态"  width="80">
-              <template slot-scope="scope">
-                <el-tag v-if="scope.row.status == 1" size="mini">暂停</el-tag>
-                <el-tag v-else-if="scope.row.status == 2" size="mini">等待中</el-tag>
-                <el-tag v-else-if="scope.row.status == 3" size="mini">下载中</el-tag>
-                <el-tag v-else-if="scope.row.status == 4" size="mini">已完成</el-tag>
-                <el-tag v-else-if="scope.row.status == 99" size="mini">错误</el-tag>
+                {{scope.row.totalLength | diskSize}}
               </template>
             </el-table-column>
             <el-table-column prop="md5" label="SH256"></el-table-column>
-
             <el-table-column label="操作" fixed="right" width="80">
               <template slot-scope="scope">
                 <el-popconfirm title="是否删除该任务？" @onConfirm="remove_task(scope.row)">
@@ -134,6 +115,12 @@
         <el-button size="small" type="primary" @click="submit_create_task">确 定</el-button>
       </div>
     </el-dialog>
+    <el-dialog custom-class="upload_diglog" :title="种子上传" :visible.sync="torrent.sync"  width="380px">
+      <el-upload class="upload-demo" drag action="/api/download/torrent">
+        <i class="el-icon-upload"></i>
+        <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+      </el-upload>
+    </el-dialog>
   </el-row>
 </template>
 
@@ -142,6 +129,9 @@
 export default {
   data() {
     return {
+      torrent: {
+        sync: false
+      },
       download: {
         tasks: {
           done: [],
@@ -181,7 +171,7 @@ export default {
     },
     remove_task (item) {
       let that = this
-      this.$api.post("/download/remove", {id: item.id}).then(function (response) {
+      this.$api.post("/download/remove", {id: item.gid}).then(function (response) {
         that.$message({message: '删除成功', type: 'success'})
       })
     },
@@ -203,12 +193,11 @@ export default {
         that.download.tasks.done = []
         that.download.tasks.not_finished = []
         if (response.detail) {
-          response.detail.forEach(function (item) {
-            if (item.status == 4) {
-              that.download.tasks.done.push(item)
-            } else {
-              that.download.tasks.not_finished.push(item)
-            }
+          response.detail["active"].forEach(function (item) {
+            that.download.tasks.not_finished.push(item)          
+          })
+          response.detail["stopped"].forEach(function (item) {
+            that.download.tasks.done.push(item)          
           })
         }
       })
@@ -217,7 +206,6 @@ export default {
       let that = this
       this.$api.get("/download/settings").then(function (response) {
         that.settings.form = response.detail
-
         that.download.create.form.thread_num = response.detail.thread_num
         that.download.create.form.path = response.detail.path
       })

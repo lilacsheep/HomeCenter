@@ -75,6 +75,7 @@ func init() {
 		// download api
 		downloadApi := &api.ProxyDownloadApi{}
 		group.POST("/download/create", downloadApi.Create)
+		group.POST("/download/torrent", downloadApi.AddTorrent)
 		group.GET("/download/tasks", downloadApi.Query)
 		group.POST("/download/remove", downloadApi.Remove)
 		group.POST("/download/cancel", downloadApi.Cancel)

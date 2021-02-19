@@ -14,6 +14,11 @@ func (self *ProxyDownloadApi) Create(r *ghttp.Request) {
 	self.DoRequestValid(request, r)
 }
 
+func (self *ProxyDownloadApi) AddTorrent(r *ghttp.Request) {
+	request := requests.NewCreateTorrentDownloadRequest()
+	self.DoRequest(request, r)
+}
+
 func (self *ProxyDownloadApi) Query(r *ghttp.Request) {
 	request := requests.NewQueryDownloadTaskRequest()
 	self.DoRequestValid(request, r)
