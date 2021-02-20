@@ -21,6 +21,15 @@ func (self *manager) TellStopped(offset, limit int) (infos []rpc.StatusInfo, err
 	return server.TellStopped(offset, limit)
 }
 
+func (self *manager) TellWaiting(offset, limit int) (infos []rpc.StatusInfo, err error) {
+	return server.TellWaiting(offset, limit)
+}
+
+func (self *manager) UnpauseTask(gid string) error {
+	_, err := server.Unpause(gid)
+	return err
+}
+
 func (self *manager) PauseTask(gid string, force bool) (err error) {
 	if force {
 		_, err = server.Pause(gid)

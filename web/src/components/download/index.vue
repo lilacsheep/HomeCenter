@@ -2,7 +2,7 @@
   <el-row :gutter="20">
     <el-col :span="24">
       <el-tabs tab-position="left" @tab-click="tabClick">
-        <el-tab-pane label="下载中">
+        <el-tab-pane label="下载任务">
           <el-button-group>
             <el-button size="mini" type="primary" icon="el-icon-edit" @click="download.create.visit = true">创建下载</el-button>
             <el-button size="mini" type="primary" icon="el-icon-upload" @click="torrent.sync = true">上传种子</el-button>
@@ -11,8 +11,8 @@
             <el-button slot="append" icon="el-icon-search"></el-button>
           </el-input> -->
 
-          <el-table :data="download.tasks.not_finished" stripe size="mini" style="margin-top: 10px;">
-            <el-table-column prop="gid" label="文件名" width="300">
+          <el-table :data="download.tasks" stripe size="mini" style="margin-top: 10px;">
+            <el-table-column prop="gid" label="文件名">
               <template slot-scope="scope">
               {{getTaskName(scope.row)}}
               </template>
@@ -22,47 +22,34 @@
                 {{scope.row.totalLength | diskSize}}
               </template>
             </el-table-column>
-            <el-table-column prop="completedLength" label="进度" width="80">
+            <el-table-column prop="status" label="状态" width="100">
               <template slot-scope="scope">
-                <span v-if="scope.row.completedLength == 0">0</span>
-                <span v-else>{{(scope.row.completedLength / scope.row.totalLength * 100).toFixed(2)}} %</span>
+                <span v-if="scope.row.status == 'active'">{{(scope.row.completedLength / scope.row.totalLength * 100).toFixed(2)}}%</span>
+                <span v-else-if="scope.row.status == 'stopped'">已停止</span>
+                <span v-else-if="scope.row.status == 'paused'">已暂停</span>
+                <span v-else-if="scope.row.status == 'complete'">已完成</span>
+                <span v-else>{{scope.row.status}}</span>
               </template>
             </el-table-column>
-            <el-table-column prop="downloadSpeed" label="速度">
+
+            <el-table-column prop="downloadSpeed" label="下载" width="100">
               <template slot-scope="scope">
                 {{scope.row.downloadSpeed | diskSize}}/秒
               </template>
             </el-table-column>
+            <el-table-column prop="uploadSpeed" label="上传" width="100">
+              <template slot-scope="scope">
+                {{scope.row.uploadSpeed | diskSize}}/秒
+              </template>
+            </el-table-column>
             <el-table-column label="操作" fixed="right" width="100">
               <template slot-scope="scope">
-                <el-popconfirm v-if="scope.row.status == 1" title="是否继续该任务？" @onConfirm="start_task(scope.row)">
+                <el-popconfirm v-if="scope.row.status == 'paused'" title="是否继续该任务？" @onConfirm="start_task(scope.row)">
                   <el-button slot="reference" style="color: green" type="text" size="mini" icon="el-icon-caret-right"></el-button>
                 </el-popconfirm>
-                <el-popconfirm v-if="scope.row.status == 3" title="是否暂停该任务？" @onConfirm="cancel_task(scope.row)">
+                <el-popconfirm v-if="scope.row.status == 'active'" title="是否暂停该任务？" @onConfirm="cancel_task(scope.row)">
                   <el-button slot="reference" style="color: red" type="text" size="mini" icon="el-icon-switch-button"></el-button>
                 </el-popconfirm>
-                <el-popconfirm title="是否删除该任务？" @onConfirm="remove_task(scope.row)">
-                  <el-button slot="reference" style="color: red" type="text" size="mini" icon="el-icon-delete"></el-button>
-                </el-popconfirm>
-              </template>
-            </el-table-column>
-          </el-table>
-        </el-tab-pane>
-        <el-tab-pane label="已完成">
-          <el-table :data="download.tasks.done" stripe size="mini" style="margin-top: 10px;">
-            <el-table-column prop="gid" label="文件名" width="300">
-              <template slot-scope="scope">
-              {{getTaskName(scope.row)}}
-              </template>
-            </el-table-column>
-            <el-table-column prop="totalLength" label="大小" width="100">
-              <template slot-scope="scope">
-                {{scope.row.totalLength | diskSize}}
-              </template>
-            </el-table-column>
-            <el-table-column prop="md5" label="SH256"></el-table-column>
-            <el-table-column label="操作" fixed="right" width="80">
-              <template slot-scope="scope">
                 <el-popconfirm title="是否删除该任务？" @onConfirm="remove_task(scope.row)">
                   <el-button slot="reference" style="color: red" type="text" size="mini" icon="el-icon-delete"></el-button>
                 </el-popconfirm>
@@ -141,10 +128,7 @@ export default {
         sync: false
       },
       download: {
-        tasks: {
-          done: [],
-          not_finished: []
-        },
+        tasks: [],
         create: {
           visit: false,
           form: {
@@ -185,29 +169,20 @@ export default {
     },
     cancel_task (item) {
       let that = this
-      this.$api.post("/download/cancel", {id: item.id}).then(function (response) {
+      this.$api.post("/download/cancel", {id: item.gid}).then(function (response) {
         that.$message({message: '暂停', type: 'success'})
       })
     },
     start_task (item) {
       let that = this
-      this.$api.post("/download/start", {id: item.id}).then(function (response) {
+      this.$api.post("/download/start", {id: item.gid}).then(function (response) {
         that.$message({message: '启动成功', type: 'success'})
       })
     },
     refresh_tasks () {
       let that = this
       this.$api.get("/download/tasks").then(function (response) {
-        that.download.tasks.done = []
-        that.download.tasks.not_finished = []
-        if (response.detail) {
-          response.detail["active"].forEach(function (item) {
-            that.download.tasks.not_finished.push(item)          
-          })
-          response.detail["stopped"].forEach(function (item) {
-            that.download.tasks.done.push(item)          
-          })
-        }
+        that.download.tasks = response.detail
       })
     },
     refresh_settings () {
@@ -237,11 +212,13 @@ export default {
     },
     tabClick: function (tab, event) {
       if (tab.index === '0') {
-        this.timer = setInterval(this.refresh_tasks, 1000)
-      } else if (tab.index === '1') {
-        clearInterval(this.timer)
-      } else if (tab.index === '2') {
-        clearInterval(this.timer)
+        if (!this.timer) {
+          this.timer = setInterval(this.refresh_tasks, 1000)
+        } else if (tab.index === '2') {
+          if (this.timer) {
+            clearInterval(this.timer)
+          } 
+        }
       }
     },
     getTaskName: function(info) {

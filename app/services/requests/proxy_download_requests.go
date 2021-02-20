@@ -58,22 +58,28 @@ type QueryDownloadTaskRequest struct {
 
 func (self *QueryDownloadTaskRequest) Exec(r *ghttp.Request) (response MessageResponse) {
 	var (
-		tasks map[string][]rpc.StatusInfo
+		infos []rpc.StatusInfo
 		err   error
 	)
-	tasks = make(map[string][]rpc.StatusInfo)
 
-	tasks["active"], err = aria2.Manager.ActiveTasks()
+	infos, err = aria2.Manager.ActiveTasks()
 	if err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
-	} else {
-		tasks["stopped"], err = aria2.Manager.TellStopped(0, 999)
-		if err != nil {
-			response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
-		} else {
-			response.DataTable(tasks, len(tasks))
-		}
+		return
 	}
+	stopped, err := aria2.Manager.TellStopped(0, 999)
+	if err != nil {
+		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
+		return
+	}
+	warnings, err := aria2.Manager.TellWaiting(0, 999)
+	if err != nil {
+		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
+		return
+	}
+	infos = append(infos, warnings...)
+	infos = append(infos, stopped...)
+	response.DataTable(infos, len(infos))
 	return
 }
 
@@ -100,12 +106,16 @@ func NewRemoveDownloadTaskRequest() *RemoveDownloadTaskRequest {
 }
 
 type CancelDownloadTaskRequest struct {
-	TaskId int `json:"id"`
+	TaskId string `json:"id"`
 }
 
 func (self *CancelDownloadTaskRequest) Exec(r *ghttp.Request) (response MessageResponse) {
-	models.DownloadManager.CancelTask(self.TaskId)
-	response.Success()
+	err := aria2.Manager.PauseTask(self.TaskId, false)
+	if err != nil {
+		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
+	} else {
+		response.Success()
+	}
 	return
 }
 
@@ -114,12 +124,16 @@ func NewCancelDownloadTaskRequest() *CancelDownloadTaskRequest {
 }
 
 type StartDownloadTaskRequest struct {
-	TaskId int `json:"id"`
+	TaskId string `json:"id"`
 }
 
 func (self *StartDownloadTaskRequest) Exec(r *ghttp.Request) (response MessageResponse) {
-	models.DownloadManager.StartTask(self.TaskId)
-	response.Success()
+	err := aria2.Manager.UnpauseTask(self.TaskId)
+	if err != nil {
+		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
+	} else {
+		response.Success()
+	}
 	return
 }
 
