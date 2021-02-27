@@ -78,8 +78,10 @@ func init() {
 		group.POST("/download/torrent", downloadApi.AddTorrent)
 		group.GET("/download/tasks", downloadApi.Query)
 		group.POST("/download/remove", downloadApi.Remove)
-		group.POST("/download/cancel", downloadApi.Cancel)
-		group.POST("/download/start", downloadApi.Start)
+		group.POST("/download/task/pause", downloadApi.Pause)
+		group.POST("/download/task/unpause", downloadApi.UnPause)
+		group.POST("/download/task/status", downloadApi.TaskStatus)
+		group.GET("/download/global/stat", downloadApi.GlobalStatInfo)
 
 		// download settings api
 		group.GET("/download/settings", downloadApi.Settings)

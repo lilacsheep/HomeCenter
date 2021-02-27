@@ -105,11 +105,11 @@ func NewRemoveDownloadTaskRequest() *RemoveDownloadTaskRequest {
 	return &RemoveDownloadTaskRequest{}
 }
 
-type CancelDownloadTaskRequest struct {
+type PauseDownloadTaskRequest struct {
 	TaskId string `json:"id"`
 }
 
-func (self *CancelDownloadTaskRequest) Exec(r *ghttp.Request) (response MessageResponse) {
+func (self *PauseDownloadTaskRequest) Exec(r *ghttp.Request) (response MessageResponse) {
 	err := aria2.Manager.PauseTask(self.TaskId, false)
 	if err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
@@ -119,15 +119,15 @@ func (self *CancelDownloadTaskRequest) Exec(r *ghttp.Request) (response MessageR
 	return
 }
 
-func NewCancelDownloadTaskRequest() *CancelDownloadTaskRequest {
-	return &CancelDownloadTaskRequest{}
+func NewPauseDownloadTaskRequest() *PauseDownloadTaskRequest {
+	return &PauseDownloadTaskRequest{}
 }
 
-type StartDownloadTaskRequest struct {
+type UnpauseDownloadTaskRequest struct {
 	TaskId string `json:"id"`
 }
 
-func (self *StartDownloadTaskRequest) Exec(r *ghttp.Request) (response MessageResponse) {
+func (self *UnpauseDownloadTaskRequest) Exec(r *ghttp.Request) (response MessageResponse) {
 	err := aria2.Manager.UnpauseTask(self.TaskId)
 	if err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
@@ -137,8 +137,8 @@ func (self *StartDownloadTaskRequest) Exec(r *ghttp.Request) (response MessageRe
 	return
 }
 
-func NewStartDownloadTaskRequest() *StartDownloadTaskRequest {
-	return &StartDownloadTaskRequest{}
+func NewUnpauseDownloadTaskRequest() *UnpauseDownloadTaskRequest {
+	return &UnpauseDownloadTaskRequest{}
 }
 
 type GetDownloadSettingsRequest struct{}
@@ -175,4 +175,39 @@ func (self *UpdateDownloadSettingsRequest) Exec(r *ghttp.Request) (response Mess
 
 func NewUpdateDownloadSettingsRequest() *UpdateDownloadSettingsRequest {
 	return &UpdateDownloadSettingsRequest{}
+}
+
+
+type GlobalStatInfoRequest struct {}
+
+func (self *GlobalStatInfoRequest) Exec(r *ghttp.Request) (response MessageResponse) {
+	info, err := aria2.Manager.GetGlobalStat()
+	if err != nil {
+		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
+	} else {
+		response.SuccessWithDetail(info)
+	}
+	return
+}
+
+func NewGlobalStatInfoRequest() *GlobalStatInfoRequest {
+	return &GlobalStatInfoRequest{}
+}
+
+type TaskStatusRequest struct {
+	Gid string `json:"id"`
+}
+
+func (self *TaskStatusRequest) Exec(r *ghttp.Request) (response MessageResponse) {
+	info, err := aria2.Manager.TaskStatus(self.Gid)
+	if err != nil {
+		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
+	} else {
+		response.SuccessWithDetail(info)
+	}
+	return
+}
+
+func NewTaskStatusRequest() *TaskStatusRequest {
+	return &TaskStatusRequest{}
 }

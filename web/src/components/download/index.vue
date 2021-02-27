@@ -10,11 +10,14 @@
           <!-- <el-input size="mini" placeholder="请输入内容" v-model="roles.filter" style="width: 250px;float: right;">
             <el-button slot="append" icon="el-icon-search"></el-button>
           </el-input> -->
-
+          <span style="float: right;">
+            <el-tag type="success" size="small"><i class="el-icon-top"></i>{{global.upload | diskSize}}/秒</el-tag>
+            <el-tag type="danger" size="small"><i class="el-icon-bottom"></i>{{global.download | diskSize}}/秒</el-tag>
+          </span>
           <el-table :data="download.tasks" stripe size="mini" style="margin-top: 10px;">
             <el-table-column prop="gid" label="文件名">
               <template slot-scope="scope">
-              {{getTaskName(scope.row)}}
+                <el-button size="mini" type="text" @click="taskInfoOpen(scope.row)">{{getTaskName(scope.row)}}</el-button>
               </template>
             </el-table-column>
             <el-table-column prop="totalLength" label="大小" width="100">
@@ -116,16 +119,39 @@
         <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
       </el-upload>
     </el-dialog>
+    <el-drawer title="任务信息" :visible.sync="task.visible" :before-close="taskInfoClose" size="40%">
+      <table border="0">
+        <tr>
+          <td>文件名</td>
+          <td>{{task.info.filename}}</td>
+        </tr>
+        <tr>
+          <td>大小</td>
+          <td>{{task.info.status.totalLength | diskSize}}</td>
+        </tr>
+      </table>
+    </el-drawer>
   </el-row>
 </template>
 
 <script>
-
+import { aria2Api } from "../../scripts/aria2"
 export default {
   data() {
     return {
       torrent: {
         sync: false
+      },
+      task: {
+        visible: false,
+        info: {
+          filename: "",
+          status: {}
+        }
+      },
+      global: {
+        upload: 0,
+        download: 0
       },
       download: {
         tasks: [],
@@ -151,38 +177,41 @@ export default {
     }
   },
   methods: {
+    taskInfoClose() {
+      this.task.visible = false
+    },
+    taskInfoOpen(info) {
+      let that = this
+      this.task.info.filename = this.getTaskName(info)
+      aria2Api.taskStatus(info.gid, function (response) {
+        that.task.info.status = response.detail
+        that.task.visible = true
+      })
+    },
     submit_create_task () {
       let that = this
-      this.$api.post('/download/create', this.download.create.form).then(function (response) {
+      aria2Api.addUri(this.download.create.form.url, function (){
         that.download.create.visit = false
-        that.$message({message: '添加成功', type: 'success'})
         that.refresh_tasks()
-      }).catch(function (response) {
-        that.$message.error({message: response.message, type: 'error'})
       })
     },
     remove_task (item) {
-      let that = this
-      this.$api.post("/download/remove", {id: item.gid}).then(function (response) {
-        that.$message({message: '删除成功', type: 'success'})
-      })
+      aria2Api.removeTask(item.gid)
     },
     cancel_task (item) {
-      let that = this
-      this.$api.post("/download/cancel", {id: item.gid}).then(function (response) {
-        that.$message({message: '暂停', type: 'success'})
-      })
+      aria2Api.pause(item.gid)
     },
     start_task (item) {
-      let that = this
-      this.$api.post("/download/start", {id: item.gid}).then(function (response) {
-        that.$message({message: '启动成功', type: 'success'})
-      })
+      aria2Api.unpause(item.gid)
     },
     refresh_tasks () {
       let that = this
-      this.$api.get("/download/tasks").then(function (response) {
+      aria2Api.tasks({}, function (response) {
         that.download.tasks = response.detail
+      })
+      aria2Api.globalStat(function (response) {
+        that.global.upload = response.detail.uploadSpeed
+        that.global.download = response.detail.downloadSpeed
       })
     },
     refresh_settings () {
@@ -200,9 +229,6 @@ export default {
       }).catch(function (resp) {
         that.$message({message: '更新失败', type: 'error'})
       })
-    },
-    filter_status(value, row) {
-      return row.status === value;
     },
     refresh_nodes () {
       let that = this
@@ -303,4 +329,8 @@ export default {
   padding: 5px 10px 10px;
 }
 
+.el-drawer__header {
+  margin-bottom: 0px;
+  padding: 10px 10px 0;
+}
 </style>

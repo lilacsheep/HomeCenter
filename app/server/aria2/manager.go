@@ -59,3 +59,7 @@ func (self *manager) AddTorrent(filename string) error {
 	_, err := server.AddTorrent(filename)
 	return err
 }
+
+func (self *manager) TaskStatus(gid string) (info rpc.StatusInfo, err error) {
+	return server.TellStatus(gid)
+}
