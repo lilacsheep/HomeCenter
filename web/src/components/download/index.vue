@@ -119,17 +119,40 @@
         <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
       </el-upload>
     </el-dialog>
-    <el-drawer title="任务信息" :visible.sync="task.visible" :before-close="taskInfoClose" size="40%">
-      <table border="0">
+    <el-drawer :withHeader="false" :visible.sync="task.visible" :before-close="taskInfoClose" size="60%">
+      <table style="border: 1px solid #f2f2f2" width="100%">
         <tr>
-          <td>文件名</td>
-          <td>{{task.info.filename}}</td>
+          <td width="100px" style="background-color: #f2f2f2;padding: 0">文件名</td>
+          <td colspan="3">{{task.info.filename}}</td>
         </tr>
         <tr>
-          <td>大小</td>
+          <td width="100px" style="background-color: #f2f2f2;padding: 0">大小</td>
           <td>{{task.info.status.totalLength | diskSize}}</td>
+          <td width="100px" style="background-color: #f2f2f2;padding: 0">状态</td>
+          <td>{{task.info.status.status}}</td>
+        </tr>
+        <tr>
+          <td width="100px" style="background-color: #f2f2f2;padding: 0">已上传</td>
+          <td>{{task.info.status.uploadLength | diskSize}}</td>
+          <td width="100px" style="background-color: #f2f2f2;padding: 0">已完成</td>
+          <td>{{task.info.status.completedLength | diskSize}}</td>
         </tr>
       </table>
+      <el-table :data="task.info.status.files" stripe size="mini" style="margin-top: 10px;" max-height="500">
+         <el-table-column prop="path" label="文件">
+           <template slot-scope="scope">
+             {{scope.row.path.split("/").slice(-1)[0]}}
+           </template>
+         </el-table-column>
+         <el-table-column prop="completedLength" label="进度" width="100">
+           <template slot-scope="scope">{{(scope.row.completedLength / scope.row.length * 100).toFixed(2)}}%</template>
+          </el-table-column>
+         <el-table-column prop="length" label="大小" width="120">
+           <template slot-scope="scope">
+             {{scope.row.length | diskSize}}
+           </template>
+         </el-table-column>
+      </el-table>
     </el-drawer>
   </el-row>
 </template>
@@ -332,5 +355,13 @@ export default {
 .el-drawer__header {
   margin-bottom: 0px;
   padding: 10px 10px 0;
+}
+
+.el-drawer__body {
+  padding: 5px;
+}
+
+.el-drawer__body table tr td {
+  border: 1px solid #f2f2f2;
 }
 </style>
