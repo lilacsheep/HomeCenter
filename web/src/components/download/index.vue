@@ -237,7 +237,7 @@ export default {
               tasks.push(item)
             }
           })
-          that.download.tasks = response.detail
+          that.download.tasks = tasks
         } else if (that.task.query.status === '下载中') {
           response.detail.forEach(function (item) {
             if (item.status == "active") {
