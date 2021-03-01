@@ -301,10 +301,12 @@ export default {
       } else if (tab.index === '1') {
         if (this.timer) {
           clearInterval(this.timer)
+          this.timer = undefined
         } 
       } else if (tab.index === '2') {
         if (this.timer) {
           clearInterval(this.timer)
+          this.timer = undefined
         }
         this.refresh_global_options()
       }
