@@ -82,6 +82,7 @@ func init() {
 		group.POST("/download/task/unpause", downloadApi.UnPause)
 		group.POST("/download/task/status", downloadApi.TaskStatus)
 		group.GET("/download/global/stat", downloadApi.GlobalStatInfo)
+		group.GET("/download/global/options", downloadApi.Options)
 
 		// download settings api
 		group.GET("/download/settings", downloadApi.Settings)

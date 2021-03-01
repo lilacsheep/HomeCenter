@@ -1,8 +1,8 @@
 package models
 
 import (
-	"homeproxy/library/filedb2"
 	"github.com/gogf/gf/os/glog"
+	"homeproxy/library/filedb2"
 )
 
 func init() {
@@ -16,9 +16,9 @@ func init() {
 }
 
 type DownloadSettings struct {
-	ID            int    `json:"id" storm:"id,increment"`
-	Aria2Url      string `json:"aria2_url"`      // aria2地址
-	Aria2Token    string `json:"aria2_token"`    // aria2的Token
+	ID              int    `json:"id" storm:"id,increment"`
+	Aria2Url        string `json:"aria2_url"`   // aria2地址
+	Aria2Token      string `json:"aria2_token"` // aria2的Token
 }
 
 func GetSettings() (*DownloadSettings, error) {

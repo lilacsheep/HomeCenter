@@ -82,7 +82,10 @@
           </el-card>
         </el-tab-pane>
         <el-tab-pane label="Aria2配置">
-
+          <el-table :data="aria2.options" stripe size="mini" style="margin-top: 10px;">
+            <el-table-column prop="key" label="配置"></el-table-column>
+            <el-table-column prop="value" label="值"></el-table-column>
+          </el-table>
         </el-tab-pane>
       </el-tabs>
     </el-col>
@@ -162,6 +165,9 @@ export default {
     return {
       torrent: {
         sync: false
+      },
+      aria2: {
+        options: []
       },
       task: {
         visible: false,
@@ -281,19 +287,26 @@ export default {
         that.settings.nodes = response.detail
       })
     },
+    refresh_global_options() {
+      let that = this, options = []
+      aria2Api.globalOptions(function (response) {
+        that.aria2.options = response.detail
+      })
+    },
     tabClick: function (tab, event) {
       if (tab.index === '0') {
         if (!this.timer) {
           this.timer = setInterval(this.refresh_tasks, 1000)
-        } else if (tab.index === '1') {
-          if (this.timer) {
-            clearInterval(this.timer)
-          } 
-        } else if (tab.index === '2') {
-          if (this.timer) {
-            clearInterval(this.timer)
-          }
         }
+      } else if (tab.index === '1') {
+        if (this.timer) {
+          clearInterval(this.timer)
+        } 
+      } else if (tab.index === '2') {
+        if (this.timer) {
+          clearInterval(this.timer)
+        }
+        this.refresh_global_options()
       }
     },
     getTaskName: function(info) {

@@ -59,3 +59,8 @@ func (self *ProxyDownloadApi) TaskStatus(r *ghttp.Request) {
 	request := requests.NewTaskStatusRequest()
 	self.DoRequestValid(request, r)
 }
+
+func (self *ProxyDownloadApi) Options(r *ghttp.Request) {
+	request := requests.NewGetAria2GlobalOptionsRequest()
+	self.DoRequestValid(request, r)
+}

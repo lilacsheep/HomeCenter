@@ -210,3 +210,24 @@ func (self *TaskStatusRequest) Exec(r *ghttp.Request) (response MessageResponse)
 func NewTaskStatusRequest() *TaskStatusRequest {
 	return &TaskStatusRequest{}
 }
+
+
+type GetAria2GlobalOptionsRequest struct {}
+
+func (self *GetAria2GlobalOptionsRequest) Exec(r *ghttp.Request) (response MessageResponse) {
+	opts := []map[string]interface{}{}
+	options, err := aria2.Manager.GetGlobalOption()
+	if err != nil {
+		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
+	} else {
+		for k, v := range options {
+			opts = append(opts, map[string]interface{}{"key": k, "value": v})
+		}
+		response.SuccessWithDetail(opts)
+	}
+	return
+}
+
+func NewGetAria2GlobalOptionsRequest() *GetAria2GlobalOptionsRequest {
+	return &GetAria2GlobalOptionsRequest{}
+}

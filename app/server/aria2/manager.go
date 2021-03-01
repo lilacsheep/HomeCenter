@@ -70,6 +70,10 @@ func (self *manager) TaskStatus(gid string) (info rpc.StatusInfo, err error) {
 	return server.TellStatus(gid)
 }
 
+func (self *manager) GetGlobalOption() (options rpc.Option, err error) {
+	return server.GetGlobalOption()
+}
+
 func UpdateSettings(data interface{}) error {
 	settings := &models.DownloadSettings{}
 	err := filedb2.DB.Get("settings", "download", settings)
