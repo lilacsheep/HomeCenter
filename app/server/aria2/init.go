@@ -17,9 +17,6 @@ var server rpc.Client
 
 func init() {
 	LoadLocalhostAria2Process()
-	if err := InitClient(); err != nil {
-		glog.Errorf("init aria2 client error: %s", err.Error())
-	}
 }
 
 
@@ -29,7 +26,7 @@ func InitClient() error {
 	if err != nil {
 		return err
 	}
-	if settings.Aria2Enable {
+	if settings.Aria2Url != "" {
 		server, err = rpc.New(context.Background(), settings.Aria2Url, settings.Aria2Token, time.Second, rpc.DummyNotifier{})
 		if err != nil {
 			return err
@@ -43,7 +40,7 @@ func InitClient() error {
 }
 
 
-func LoadLocalhostAria2Process () (err error) {
+func LoadLocalhostAria2Process() (err error) {
 	processes, err := process.Processes()
 	if err != nil {
 		return err

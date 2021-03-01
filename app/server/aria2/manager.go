@@ -1,13 +1,19 @@
 package aria2
 
 import (
+	"homeproxy/app/models"
+	"homeproxy/library/filedb2"
 	"strings"
+
+	"github.com/gogf/gf/encoding/gjson"
 	"github.com/zyxar/argo/rpc"
 )
 
 var Manager *manager
 
-type manager struct{}
+type manager struct {
+	Change   bool
+}
 
 func (self *manager) GetGlobalStat() (info rpc.GlobalStatInfo, err error) {
 	return server.GetGlobalStat()
@@ -62,4 +68,17 @@ func (self *manager) AddTorrent(filename string) error {
 
 func (self *manager) TaskStatus(gid string) (info rpc.StatusInfo, err error) {
 	return server.TellStatus(gid)
+}
+
+func UpdateSettings(data interface{}) error {
+	settings := &models.DownloadSettings{}
+	err := filedb2.DB.Get("settings", "download", settings)
+	if err != nil {
+		return err
+	}
+	new_ := gjson.New(data)
+	settings.Aria2Url = new_.GetString("aria2_url", settings.Aria2Url)
+	settings.Aria2Token = new_.GetString("aria2_token", settings.Aria2Token)
+	Manager.Change = true
+	return filedb2.DB.Set("settings", "download", settings)
 }

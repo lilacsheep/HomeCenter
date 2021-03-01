@@ -63,17 +63,6 @@
         <el-tab-pane label="配置管理">
           <el-card>
             <el-form :model="settings.form" ref="ruleForm" label-width="100px" class="demo-ruleForm">
-              <el-form-item label="下载路径" prop="path">
-                <el-select v-model="settings.form.path" placeholder="请选择">
-                  <el-option v-for="item in settings.nodes" :key="item.id" :label="item.name" :value="item.path"></el-option>
-                </el-select>
-              </el-form-item>
-              <el-form-item label="线程数量" prop="thread_num">
-                <el-input-number size="small" v-model="settings.form.thread_num" :min="1" :step="2" :max="64"></el-input-number>
-              </el-form-item>
-              <el-form-item label="Aira2" prop="aria2_enable">
-                <el-switch size="small" v-model="settings.form.aria2_enable"></el-switch>
-              </el-form-item>
               <el-form-item label="地址" label-width="100px">
                 <el-input size="small" v-model="settings.form.aria2_url" style="width: 220px"></el-input>
               </el-form-item>

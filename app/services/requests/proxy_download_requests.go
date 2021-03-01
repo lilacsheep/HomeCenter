@@ -144,8 +144,12 @@ func NewUnpauseDownloadTaskRequest() *UnpauseDownloadTaskRequest {
 type GetDownloadSettingsRequest struct{}
 
 func (self *GetDownloadSettingsRequest) Exec(r *ghttp.Request) (response MessageResponse) {
-	settings := models.DownloadManager.GetSettings()
-	response.SuccessWithDetail(settings)
+	settings, err := models.GetSettings()
+	if err != nil {
+		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
+	} else {
+		response.SuccessWithDetail(settings)
+	}
 	return
 }
 
@@ -154,17 +158,12 @@ func NewGetDownloadSettingsRequest() *GetDownloadSettingsRequest {
 }
 
 type UpdateDownloadSettingsRequest struct {
-	Path          string `json:"path"`       // 下载路径
-	ThreadNum     int64  `json:"thread_num"` // 默认的线程大小
-	NotifyOpen    bool   `json:"notify_open"`
-	NotifyMessage string `json:"notify_message"`
-	Aria2Enable   bool   `json:"aria2_enable"`
 	Aria2Url      string `json:"aria2_url"`
 	Aria2Token    string `json:"aria2_token"`
 }
 
 func (self *UpdateDownloadSettingsRequest) Exec(r *ghttp.Request) (response MessageResponse) {
-	err := models.DownloadManager.UpdateSettings(self)
+	err := aria2.UpdateSettings(self)
 	if err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
