@@ -7,10 +7,16 @@
             <el-button size="mini" type="primary" icon="el-icon-edit" @click="download.create.visit = true">创建下载</el-button>
             <el-button size="mini" type="primary" icon="el-icon-upload" @click="torrent.sync = true">上传种子</el-button>
           </el-button-group>
+          
           <!-- <el-input size="mini" placeholder="请输入内容" v-model="roles.filter" style="width: 250px;float: right;">
             <el-button slot="append" icon="el-icon-search"></el-button>
           </el-input> -->
           <span style="float: right;">
+            <el-radio-group v-model="task.query.status" size="mini">
+              <el-radio-button label="全部"></el-radio-button>
+              <el-radio-button label="下载中"></el-radio-button>
+              <el-radio-button label="已完成"></el-radio-button>
+            </el-radio-group>
             <el-tag type="success" size="small"><i class="el-icon-top"></i>{{global.upload | diskSize}}/秒</el-tag>
             <el-tag type="danger" size="small"><i class="el-icon-bottom"></i>{{global.download | diskSize}}/秒</el-tag>
           </span>
@@ -159,6 +165,9 @@ export default {
       },
       task: {
         visible: false,
+        query: {
+          status: "全部"
+        },
         info: {
           filename: "",
           status: {}
@@ -220,9 +229,30 @@ export default {
       aria2Api.unpause(item.gid)
     },
     refresh_tasks () {
-      let that = this
+      let that = this, tasks = []
       aria2Api.tasks({}, function (response) {
-        that.download.tasks = response.detail
+        if (that.task.query.status === "全部") {
+          response.detail.forEach(function (item) {
+            if (item.status != "error") {
+              tasks.push(item)
+            }
+          })
+          that.download.tasks = response.detail
+        } else if (that.task.query.status === '下载中') {
+          response.detail.forEach(function (item) {
+            if (item.status == "active") {
+              tasks.push(item)
+            }
+          }) 
+          that.download.tasks = tasks
+        } else {
+          response.detail.forEach(function (item) {
+            if ((item.status != "active") && (item.status != "error")) {
+              tasks.push(item)
+            }
+          })
+          that.download.tasks = tasks
+        }
       })
       aria2Api.globalStat(function (response) {
         that.global.upload = response.detail.uploadSpeed

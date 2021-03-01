@@ -56,7 +56,7 @@ export function addTorrent(params={}, callback=function (response){}) {
 }
 
 export function tasks(params = {}, callback = function (response) {}) {
-    api.get(aria2_uri["tasks"], params).then(function (response) {    
+    api.get(aria2_uri["tasks"]).then(function (response) {    
         callback(response)
     }).catch(function (response) {
         console.log("获取任务列表失败: "+ response.detail)
