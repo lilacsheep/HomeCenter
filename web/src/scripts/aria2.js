@@ -13,33 +13,27 @@ const aria2_uri = {
     "taskStatus": "/download/task/status"
 }
 
-export function pause(gid, callback) {
+export function pause(gid, callback = function (response) { }) {
     api.post(aria2_uri['pause'], {id: gid}).then(function (response) {
         Message({ message: '已经暂停', type: 'success' })
-        if (callback) {
-            callback(response)
-        }
+        callback(response)
     }).catch(function (response) {
         Message({ message: '暂停失败:' + response.detail, type: 'error' })
     })
 }
 
-export function unpause(gid, callback) {
+export function unpause(gid, callback = function (response) { }) {
     api.post(aria2_uri['unpause'], { id: gid }).then(function (response) {
         Message({ message: '启动成功', type: 'success' })
-        if (callback) {
-            callback(response)
-        }
+        callback(response)       
     }).catch(function (response) {
         Message({ message: '启动失败:' + response.detail, type: 'error' })
     })
 }
 
-export function globalStat(callback) {
+export function globalStat(callback = function (response) { }) {
     api.get(aria2_uri['globalStat']).then(function (response) {
-        if (callback) {
-            callback(response)
-        }
+        callback(response)
     })
 }
 

@@ -86,6 +86,9 @@
             </el-form>
           </el-card>
         </el-tab-pane>
+        <el-tab-pane label="Aria2配置">
+
+        </el-tab-pane>
       </el-tabs>
     </el-col>
 
@@ -263,10 +266,14 @@ export default {
       if (tab.index === '0') {
         if (!this.timer) {
           this.timer = setInterval(this.refresh_tasks, 1000)
-        } else if (tab.index === '2') {
+        } else if (tab.index === '1') {
           if (this.timer) {
             clearInterval(this.timer)
           } 
+        } else if (tab.index === '2') {
+          if (this.timer) {
+            clearInterval(this.timer)
+          }
         }
       }
     },
