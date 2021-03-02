@@ -11,7 +11,7 @@ import (
 )
 
 type CreateDownloadTaskRequest struct {
-	Url       string `json:"url"`
+	Url string `json:"url"`
 }
 
 func (self *CreateDownloadTaskRequest) Exec(r *ghttp.Request) (response MessageResponse) {
@@ -24,7 +24,7 @@ func (self *CreateDownloadTaskRequest) Exec(r *ghttp.Request) (response MessageR
 	return
 }
 
-type CreateTorrentDownloadRequest struct {}
+type CreateTorrentDownloadRequest struct{}
 
 func (self *CreateTorrentDownloadRequest) Exec(r *ghttp.Request) (response MessageResponse) {
 	file := r.GetUploadFile("file")
@@ -156,9 +156,10 @@ func NewGetDownloadSettingsRequest() *GetDownloadSettingsRequest {
 }
 
 type UpdateDownloadSettingsRequest struct {
-	Aria2Url      string `json:"aria2_url"`
-	Aria2Token    string `json:"aria2_token"`
-	AutoClean     int    `json:"auto_clean"`
+	Aria2Url            string `json:"aria2_url"`
+	Aria2Token          string `json:"aria2_token"`
+	AutoClean           int    `json:"auto_clean"`
+	AutoUpdateBTTracker string `json:"auto_update_bt_tracker"`
 }
 
 func (self *UpdateDownloadSettingsRequest) Exec(r *ghttp.Request) (response MessageResponse) {
@@ -175,8 +176,7 @@ func NewUpdateDownloadSettingsRequest() *UpdateDownloadSettingsRequest {
 	return &UpdateDownloadSettingsRequest{}
 }
 
-
-type GlobalStatInfoRequest struct {}
+type GlobalStatInfoRequest struct{}
 
 func (self *GlobalStatInfoRequest) Exec(r *ghttp.Request) (response MessageResponse) {
 	info, err := aria2.Manager.GetGlobalStat()
@@ -210,8 +210,7 @@ func NewTaskStatusRequest() *TaskStatusRequest {
 	return &TaskStatusRequest{}
 }
 
-
-type GetAria2GlobalOptionsRequest struct {}
+type GetAria2GlobalOptionsRequest struct{}
 
 func (self *GetAria2GlobalOptionsRequest) Exec(r *ghttp.Request) (response MessageResponse) {
 	opts := []map[string]interface{}{}

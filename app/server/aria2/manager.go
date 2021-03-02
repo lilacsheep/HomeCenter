@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/gogf/gf/encoding/gjson"
+	"github.com/gogf/gf/util/gconv"
 	"github.com/zyxar/argo/rpc"
 )
 
@@ -74,6 +75,23 @@ func (self *manager) GetGlobalOption() (options rpc.Option, err error) {
 	return server.GetGlobalOption()
 }
 
+func (self *manager) Close() error {
+	return server.Close()
+}
+
+func (self *manager) GetOption(key string) (string, error) {
+	options, err := server.GetGlobalOption()
+	if err != nil {
+		return "", err
+	}
+	for k, v := range options {
+		if k == key {
+			return gconv.String(v), nil
+		}
+	}
+	return "", err
+}
+
 func UpdateSettings(data interface{}) error {
 	settings := &models.DownloadSettings{}
 	err := filedb2.DB.Get("settings", "download", settings)
@@ -84,6 +102,7 @@ func UpdateSettings(data interface{}) error {
 	settings.Aria2Url = new_.GetString("aria2_url", settings.Aria2Url)
 	settings.Aria2Token = new_.GetString("aria2_token", settings.Aria2Token)
 	settings.AutoClean = new_.GetInt("auto_clean", settings.AutoClean)
+	settings.AutoUpdateBTTracker = new_.GetString("auto_update_bt_tracker", settings.AutoUpdateBTTracker)
 	Manager.Change = true
 	return filedb2.DB.Set("settings", "download", settings)
 }

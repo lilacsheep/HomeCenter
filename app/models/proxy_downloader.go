@@ -20,6 +20,7 @@ type DownloadSettings struct {
 	Aria2Url   string `json:"aria2_url"`   // aria2地址
 	Aria2Token string `json:"aria2_token"` // aria2的Token
 	AutoClean  int    `json:"auto_clean"`  // 自动清理Bt下载后文件夹内内容，根据文件大小判断
+	AutoUpdateBTTracker string `json:"auto_update_bt_tracker"` // 自动更新bt-tracker, "" 为不更新,
 }
 
 func GetSettings() (*DownloadSettings, error) {

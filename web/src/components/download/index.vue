@@ -81,6 +81,16 @@
                 </el-input>
                 <span style="color: #909399;font-size: 11px">自动清理BT文件夹内不满足文件大小的文件, 0为关闭</span>
               </el-form-item>
+              <el-form-item label="自动同步">
+                <el-select size="small" v-model="settings.form.auto_update_bt_tracker" placeholder="请选择">
+                  <el-option label="关闭" value=""></el-option>
+                  <el-option label="每分钟" value="@every 1m"></el-option>
+                  <el-option label="每小时" value="@hourly"></el-option>
+                  <el-option label="半小时" value="@every 30m"></el-option>
+                  <el-option label="每天" value="@every 24h"></el-option>
+                </el-select>
+                <span style="color: #909399;font-size: 11px">自动同步最新的BT服务器</span>
+              </el-form-item>
               <el-form-item>
                 <el-button size="small" type="primary"  @click="submit_update_settings">立即更新</el-button>
               </el-form-item>
@@ -191,7 +201,8 @@ export default {
         form: {
           aria2_url: "",
           aria2_token: "",
-          auto_clean: 0
+          auto_clean: 0,
+          auto_update_bt_tracker: ""
         },
         nodes: []
       }

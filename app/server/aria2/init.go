@@ -7,18 +7,16 @@ import (
 	"time"
 
 	"github.com/gogf/gf/os/glog"
-	"github.com/gogf/gf/text/gregex"
-	"github.com/shirou/gopsutil/process"
 	"github.com/zyxar/argo/rpc"
 )
 
 
 var server rpc.Client
 
-func init() {
-	LoadLocalhostAria2Process()
-}
-
+const (
+	ConfigPathKey = "conf-path"
+	ConfigBTTrackerKey = "bt-tracker"
+)
 
 func InitClient() error {
 	settings := models.DownloadSettings{}
@@ -32,24 +30,10 @@ func InitClient() error {
 			return err
 		}
 		Manager = &manager{}
+		NewAutoUpdateBTTracker(settings.AutoUpdateBTTracker)
 		glog.Info("aria2 connection success")
 	} else {
 		glog.Info("Aria2 not enabled")
 	}
 	return nil
-}
-
-
-func LoadLocalhostAria2Process() (err error) {
-	processes, err := process.Processes()
-	if err != nil {
-		return err
-	}
-	for _, process := range processes {
-		name, _ := process.Name()
-		if gregex.IsMatchString("aria2", name) {
-			glog.Info(process.Name())
-		}
-	}
-	return
 }
