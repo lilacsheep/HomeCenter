@@ -31,12 +31,12 @@ func (CustomNotify) OnDownloadComplete(events []rpc.Event)   {
 	for _, event := range events {
 		infos, err := server.GetFiles(event.Gid)
 		if err != nil {
-			glog.Error("get task %s file error: %s", event.Gid, err.Error())
+			glog.Errorf("get task %s file error: %s", event.Gid, err.Error())
 		} else {
 			if len(infos) > 1 {
 				for _, info := range infos {
 					if gconv.Int(info.Length) < cleanSize {
-						glog.Info("clean file %s size is %s b need %d b", info.Path, gconv.Int(info.Length), cleanSize)
+						glog.Infof("clean file %s size is %s b need %d b", info.Path, gconv.Int(info.Length), cleanSize)
 						os.RemoveAll(info.Path)
 					}
 				}
