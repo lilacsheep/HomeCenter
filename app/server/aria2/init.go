@@ -47,7 +47,7 @@ func LoadLocalhostAria2Process() (err error) {
 	}
 	for _, process := range processes {
 		name, _ := process.Name()
-		if gregex.IsMatchString(name, "aria2") {
+		if gregex.IsMatchString("aria2", name) {
 			glog.Info(process.Name())
 		}
 	}
