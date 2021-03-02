@@ -83,6 +83,7 @@ func UpdateSettings(data interface{}) error {
 	new_ := gjson.New(data)
 	settings.Aria2Url = new_.GetString("aria2_url", settings.Aria2Url)
 	settings.Aria2Token = new_.GetString("aria2_token", settings.Aria2Token)
+	settings.AutoClean = new_.GetInt("auto_clean", settings.AutoClean)
 	Manager.Change = true
 	return filedb2.DB.Set("settings", "download", settings)
 }

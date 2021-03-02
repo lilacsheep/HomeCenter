@@ -16,9 +16,10 @@ func init() {
 }
 
 type DownloadSettings struct {
-	ID              int    `json:"id" storm:"id,increment"`
-	Aria2Url        string `json:"aria2_url"`   // aria2地址
-	Aria2Token      string `json:"aria2_token"` // aria2的Token
+	ID         int    `json:"id" storm:"id,increment"`
+	Aria2Url   string `json:"aria2_url"`   // aria2地址
+	Aria2Token string `json:"aria2_token"` // aria2的Token
+	AutoClean  int    `json:"auto_clean"`  // 自动清理Bt下载后文件夹内内容，根据文件大小判断
 }
 
 func GetSettings() (*DownloadSettings, error) {

@@ -160,6 +160,7 @@ func NewGetDownloadSettingsRequest() *GetDownloadSettingsRequest {
 type UpdateDownloadSettingsRequest struct {
 	Aria2Url      string `json:"aria2_url"`
 	Aria2Token    string `json:"aria2_token"`
+	AutoClean     int    `json:"auto_clean"`
 }
 
 func (self *UpdateDownloadSettingsRequest) Exec(r *ghttp.Request) (response MessageResponse) {

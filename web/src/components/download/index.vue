@@ -67,13 +67,19 @@
           </el-table>
         </el-tab-pane>
         <el-tab-pane label="配置管理">
-          <el-card>
+          <el-card body-style="padding: 5px">
             <el-form :model="settings.form" ref="ruleForm" label-width="100px" class="demo-ruleForm">
               <el-form-item label="地址" label-width="100px">
                 <el-input size="small" v-model="settings.form.aria2_url" style="width: 220px"></el-input>
               </el-form-item>
               <el-form-item label="Token" label-width="100px">
                 <el-input size="small" v-model="settings.form.aria2_token" style="width: 220px"></el-input>
+              </el-form-item>
+              <el-form-item label="清理" label-width="100px">
+                <el-input v-model="settings.form.auto_clean" style="width: 220px" size="small">
+                  <template slot="append">MB</template>
+                </el-input>
+                <span style="color: #909399;font-size: 11px">自动清理BT文件夹内不满足文件大小的文件, 0为关闭</span>
               </el-form-item>
               <el-form-item>
                 <el-button size="small" type="primary"  @click="submit_update_settings">立即更新</el-button>
@@ -196,11 +202,9 @@ export default {
       },
       settings: {
         form: {
-          path: "",
-          thread_num: 0,
-          aria2_enable: false,
           aria2_url: "",
-          aria2_token: ""
+          aria2_token: "",
+          auto_clean: 0
         },
         nodes: []
       }
@@ -371,10 +375,6 @@ export default {
 <style>
 .el-card__header {
   padding: 5px;
-}
-
-.el-card__body {
-  padding: 20px;
 }
 
 .el-dialog__header {

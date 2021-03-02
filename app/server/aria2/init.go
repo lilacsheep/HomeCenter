@@ -27,7 +27,7 @@ func InitClient() error {
 		return err
 	}
 	if settings.Aria2Url != "" {
-		server, err = rpc.New(context.Background(), settings.Aria2Url, settings.Aria2Token, time.Second, rpc.DummyNotifier{})
+		server, err = rpc.New(context.Background(), settings.Aria2Url, settings.Aria2Token, time.Second, CustomNotify{})
 		if err != nil {
 			return err
 		}
