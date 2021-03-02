@@ -101,19 +101,6 @@
         <el-form-item label="地址" label-width="100px">
           <el-input size="small" type="textarea" v-model="download.create.form.url" :rows="3"></el-input>
         </el-form-item>
-        <el-form-item label="下载路径" prop="path" label-width="100px">
-          <el-select size="small" v-model="download.create.form.path" placeholder="请选择">
-            <el-option
-              v-for="item in settings.nodes"
-              :key="item.id"
-              :label="item.name"
-              :value="item.path">
-            </el-option>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="线程数量" prop="thread_num" label-width="100px">
-          <el-input-number size="small" v-model="settings.form.thread_num" :min="1" :step="2" :max="64"></el-input-number>
-        </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button size="small" @click="download.create.visit = false">取 消</el-button>
@@ -285,12 +272,6 @@ export default {
         that.$message({message: '更新失败', type: 'error'})
       })
     },
-    refresh_nodes () {
-      let that = this
-      this.$api.get("/filesystem/nodes").then(function (response) {
-        that.settings.nodes = response.detail
-      })
-    },
     refresh_global_options() {
       let that = this, options = []
       aria2Api.globalOptions(function (response) {
@@ -362,7 +343,6 @@ export default {
   created: function () {
     this.refresh_settings()
     this.refresh_tasks()
-    this.refresh_nodes()
     this.timer = setInterval(this.refresh_tasks, 1000)
   },
   beforeDestroy () {
