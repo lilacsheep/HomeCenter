@@ -3,6 +3,7 @@ package aria2
 import (
 	"homeproxy/app/models"
 	"homeproxy/library/filedb2"
+	"os/exec"
 	"strings"
 
 	"github.com/gogf/gf/encoding/gjson"
@@ -105,4 +106,9 @@ func UpdateSettings(data interface{}) error {
 	settings.AutoUpdateBTTracker = new_.GetString("auto_update_bt_tracker", settings.AutoUpdateBTTracker)
 	Manager.Change = true
 	return filedb2.DB.Set("settings", "download", settings)
+}
+
+func RestartAria2() {
+	cmd := exec.Command("systemctl", "restart", "aria2")
+	cmd.Run()
 }

@@ -45,6 +45,7 @@ func AutoUpdateBTTracker() {
 				glog.Errorf("save aria2 config error: %v", err)
 				return
 			}
+			RestartAria2()
 			glog.Info("update trackers server successfully")
 		}
 	}
