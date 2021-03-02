@@ -12,8 +12,6 @@ import (
 
 type CreateDownloadTaskRequest struct {
 	Url       string `json:"url"`
-	Path      string `json:"path"`
-	ThreadNum int64  `json:"thread_num"`
 }
 
 func (self *CreateDownloadTaskRequest) Exec(r *ghttp.Request) (response MessageResponse) {
