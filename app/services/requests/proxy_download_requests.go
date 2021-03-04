@@ -15,11 +15,11 @@ type CreateDownloadTaskRequest struct {
 }
 
 func (self *CreateDownloadTaskRequest) Exec(r *ghttp.Request) (response MessageResponse) {
-	err := aria2.Manager.NewTask(self.Url)
+	gid, err := aria2.Manager.NewTask(self.Url)
 	if err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
-		response.Success()
+		response.SuccessWithDetail(gid)
 	}
 	return
 }

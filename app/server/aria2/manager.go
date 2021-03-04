@@ -57,10 +57,9 @@ func (self *manager) RemoveTask(gid string, force bool) (err error) {
 	return err
 }
 
-func (self *manager) NewTask(s string) error {
+func (self *manager) NewTask(s string) (string, error) {
 	urls := strings.Split(s, "\n")
-	_, err := server.AddURI(urls)
-	return err
+	return server.AddURI(urls)
 }
 
 func (self *manager) AddTorrent(filename string) error {
