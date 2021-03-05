@@ -241,7 +241,7 @@ export default {
       aria2Api.tasks({}, function (response) {
         if (that.task.query.status === "全部") {
           response.detail.forEach(function (item) {
-            if (item.status != "error") {
+            if ((item.status != "error") && (item.followedBy.length == 0)){
               tasks.push(item)
             }
           })
@@ -255,7 +255,7 @@ export default {
           that.download.tasks = tasks
         } else {
           response.detail.forEach(function (item) {
-            if ((item.status != "active") && (item.status != "error")) {
+            if ((item.status != "active") && (item.status != "error") && (item.followedBy.length == 0)) {
               tasks.push(item)
             }
           })
