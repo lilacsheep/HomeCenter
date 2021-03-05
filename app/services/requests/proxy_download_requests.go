@@ -60,7 +60,7 @@ func (self *QueryDownloadTaskRequest) Exec(r *ghttp.Request) (response MessageRe
 		err   error
 	)
 
-	infos, err = aria2.Manager.ActiveTasks()
+	actives, err := aria2.Manager.ActiveTasks()
 	if err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 		return
@@ -75,8 +75,21 @@ func (self *QueryDownloadTaskRequest) Exec(r *ghttp.Request) (response MessageRe
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 		return
 	}
-	infos = append(infos, warnings...)
-	infos = append(infos, stopped...)
+	for _, task := range actives {
+		if len(task.FollowedBy) > 0 {
+			infos = append(infos, task)
+		}
+	}
+	for _, task := range warnings {
+		if len(task.FollowedBy) > 0 {
+			infos = append(infos, task)
+		}
+	}
+	for _, task := range stopped {
+		if len(task.FollowedBy) > 0 {
+			infos = append(infos, task)
+		}
+	}
 	response.DataTable(infos, len(infos))
 	return
 }
