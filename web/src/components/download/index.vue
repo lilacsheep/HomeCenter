@@ -131,7 +131,7 @@
         </tr>
         <tr>
           <td width="100px" style="background-color: #f2f2f2;padding: 0">GID</td>
-          <td colspan="3">{{task.info.gid}}</td>
+          <td colspan="3">{{task.info.status.gid}}</td>
         </tr>
         <tr>
           <td width="100px" style="background-color: #f2f2f2;padding: 0">大小</td>
