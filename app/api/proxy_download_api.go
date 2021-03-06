@@ -83,7 +83,7 @@ func (self *ProxyDownloadApi) Download(r *ghttp.Request) {
 	} else {
 
 		info := models.DownloadFileList{}
-		err := filedb2.DB.Find("vkey", vkey, &info)
+		err := filedb2.DB.One("vkey", vkey, &info)
 		if err != nil {
 			if err == storm.ErrNotFound {
 				r.Response.WriteStatus(http.StatusNotFound)
