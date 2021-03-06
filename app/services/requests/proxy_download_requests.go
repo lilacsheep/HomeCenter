@@ -3,10 +3,13 @@ package requests
 import (
 	"homeproxy/app/models"
 	"homeproxy/app/server/aria2"
+	"homeproxy/library/filedb2"
 	"net/http"
 	"path"
+	"time"
 
 	"github.com/gogf/gf/net/ghttp"
+	"github.com/gogf/gf/util/guid"
 	"github.com/zyxar/argo/rpc"
 )
 
@@ -228,4 +231,37 @@ func (self *GetAria2GlobalOptionsRequest) Exec(r *ghttp.Request) (response Messa
 
 func NewGetAria2GlobalOptionsRequest() *GetAria2GlobalOptionsRequest {
 	return &GetAria2GlobalOptionsRequest{}
+}
+
+type MakeAria2FileDownloadUrlRequest struct {
+	GID       string `json:"gid"`
+	FileIndex string `json:"file_index"`
+}
+
+func (self *MakeAria2FileDownloadUrlRequest) Exec(r *ghttp.Request) (response MessageResponse) {
+	task, err := aria2.Manager.TaskStatus(self.GID)
+	if err != nil {
+		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
+		return
+	}
+	var download = &models.DownloadFileList{}
+
+	for _, i := range task.Files {
+		if i.Index == self.GID {
+			download.Path = i.Path
+			download.CreateAt = time.Now()
+			download.Vkey = guid.S()
+			filedb2.DB.Save(download)
+		}
+	}
+	if download.Vkey == "" {
+		response.ErrorWithMessage(http.StatusInternalServerError, "资源不存在")
+	} else {
+		response.SuccessWithDetail(download.Vkey)
+	}
+	return
+}
+
+func NewMakeAria2FileDownloadUrlRequest() *MakeAria2FileDownloadUrlRequest {
+	return &MakeAria2FileDownloadUrlRequest{}
 }

@@ -1,8 +1,13 @@
 package api
 
 import (
-	"github.com/gogf/gf/net/ghttp"
+	"homeproxy/app/models"
 	"homeproxy/app/services/requests"
+	"homeproxy/library/filedb2"
+	"net/http"
+
+	"github.com/asdine/storm/v3"
+	"github.com/gogf/gf/net/ghttp"
 )
 
 type ProxyDownloadApi struct {
@@ -63,4 +68,30 @@ func (self *ProxyDownloadApi) TaskStatus(r *ghttp.Request) {
 func (self *ProxyDownloadApi) Options(r *ghttp.Request) {
 	request := requests.NewGetAria2GlobalOptionsRequest()
 	self.DoRequestValid(request, r)
+}
+
+
+func (self *ProxyDownloadApi) MakeDownloadUrl(r *ghttp.Request) {
+	request := requests.NewMakeAria2FileDownloadUrlRequest()
+	self.DoRequestValid(request, r)
+}
+
+func (self *ProxyDownloadApi) Download(r *ghttp.Request) {
+	vkey := r.GetString(":vkey", "")
+	if vkey == "" {
+		r.Response.WriteStatus(http.StatusNotFound)
+	} else {
+
+		info := models.DownloadFileList{}
+		err := filedb2.DB.Find("vkey", vkey, &info)
+		if err != nil {
+			if err == storm.ErrNotFound {
+				r.Response.WriteStatus(http.StatusNotFound)
+			} else {
+				r.Response.WriteStatus(http.StatusInternalServerError)
+			}
+		} else {
+			r.Response.ServeFileDownload(info.Path)
+		}
+	}
 }

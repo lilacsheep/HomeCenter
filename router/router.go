@@ -42,8 +42,10 @@ func init() {
 	proxyRoleApi := &api.ProxyRoleApi{}
 	auth := &api.AuthController{}
 	common := &api.CommonApi{}
+	downloadApi := &api.ProxyDownloadApi{}
 
 	s.BindHandler("POST:/api/login", auth.LoginUser)
+	s.BindHandler("Get:/download/:vkey", downloadApi.Download)
 	s.Group("/api", func(group *ghttp.RouterGroup) {
 		group.Middleware(MiddlewareCORS, AuthMiddleware)
 		// user auth
@@ -73,7 +75,6 @@ func init() {
 		group.POST("/proxy/log/add", proxyRoleApi.AddLogToRole)
 
 		// download api
-		downloadApi := &api.ProxyDownloadApi{}
 		group.POST("/download/create", downloadApi.Create)
 		group.POST("/download/torrent", downloadApi.AddTorrent)
 		group.GET("/download/tasks", downloadApi.Query)
@@ -83,6 +84,7 @@ func init() {
 		group.POST("/download/task/status", downloadApi.TaskStatus)
 		group.GET("/download/global/stat", downloadApi.GlobalStatInfo)
 		group.GET("/download/global/options", downloadApi.Options)
+		group.POST("/download/make/download", downloadApi.MakeDownloadUrl)
 
 		// download settings api
 		group.GET("/download/settings", downloadApi.Settings)
