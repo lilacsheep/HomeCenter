@@ -247,7 +247,7 @@ func (self *MakeAria2FileDownloadUrlRequest) Exec(r *ghttp.Request) (response Me
 	var download = &models.DownloadFileList{}
 
 	for _, i := range task.Files {
-		if i.Index == self.GID {
+		if i.Index == self.FileIndex {
 			download.Path = i.Path
 			download.CreateAt = time.Now()
 			download.Vkey = guid.S()
