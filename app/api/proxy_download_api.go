@@ -77,7 +77,7 @@ func (self *ProxyDownloadApi) MakeDownloadUrl(r *ghttp.Request) {
 }
 
 func (self *ProxyDownloadApi) Download(r *ghttp.Request) {
-	vkey := r.GetString(":vkey", "")
+	vkey := r.GetString("vkey", "")
 	if vkey == "" {
 		r.Response.WriteStatus(http.StatusNotFound)
 	} else {
