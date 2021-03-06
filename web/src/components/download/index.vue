@@ -130,6 +130,10 @@
           <td colspan="3">{{task.info.filename}}</td>
         </tr>
         <tr>
+          <td width="100px" style="background-color: #f2f2f2;padding: 0">GID</td>
+          <td colspan="3">{{task.info.gid}}</td>
+        </tr>
+        <tr>
           <td width="100px" style="background-color: #f2f2f2;padding: 0">大小</td>
           <td>{{task.info.status.totalLength | diskSize}}</td>
           <td width="100px" style="background-color: #f2f2f2;padding: 0">状态</td>
