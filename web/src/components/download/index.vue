@@ -16,6 +16,7 @@
               <el-radio-button label="全部"></el-radio-button>
               <el-radio-button label="下载中"></el-radio-button>
               <el-radio-button label="已完成"></el-radio-button>
+              <el-radio-button label="其他"></el-radio-button>
             </el-radio-group>
             <el-tag type="success" size="small"><i class="el-icon-top"></i>{{global.upload | diskSize}}/秒</el-tag>
             <el-tag type="danger" size="small"><i class="el-icon-bottom"></i>{{global.download | diskSize}}/秒</el-tag>
@@ -56,6 +57,9 @@
                 <el-popconfirm v-if="scope.row.status == 'paused'" title="是否继续该任务？" @onConfirm="start_task(scope.row)">
                   <el-button slot="reference" style="color: green" type="text" size="mini" icon="el-icon-caret-right"></el-button>
                 </el-popconfirm>
+                <el-popconfirm v-if="scope.row.status == 'error'" title="是否继续该任务？" @onConfirm="start_task(scope.row)">
+                  <el-button slot="reference" style="color: green" type="text" size="mini" icon="el-icon-caret-right"></el-button>
+                </el-popconfirm>
                 <el-popconfirm v-if="scope.row.status == 'active'" title="是否暂停该任务？" @onConfirm="cancel_task(scope.row)">
                   <el-button slot="reference" style="color: red" type="text" size="mini" icon="el-icon-switch-button"></el-button>
                 </el-popconfirm>
@@ -84,9 +88,7 @@
               <el-form-item label="自动同步">
                 <el-select size="small" v-model="settings.form.auto_update_bt_tracker" placeholder="请选择">
                   <el-option label="关闭" value=""></el-option>
-                  <el-option label="每分钟" value="@every 1m"></el-option>
                   <el-option label="每小时" value="@hourly"></el-option>
-                  <el-option label="半小时" value="@every 30m"></el-option>
                   <el-option label="每天" value="@every 24h"></el-option>
                 </el-select>
                 <span style="color: #909399;font-size: 11px">自动同步最新的BT服务器</span>
@@ -132,6 +134,10 @@
         <tr>
           <td width="100px" style="background-color: #f2f2f2;padding: 0">GID</td>
           <td colspan="3">{{task.info.status.gid}}</td>
+        </tr>
+        <tr>
+          <td width="100px" style="background-color: #f2f2f2;padding: 0">错误</td>
+          <td colspan="3">{{task.info.status.errorMessage}}</td>
         </tr>
         <tr>
           <td width="100px" style="background-color: #f2f2f2;padding: 0">大小</td>
@@ -257,9 +263,16 @@ export default {
             }
           }) 
           that.download.tasks = tasks
+        } else if (that.task.query.status === '已完成') {
+          response.detail.forEach(function (item) {
+            if ((item.status == "complete") && (item.status != "error") && (!item.followedBy)) {
+              tasks.push(item)
+            }
+          })
+          that.download.tasks = tasks
         } else {
           response.detail.forEach(function (item) {
-            if ((item.status != "active") && (item.status != "error") && (!item.followedBy)) {
+            if ((item.status != "active") && (item.status != "complete") && (!item.followedBy)) {
               tasks.push(item)
             }
           })
