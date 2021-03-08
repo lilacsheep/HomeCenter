@@ -65,7 +65,7 @@ export function tasks(params = {}, callback = function (response) {}) {
 }
 
 export function removeTask(gid, callback = function (response) {}) {
-    api.get(aria2_uri["tasks"], {id: gid}).then(function (response) {
+    api.post(aria2_uri["remove"], {id: gid}).then(function (response) {
         Message({ message: '删除成功', type: 'success' })
         callback(response)
     }).catch(function (response) {
