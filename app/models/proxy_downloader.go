@@ -1,179 +1,39 @@
 package models
 
 import (
-	"homeproxy/app/server/download"
 	"homeproxy/library/filedb2"
 	"time"
 
-	"github.com/gogf/gf/container/gmap"
-	"github.com/gogf/gf/encoding/gjson"
-	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/os/glog"
-	"github.com/gogf/gf/util/gutil"
-)
-
-var (
-	DownloadManager *downloadTaskManager
 )
 
 func init() {
 	if found, _ := filedb2.DB.KeyExists("settings", "download"); !found {
 		if !found {
-			settings := DownloadSettings{
-				Path:          gfile.Abs("download/"),
-				ThreadNum:     32,
-				NotifyOpen:    false,
-				NotifyMessage: "",
-				Aria2Enable:   false,
-			}
+			settings := DownloadSettings{}
 			filedb2.DB.Set("settings", "download", &settings)
 			glog.Info("init download settings")
 		}
 	}
-
-	if err := InitDownloadManager(); err != nil {
-		panic(err)
-	}
-}
-
-func InitDownloadManager() error {
-	DownloadManager = NewDownloadTaskManager()
-	DownloadManager.Settings = &DownloadSettings{}
-	return DownloadManager.Init()
 }
 
 type DownloadSettings struct {
-	ID            int    `json:"id" storm:"id,increment"`
-	Path          string `json:"path"`           // 下载路径
-	ThreadNum     int64  `json:"thread_num"`     // 默认的线程大小
-	NotifyOpen    bool   `json:"notify_open"`    // 是否开启通知
-	NotifyMessage string `json:"notify_message"` // 通知消息
-	Aria2Enable   bool   `json:"aria2_enable"`   // 是否使用aria2
-	Aria2Url      string `json:"aria2_url"`      // aria2地址
-	Aria2Token    string `json:"aria2_token"`    // aria2的Token
+	ID                  int    `json:"id" storm:"id,increment"`
+	Aria2Url            string `json:"aria2_url"`              // aria2地址
+	Aria2Token          string `json:"aria2_token"`            // aria2的Token
+	AutoClean           int    `json:"auto_clean"`             // 自动清理Bt下载后文件夹内内容，根据文件大小判断
+	AutoUpdateBTTracker string `json:"auto_update_bt_tracker"` // 自动更新bt-tracker, "" 为不更新,
 }
 
-type downloadTaskManager struct {
-	Settings *DownloadSettings
-	tasks    *gmap.TreeMap
+func GetSettings() (*DownloadSettings, error) {
+	settings := &DownloadSettings{}
+	err := filedb2.DB.Get("settings", "download", settings)
+	return settings, err
 }
 
-func (self *downloadTaskManager) Init() error {
-	glog.Info("init download settings")
-	err := filedb2.DB.Get("settings", "download", self.Settings)
-	if err != nil {
-		return err
-	}
-	glog.Info("init download settings done")
-
-	if self.tasks.Size() == 0 {
-		tasks, err := self.Tasks()
-		if err != nil {
-			return err
-		} else {
-			for _, task := range tasks {
-				if task.Status == 3 {
-					task.Status = 1
-				}
-				task.Init()
-				self.tasks.Set(task.ID, task)
-			}
-		}
-	}
-	self.sync()
-	return nil
-}
-
-func (self *downloadTaskManager) GetSettings() *DownloadSettings {
-	return self.Settings
-}
-
-func (self *downloadTaskManager) UpdateSettings(data interface{}) error {
-	new_ := gjson.New(data)
-	self.Settings.Path = new_.GetString("path", self.Settings.Path)
-	self.Settings.ThreadNum = new_.GetInt64("thread_num", self.Settings.ThreadNum)
-	self.Settings.Aria2Enable = new_.GetBool("aria2_enable", self.Settings.Aria2Enable)
-	self.Settings.Aria2Url = new_.GetString("aria2_url", self.Settings.Aria2Url)
-	self.Settings.Aria2Token = new_.GetString("aria2_token", self.Settings.Aria2Token)
-	return filedb2.DB.Set("settings", "download", self.Settings)
-}
-
-func (self *downloadTaskManager) NewTask(url string, threadNum int64, path string) (err error) {
-	if threadNum == 0 {
-		threadNum = self.Settings.ThreadNum
-	}
-	var (
-		task  *download.Task
-		path_ = self.Settings.Path
-	)
-	if path == "" {
-		path_ = path
-	}
-	// 新建任务
-	task, err = download.NewDownLoadTask(url, threadNum, path_)
-	if err != nil {
-		return
-	}
-	// 创建记录
-	err = filedb2.DB.Save(task)
-	if err != nil {
-		return
-	}
-	task.Init()
-	self.tasks.Set(task.ID, task)
-	return
-}
-
-func (self *downloadTaskManager) Tasks() (tasks []*download.Task, err error) {
-	err = filedb2.DB.All(&tasks)
-	return
-}
-
-func (self *downloadTaskManager) StartTask(taskID int) {
-	if value, found := self.tasks.Search(taskID); found {
-		if task, ok := value.(*download.Task); ok {
-			go task.Start()
-		}
-	}
-}
-
-func (self *downloadTaskManager) RemoveTask(taskID int) {
-	if value := self.tasks.Remove(taskID); value != nil {
-		task := value.(*download.Task)
-		task.Cancel()
-		filedb2.DB.DeleteStruct(task)
-	} else {
-		glog.Warning("task not exist")
-	}
-}
-
-func (self *downloadTaskManager) CancelTask(taskID int) {
-	if value, found := self.tasks.Search(taskID); found {
-		value.(*download.Task).Cancel()
-	}
-}
-
-func (self *downloadTaskManager) sync() {
-	go func() {
-		for {
-			self.tasks.IteratorAsc(func(key, value interface{}) bool {
-				var (
-					new = value.(*download.Task)
-					err error
-				)
-				err = filedb2.DB.Update(new)
-				if err != nil {
-					glog.Errorf("sync task: %d error: %s", key.(int), err.Error())
-				}
-				return true
-			})
-			time.Sleep(time.Millisecond * 500)
-		}
-	}()
-}
-
-func NewDownloadTaskManager() *downloadTaskManager {
-	return &downloadTaskManager{
-		tasks: gmap.NewTreeMap(gutil.ComparatorInt, true),
-	}
+type DownloadFileList struct {
+	ID       int       `json:"id" storm:"id,increment"`
+	Vkey     string    `json:"vkey"`
+	Path     string    `json:"path"`
+	CreateAt time.Time `json:"create_at"`
 }

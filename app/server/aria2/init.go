@@ -13,12 +13,10 @@ import (
 
 var server rpc.Client
 
-func init() {
-	if err := InitClient(); err != nil {
-		glog.Errorf("init aria2 client error: %s", err.Error())
-	}
-}
-
+const (
+	ConfigPathKey = "conf-path"
+	ConfigBTTrackerKey = "bt-tracker"
+)
 
 func InitClient() error {
 	settings := models.DownloadSettings{}
@@ -26,12 +24,13 @@ func InitClient() error {
 	if err != nil {
 		return err
 	}
-	if settings.Aria2Enable {
-		server, err = rpc.New(context.Background(), settings.Aria2Url, settings.Aria2Token, time.Second, rpc.DummyNotifier{})
+	if settings.Aria2Url != "" {
+		server, err = rpc.New(context.Background(), settings.Aria2Url, settings.Aria2Token, time.Second, CustomNotify{})
 		if err != nil {
 			return err
 		}
 		Manager = &manager{}
+		NewAutoUpdateBTTracker(settings.AutoUpdateBTTracker)
 		glog.Info("aria2 connection success")
 	} else {
 		glog.Info("Aria2 not enabled")
