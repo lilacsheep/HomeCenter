@@ -61,6 +61,14 @@ func (self *DnsCache) lookupCountry(domain string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	if ok, err := self.IsLocal(addr); err != nil {
+		return "", err
+	} else {
+		if ok {
+			self.ForceCountry.Set(domain, "CN", time.Minute * 60)
+			return "CN", nil
+		}
+	}
 	country, err := common.LookupCountry(addr)
 	if err != nil {
 		return "", err
