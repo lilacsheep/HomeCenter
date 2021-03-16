@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/gogf/gf/encoding/gjson"
+	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/zyxar/argo/rpc"
 )
@@ -48,6 +49,19 @@ func (self *manager) PauseTask(gid string, force bool) (err error) {
 }
 
 func (self *manager) RemoveTask(gid string, force bool) (err error) {
+	status, err := server.TellStatus(gid)
+	if err != nil {
+		return err
+	}
+	if status.Status == "active"{
+		server.Pause(gid)
+	}
+
+	for _, t := range status.Files {
+		if gfile.Exists(t.Path) {
+			gfile.Remove(t.Path)
+		}
+	}
 	if force {
 		_, err = server.ForceRemove(gid)
 	} else {
