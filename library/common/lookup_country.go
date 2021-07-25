@@ -73,16 +73,17 @@ func LookupByApi(addr string) (string, error) {
 }
 
 func LookupCountry(addr string) (string, error) {
-	location, err := LookupByGeo(addr)
-	if err != nil {
-		if err == GeoFileNotFoundErr {
-			go InitGeoFile()
-			return LookupByApi(addr)
-		} else {
-			return "", err
-		}
-	}
-	return location.CountryCode, nil
+	return LookupByApi(addr)
+	// location, err := LookupByGeo(addr)
+	// if err != nil {
+	// 	if err == GeoFileNotFoundErr {
+	// 		go InitGeoFile()
+	// 		return LookupByApi(addr)
+	// 	} else {
+	// 		return "", err
+	// 	}
+	// }
+	// return location.CountryCode, nil
 }
 
 func CheckIp(ip string) bool {
