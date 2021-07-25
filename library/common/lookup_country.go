@@ -2,62 +2,32 @@ package common
 
 import (
 	"errors"
+	"net"
 	"regexp"
 	"strings"
 
 	"github.com/gogf/gf/encoding/gjson"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/ghttp"
-	"github.com/gogf/gf/os/gfile"
-	libgeo "github.com/nranchev/go-libGeoIP"
+	"github.com/gogf/gf/os/glog"
+	"github.com/oschwald/geoip2-golang"
 )
 
 const (
-	apiUrl     string = "http://api.dukeshi.cn:29090/api/location"
-	geoDataUrl string = "https://raw.githubusercontent.com/Loyalsoldier/geoip/release/geoip.dat"
-	dataFile   string = "data/geoip.dat"
+	apiUrl string = "http://api.dukeshi.cn:29090/api/location"
 )
 
 var (
-	gi *libgeo.GeoIP
 	GeoFileNotFoundErr = errors.New("")
+	GeoDB              *geoip2.Reader
 )
 
-func LookupByGeo(addr string) (*libgeo.Location, error) {
+func init() {
 	var err error
-	if !gfile.Exists(dataFile) {
-		return nil, GeoFileNotFoundErr
-	}
-	if gi == nil {
-		gi, err = libgeo.Load(dataFile)
-		if err != nil {
-			return nil, err
-		}
-	}
-	ip := gi.GetLocationByIP(addr)
-	return ip, err
-}
-
-func InitGeoFile(proxyUrl ...string) error {
-	cli := ghttp.NewClient()
-	if len(proxyUrl) > 0 {
-		cli.SetProxy(proxyUrl[0])
-	}
-	resp, err := cli.Get(geoDataUrl)
+	GeoDB, err = geoip2.Open("data/GeoLite2-Country.mmdb")
 	if err != nil {
-		return err
+		panic(err)
 	}
-	defer resp.Close()
-
-	err = gfile.PutBytes("data/geoip.dat", resp.ReadAll())
-	if err != nil {
-		return err
-	}
-	gi, err = libgeo.Load(dataFile)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func LookupByApi(addr string) (string, error) {
@@ -73,17 +43,12 @@ func LookupByApi(addr string) (string, error) {
 }
 
 func LookupCountry(addr string) (string, error) {
-	return LookupByApi(addr)
-	// location, err := LookupByGeo(addr)
-	// if err != nil {
-	// 	if err == GeoFileNotFoundErr {
-	// 		go InitGeoFile()
-	// 		return LookupByApi(addr)
-	// 	} else {
-	// 		return "", err
-	// 	}
-	// }
-	// return location.CountryCode, nil
+	record, err := GeoDB.Country(net.ParseIP(addr))
+	if err != nil {
+		glog.Warning("get ip from geo data error: " + err.Error())
+		return LookupByApi(addr)
+	}
+	return record.Country.IsoCode, err
 }
 
 func CheckIp(ip string) bool {

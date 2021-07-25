@@ -73,6 +73,7 @@ func (self *DnsCache) lookupCountry(domain string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	glog.Debugf("domain: %s country: %s", domain, country)
 	self.Cache.Set(domain, country, time.Second * 600)
 	return country, nil
 }
