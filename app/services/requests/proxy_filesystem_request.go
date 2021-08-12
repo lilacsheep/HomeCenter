@@ -298,3 +298,19 @@ func (self *UploadFilesystemFileRequest) Exec(r *ghttp.Request) (response Messag
 func NewUploadFilesystemFileRequest() *UploadFilesystemFileRequest {
 	return &UploadFilesystemFileRequest{}
 }
+
+
+type RemoveEmptyDirRequest struct {
+	NodeID int    `json:"node_id"`
+}
+
+func (self *RemoveEmptyDirRequest) Exec(r *ghttp.Request) (response MessageResponse) {
+	var node models.ProxyFileSystemNode
+	if err := filedb2.DB.One("ID", self.NodeID, &node); err != nil {
+		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
+	} else {
+		node.RemoveEmptyDir()
+		response.Success()
+	}
+	return
+}

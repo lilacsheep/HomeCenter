@@ -11,7 +11,8 @@
       <el-button size="small" type="primary" @click.prevent="node.create.visit = true">新增节点</el-button>
       <el-button size="small" type="success" @click.prevent="node.file.visit = true" plain>上传文件</el-button>
       <el-button size="small" type="warning" @click="open_create_dir_dialog" plain>新增目录</el-button>
-      <el-button size="small" type="danger" @click="remove_node" plain>删除节点</el-button>
+      <el-button v-if="node.files !== null && node.files.length > 0" size="small" type="danger" @click="remove_node" plain>删除节点</el-button>
+      <el-button v-if="node.files !== null && node.files.length > 0" size="small" type="danger" @click="remove_node" plain>清除空文件夹</el-button>
     </el-col>
     
     <el-col :span="3" v-for="(node, index) in nodes" :key="index">
@@ -298,6 +299,14 @@ export default {
       this.$api.post("/filesystem/node/remove", {id: that.node.info.id}).then(function (response) {
         that.refresh_nodes()
         that.node.files = null
+      }).catch(function (response) {
+        that.$message({type: "error", "message": response.message})
+      })
+    },
+    remove_empty_directory() {
+      let that = this
+      this.$api.post("/filesystem/remove/empty/dir", {node_id: that.node.info.id}).then(function (response) {
+        that.select_node(that.node.info)
       }).catch(function (response) {
         that.$message({type: "error", "message": response.message})
       })

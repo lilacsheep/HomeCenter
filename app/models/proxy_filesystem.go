@@ -63,3 +63,24 @@ func (self *ProxyFileSystemNode) Files() (files []FileInfo) {
 	absPath := gfile.Abs(self.Path)
 	return self.walk(absPath)
 }
+
+func (self *ProxyFileSystemNode) RemoveEmptyDir() {
+	absPath := gfile.Abs(self.Path)
+	fileInfos := self.walk(absPath)
+
+	for _, f := range fileInfos {
+		if f.IsDir {
+			if !f.HasChildren {
+				gfile.Remove(f.Path)
+			} else {
+				for _, child := range f.Children {
+					if child.IsDir {
+						if !child.HasChildren {
+							gfile.Remove(child.Path)
+						}
+					}
+				}
+			}
+		}
+	}
+}

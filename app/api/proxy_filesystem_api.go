@@ -75,3 +75,8 @@ func (self *ProxyFilesystemApi) RemoveDir(r *ghttp.Request) {
 	request := requests.NewRemoveFilesystemDirRequest()
 	self.DoRequestValid(request, r)
 }
+
+func (self *ProxyFilesystemApi) RemoveEmptyDir(r *ghttp.Request) {
+	request := &requests.RemoveEmptyDirRequest{}
+	self.DoRequestValid(request, r)
+}

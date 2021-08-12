@@ -102,6 +102,7 @@ func init() {
 		group.POST("/filesystem/dir/remove", filesystemApi.RemoveDir)
 		group.GET("/filesystem/download", filesystemApi.DownloadFile)
 		group.POST("/filesystem/file/info", filesystemApi.FileInfo)
+		group.POST("/filesystem/remove/empty/dir", filesystemApi.RemoveEmptyDir)
 
 		// message api
 		messageApi := new(api.ProxyMessageApi)
