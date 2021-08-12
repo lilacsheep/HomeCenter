@@ -62,7 +62,10 @@ func (self *QueryDownloadTaskRequest) Exec(r *ghttp.Request) (response MessageRe
 		infos []rpc.StatusInfo
 		err   error
 	)
-
+	if aria2.Manager == nil {
+		response.SuccessWithDetail(nil)
+		return
+	}
 	infos, err = aria2.Manager.ActiveTasks()
 	if err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
@@ -182,6 +185,10 @@ func NewUpdateDownloadSettingsRequest() *UpdateDownloadSettingsRequest {
 type GlobalStatInfoRequest struct{}
 
 func (self *GlobalStatInfoRequest) Exec(r *ghttp.Request) (response MessageResponse) {
+	if aria2.Manager == nil {
+		response.SuccessWithDetail(nil)
+		return
+	}
 	info, err := aria2.Manager.GetGlobalStat()
 	if err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
@@ -200,10 +207,6 @@ type TaskStatusRequest struct {
 }
 
 func (self *TaskStatusRequest) Exec(r *ghttp.Request) (response MessageResponse) {
-	if aria2.Manager == nil {
-		response.SuccessWithDetail(nil)
-		return
-	}
 	info, err := aria2.Manager.TaskStatus(self.Gid)
 	if err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
