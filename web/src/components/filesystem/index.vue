@@ -11,6 +11,7 @@
       <el-button size="small" type="primary" @click.prevent="node.create.visit = true">新增节点</el-button>
       <el-button size="small" type="success" @click.prevent="node.file.visit = true" plain>上传文件</el-button>
       <el-button size="small" type="warning" @click="open_create_dir_dialog" plain>新增目录</el-button>
+      <el-button size="small" type="danger" @click="remove_node" plain>删除节点</el-button>
     </el-col>
     
     <el-col :span="3" v-for="(node, index) in nodes" :key="index">
@@ -18,13 +19,6 @@
         <img :src="icon.folder" style="margin: 0" @click="select_node(node)">
         <div style="padding: 0 5px;">
           <span @click="select_node(node)">{{node.name}}</span>
-          <el-dropdown style="float: right;">
-            <el-button type="text" class="icon"  icon="el-icon-more-outline"></el-button>
-            <el-dropdown-menu slot="dropdown">
-              <el-dropdown-item>下载</el-dropdown-item>
-              <el-dropdown-item>删除</el-dropdown-item>
-            </el-dropdown-menu>
-          </el-dropdown>
         </div>
       </el-card>
     </el-col>
@@ -298,6 +292,15 @@ export default {
     },
     download_file(row) {
       window.open("/api/filesystem/download?path="+row.path+"&node_id="+this.node.info.id)
+    },
+    remove_node() {
+      let that = this
+      this.$api.post("/filesystem/node/remove", {id: that.node.info.id}).then(function (response) {
+        that.refresh_nodes()
+        that.node.files = null
+      }).catch(function (response) {
+        that.$message({type: "error", "message": response.message})
+      })
     }
   },
   created: function () {
