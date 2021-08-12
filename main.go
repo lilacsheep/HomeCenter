@@ -2,11 +2,12 @@ package main
 
 import (
 	_ "homeproxy/app/server"
+	_ "homeproxy/app/server/aria2"
+	"homeproxy/boot"
 	"homeproxy/library/config"
 	"homeproxy/library/events"
 	_ "homeproxy/packed"
 	_ "homeproxy/router"
-	_ "homeproxy/app/server/aria2"
 	"time"
 
 	"github.com/gogf/gf/frame/g"
@@ -31,5 +32,7 @@ func main() {
 	s.SetAddr(config.WebHost)
 	s.AddStaticPath("/static", "public")
 	s.SetDumpRouterMap(false)
+
+	boot.Setup()
 	s.Run()
 }

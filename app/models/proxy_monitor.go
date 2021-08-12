@@ -2,14 +2,8 @@ package models
 
 import (
 	"homeproxy/library/filedb2"
-
-	"github.com/gogf/gf/os/glog"
 )
 
-func init() {
-	glog.Debugf("clean all monitor info")
-	filedb2.DB.Drop(&ProxyMonitorInfo{})
-}
 
 type ProxyMonitorInfo struct {
 	ID          int     `json:"id" storm:"id,increment"`

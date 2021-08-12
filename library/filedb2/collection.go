@@ -12,7 +12,7 @@ var (
 	DB *storm.DB
 )
 
-func init() {
+func Init() {
 	dbname := fmt.Sprintf("%s.db", config.Dbname)
 	DB, _ = storm.Open(filepath.Join(config.Dbpath, dbname))
 }

@@ -38,7 +38,7 @@ func DefaultServer() *models.ProxyServer {
 	}
 }
 
-func init() {
+func Setup() {
 	Mallory = &MalloryManger{}
 	server, err := models.GetProxyServer()
 	if err != nil {

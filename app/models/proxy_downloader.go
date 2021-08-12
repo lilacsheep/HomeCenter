@@ -3,19 +3,7 @@ package models
 import (
 	"homeproxy/library/filedb2"
 	"time"
-
-	"github.com/gogf/gf/os/glog"
 )
-
-func init() {
-	if found, _ := filedb2.DB.KeyExists("settings", "download"); !found {
-		if !found {
-			settings := DownloadSettings{}
-			filedb2.DB.Set("settings", "download", &settings)
-			glog.Info("init download settings")
-		}
-	}
-}
 
 type DownloadSettings struct {
 	ID                  int    `json:"id" storm:"id,increment"`

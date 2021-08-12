@@ -7,13 +7,6 @@ import (
 	"github.com/asdine/storm/v3/q"
 )
 
-func init() {
-	defaultUser := User{Username: "admin", Password: "!QAZ2wsx", Status: true, CreateAt: time.Now()}
-	if c, _ := filedb2.DB.Count(&User{});c == 0 {
-		filedb2.DB.Save(&defaultUser)
-	}
-}
-
 type User struct {
 	ID       int       `json:"id" storm:"id,increment"`
 	Username string    `json:"username" storm:"unique"`

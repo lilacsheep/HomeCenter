@@ -1,7 +1,6 @@
 package models
 
 import (
-	"homeproxy/library/filedb2"
 	"io/ioutil"
 	"path/filepath"
 	"time"
@@ -9,17 +8,6 @@ import (
 	"github.com/gogf/gf/os/gfile"
 )
 
-func init() {
-	count, _ := filedb2.DB.Count(&ProxyFileSystemNode{})
-	if count == 0 {
-		node := ProxyFileSystemNode{
-			Path:     gfile.Abs("download/"),
-			Name:     "下载",
-			CreateAt: time.Now(),
-		}
-		filedb2.DB.Save(&node)
-	}
-}
 
 type FileInfo struct {
 	Name        string     `json:"name"`

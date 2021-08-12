@@ -30,8 +30,14 @@ func (self *ProxyFilesystemApi) DownloadFile(r *ghttp.Request) {
 	request := &requests.DownloadFilesystemFileRequest{}
 	if err := r.Parse(request); err != nil {
 		resp := requests.MessageResponse{}
-		resp.ErrorWithMessage(requests.ParamsErrorCode, err.(*gvalid.Error).Maps())
-		r.Response.WriteJsonExit(resp)
+		switch err.(type) {
+			case gvalid.Error:
+				resp.ErrorWithMessage(requests.ParamsErrorCode, err.(gvalid.Error).Maps())
+				r.Response.WriteJsonExit(resp)
+			default:
+				resp.ErrorWithMessage(requests.ParamsErrorCode, err.Error())
+				r.Response.WriteJsonExit(resp)
+		}
 	} else {
 		response := request.Exec(r)
 		if response.ErrorCode == http.StatusNotFound {

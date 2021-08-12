@@ -91,7 +91,7 @@ func (self *DNSPod) Version() (interface{}, error) {
 		defer response.Body.Close()
 		body := response.ReadAllString()
 		resp := DNSPodResponse{}
-		err := gjson.New(body).ToStruct(&resp)
+		err := gjson.New(body).Struct(&resp)
 		return resp, err
 	}
 }
@@ -117,7 +117,7 @@ func (self *DNSPod) DomainList(keyword ...string) (interface{}, error) {
 	} else {
 		defer response.Close()
 		resp := DNSPodResponse{}
-		err := gjson.New(response.ReadAllString()).ToStruct(&resp)
+		err := gjson.New(response.ReadAllString()).Struct(&resp)
 		return resp, err
 	}
 }
@@ -138,7 +138,7 @@ func (self *DNSPod) RecordList(domain string, subDomain string, keyword ...strin
 		return nil, err
 	} else {
 		defer resp.Close()
-		err = gjson.New(resp.ReadAllString()).ToStruct(&response)
+		err = gjson.New(resp.ReadAllString()).Struct(&response)
 		if err != nil {
 			return nil, err
 		}
@@ -165,7 +165,7 @@ func (self *DNSPod) RecordCreate(domain, subDomain, ttl string, address Address)
 	}
 	defer resp.Close()
 	response := DNSPodResponse{}
-	err = gjson.New(resp.ReadAllString()).ToStruct(&response)
+	err = gjson.New(resp.ReadAllString()).Struct(&response)
 	if response.Status.Code != 1 {
 		return "", errors.New(response.Status.Message)
 	}
@@ -183,7 +183,7 @@ func (self *DNSPod) RecordRemove(domain string, recordID string) (interface{}, e
 	}
 	defer resp.Close()
 	response := DNSPodResponse{}
-	err = gjson.New(resp.ReadAllString()).ToStruct(&response)
+	err = gjson.New(resp.ReadAllString()).Struct(&response)
 	return response, err
 }
 
@@ -204,7 +204,7 @@ func (self *DNSPod) RecordModify(domain, recordID, subDomain string, address Add
 	}
 	defer resp.Close()
 	response := DNSPodResponse{}
-	err = gjson.New(resp.ReadAllString()).ToStruct(&response)
+	err = gjson.New(resp.ReadAllString()).Struct(&response)
 	if err != nil {
 		return err
 	}
@@ -225,7 +225,7 @@ func (self *DNSPod) RecordInfo(domain, recordID string) (interface{}, error) {
 	}
 	defer resp.Close()
 	response := DNSPodResponse{}
-	err = gjson.New(resp.ReadAllString()).ToStruct(&response)
+	err = gjson.New(resp.ReadAllString()).Struct(&response)
 	return response, err
 }
 

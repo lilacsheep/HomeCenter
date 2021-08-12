@@ -11,10 +11,6 @@ import (
 	"time"
 )
 
-func init() {
-	InitDDnsTask()
-}
-
 func InitDDnsTask() {
 	var roles []models.DDnsProviderSettings
 	err := filedb2.DB.All(&roles)

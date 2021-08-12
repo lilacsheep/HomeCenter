@@ -19,7 +19,7 @@ var (
 	History *HistoryInfo
 )
 
-func init() {
+func SetupMonitor() {
 	gcron.AddSingleton("* * * * * *", QueryProxyMonitorInfoTask)
 	gcron.AddSingleton("0 1 */1 * * *", CleanupMonitorInfo)
 }
