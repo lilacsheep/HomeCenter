@@ -11,6 +11,7 @@ require (
 	github.com/go-ole/go-ole v1.2.5 // indirect
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
 	github.com/gogf/gf v1.16.5
+	github.com/goh-chunlin/go-onedrive v1.1.1 // indirect
 	github.com/golang/snappy v0.0.2 // indirect
 	github.com/grokify/html-strip-tags-go v0.0.1 // indirect
 	github.com/kr/text v0.2.0 // indirect

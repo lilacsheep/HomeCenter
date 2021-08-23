@@ -31,7 +31,7 @@ func main() {
 	s.SetServerRoot("public")
 	s.SetAddr(config.WebHost)
 	s.AddStaticPath("/static", "public")
-	s.SetDumpRouterMap(false)
+	// s.SetDumpRouterMap(false)
 
 	boot.Setup()
 	s.Run()

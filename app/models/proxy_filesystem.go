@@ -8,7 +8,6 @@ import (
 	"github.com/gogf/gf/os/gfile"
 )
 
-
 type FileInfo struct {
 	Name        string     `json:"name"`
 	Path        string     `json:"path"`

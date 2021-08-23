@@ -12,7 +12,7 @@
       <el-button size="small" type="success" @click.prevent="node.file.visit = true" plain>上传文件</el-button>
       <el-button size="small" type="warning" @click="open_create_dir_dialog" plain>新增目录</el-button>
       <el-button v-if="node.files !== null && node.files.length > 0" size="small" type="danger" @click="remove_node" plain>删除节点</el-button>
-      <el-button v-if="node.files !== null && node.files.length > 0" size="small" type="danger" @click="remove_node" plain>清除空文件夹</el-button>
+      <el-button v-if="node.files !== null && node.files.length > 0" size="small" type="danger" @click="remove_empty_directory" plain>清除空文件夹</el-button>
     </el-col>
     
     <el-col :span="3" v-for="(node, index) in nodes" :key="index">
