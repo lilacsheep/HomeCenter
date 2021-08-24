@@ -6,6 +6,7 @@ import (
 	"homeproxy/app/server/aria2"
 	"homeproxy/app/services/tasks"
 	"homeproxy/library/filedb2"
+	"homeproxy/library/orm"
 	"time"
 
 	"github.com/gogf/gf/os/gfile"
@@ -14,6 +15,11 @@ import (
 
 func Setup() error {
 	filedb2.Init()
+
+	err := orm.Init()
+	if err != nil {
+		return err
+	}
 	// 初始化用户
 	defaultUser := models.User{Username: "admin", Password: "!QAZ2wsx", Status: true, CreateAt: time.Now()}
 	if c, _ := filedb2.DB.Count(&models.User{});c == 0 {
