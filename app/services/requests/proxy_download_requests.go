@@ -169,10 +169,23 @@ type UpdateDownloadSettingsRequest struct {
 }
 
 func (self *UpdateDownloadSettingsRequest) Exec(r *ghttp.Request) (response MessageResponse) {
-	err := aria2.UpdateSettings(self)
+	settings := models.DownloadSettings{}
+	err := models.ConfigToStruct("download", &settings)
 	if err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
+		if self.Aria2Url != settings.Aria2Url {
+			models.UpdateConfig("download", "aria2_url", self.Aria2Url)
+		}
+		if self.Aria2Token != settings.Aria2Token {
+			models.UpdateConfig("download", "aria2_token", self.Aria2Token)
+		}
+		if self.AutoClean != settings.AutoClean {
+			models.UpdateConfig("download", "auto_clean", self.AutoClean)
+		}
+		if self.AutoUpdateBTTracker != settings.AutoUpdateBTTracker {
+			models.UpdateConfig("download", "auto_update_bt_tracker", self.AutoUpdateBTTracker)
+		}
 		response.Success()
 	}
 	return
