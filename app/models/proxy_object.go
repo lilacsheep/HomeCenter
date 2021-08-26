@@ -4,9 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/util/gmeta"
 )
 
 type Version struct {
@@ -20,7 +20,7 @@ func (v Version) String() string {
 }
 
 func (v *Version) Next() (string, error) {
-	v.latest+=1
+	v.latest += 1
 	nv := fmt.Sprintf("%d.%d.%d", v.first, v.second, v.latest)
 	return nv, nil
 }
@@ -36,17 +36,16 @@ func NewVersion(data string) (*Version, error) {
 	return &Version{first: gconv.Int(t[0]), second: gconv.Int(t[1]), latest: gconv.Int(t[2])}, nil
 }
 
-
 type ObjectInfo struct {
-	ID          int       `json:"id" storm:"id,increment"`
-	Name        string    `json:"name"`
-	Key         string    `json:"key"`
-	Size        int64     `json:"size"`
-	Hash        string    `json:"hash" storm:"unique"`
-	RealPath    string    `json:"real_path" storm:"unique"`
-	ContextType string    `json:"context_type"`
-	Version     string    `json:"version"`
-	CreateAt    time.Time `json:"create_at"`
+	DefaultModel
+	Name        string `json:"name"`
+	Key         string `json:"key"`
+	Size        int64  `json:"size"`
+	Hash        string `json:"hash"`
+	RealPath    string `json:"real_path"`
+	ContextType string `json:"context_type"`
+	Version     string `json:"version"`
+	gmeta.Meta  `orm:"table:object_table"`
 }
 
 func (s *ObjectInfo) GetVersion() (*Version, error) {

@@ -48,7 +48,7 @@ func (self *ProxyInstance) RefreshCountry() {
 		glog.Debugf("check ip address: %s", v[0])
 		code, _ = common.LookupCountry(v[0])
 	} else {
-		serverInfo, _ := GetProxyServer()
+		serverInfo, _ := DefaultProxyServer()
 		dns := &net.Resolver{
 			PreferGo: true,
 			Dial: func(ctx context.Context, network, address string) (net.Conn, error) {

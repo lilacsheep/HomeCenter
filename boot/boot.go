@@ -6,9 +6,9 @@ import (
 	"homeproxy/app/server/aria2"
 	"homeproxy/app/services/tasks"
 	"homeproxy/library/filedb2"
-	"homeproxy/library/orm"
 	"time"
 
+	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/os/glog"
 )
@@ -16,13 +16,19 @@ import (
 func Setup() error {
 	filedb2.Init()
 
-	err := orm.Init()
-	if err != nil {
-		return err
+	sqlFile := []string{"dbsql/object_table.sql", "dbsql/global_config.sql"}
+	for _, f := range sqlFile {
+		s := gfile.GetContents(f)
+		_, err := g.DB().Exec(s)
+		if err != nil {
+			return err
+		}
 	}
+	
+
 	// 初始化用户
 	defaultUser := models.User{Username: "admin", Password: "!QAZ2wsx", Status: true, CreateAt: time.Now()}
-	if c, _ := filedb2.DB.Count(&models.User{});c == 0 {
+	if c, _ := filedb2.DB.Count(&models.User{}); c == 0 {
 		filedb2.DB.Save(&defaultUser)
 	}
 	// 初始化下载配置
@@ -52,6 +58,6 @@ func Setup() error {
 	server.Setup()
 	tasks.InitDDnsTask()
 	tasks.SetupMonitor()
-	
+
 	return nil
 }

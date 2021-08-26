@@ -13,7 +13,6 @@ import (
 	"os/user"
 	"time"
 
-	"github.com/asdine/storm/v3"
 	"github.com/gogf/gf/container/garray"
 	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/frame/g"
@@ -27,30 +26,11 @@ import (
 
 var Mallory *MalloryManger
 
-func DefaultServer() *models.ProxyServer {
-	return &models.ProxyServer{
-		Name:      "default",
-		Port:      1316,
-		Status:    true,
-		AutoStart: true,
-		DNSAddr:   "8.8.8.8",
-		ProxyMode: 4,
-	}
-}
-
 func Setup() {
 	Mallory = &MalloryManger{}
-	server, err := models.GetProxyServer()
+	server, err := models.DefaultProxyServer()
 	if err != nil {
-		if err == storm.ErrNotFound {
-			server = DefaultServer()
-			err = filedb2.DB.Set("settings", "server", server)
-			if err != nil {
-				panic(err)
-			}
-		} else {
-			panic(err)
-		}
+		panic(err)
 	}
 	if server.AutoStart {
 		glog.Info("proxy auto start, please wait...")
@@ -70,7 +50,7 @@ type MalloryManger struct {
 
 func (self *MalloryManger) Init() error {
 	// init get Proxy Server
-	info, err := models.GetProxyServer()
+	info, err := models.DefaultProxyServer()
 	if err != nil {
 		return err
 	}
@@ -102,7 +82,7 @@ func (self *MalloryManger) Init() error {
 				}
 				return d.DialContext(ctx, "udp", fmt.Sprintf("%s:53", info.DNSAddr))
 			}},
-		Cache: gcache.New(),
+		Cache:        gcache.New(),
 		ForceCountry: mallory.DefaultForceCountry(),
 	}
 	self.ProxyHandler = &mallory.Server{

@@ -47,7 +47,7 @@ type UpdateProxyServerRequest struct {
 	Port       int    `json:"port"`
 	Username   string `json:"username"`
 	Password   string `json:"password"`
-	Status     bool   `json:"status"`
+	Balance    bool   `json:"balance"`
 	DNSAddr    string `json:"dns_addr"`
 	AutoProxy  bool   `json:"auto_proxy"`
 	ProxyMode  int    `json:"proxy_mode"`
@@ -55,18 +55,15 @@ type UpdateProxyServerRequest struct {
 }
 
 func (self *UpdateProxyServerRequest) Exec(r *ghttp.Request) (response MessageResponse) {
-	server2, err := models.GetProxyServer()
+	server2, err := models.DefaultProxyServer()
 	if err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err)
 	} else {
-		if self.Name != "" && server2.Name != self.Name {
-			server2.Name = self.Name
-		}
 		if self.Port != 0 && server2.Port != self.Port {
 			server2.Port = self.Port
 		}
 		if self.Username != "" && server2.Username == self.Username {
-			server2.Name = self.Username
+			server2.Username = self.Username
 		}
 		if self.Password != "" && server2.Password == self.Password {
 			server2.Password = self.Password
@@ -75,13 +72,13 @@ func (self *UpdateProxyServerRequest) Exec(r *ghttp.Request) (response MessageRe
 			server2.DNSAddr = self.DNSAddr
 			server.Mallory.SwitchDNS(self.DNSAddr)
 		}
-		if self.Status != server2.Status {
-			if self.Status {
+		if self.Balance != server2.Balance {
+			if self.Balance {
 				server.Mallory.SetBalance(1)
 			} else {
 				server.Mallory.SetBalance(0)
 			}
-			server2.Status = self.Status
+			server2.Balance = self.Balance
 		}
 		if self.ProxyMode != server2.ProxyMode {
 			if server.Mallory.Status {
@@ -114,7 +111,7 @@ func NewUpdateProxyServerRequest() *UpdateProxyServerRequest {
 type InfoProxyServerRequest struct{}
 
 func (self *InfoProxyServerRequest) Exec(r *ghttp.Request) (response MessageResponse) {
-	info, err := models.GetProxyServer()
+	info, err := models.DefaultProxyServer()
 	if err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
@@ -122,7 +119,7 @@ func (self *InfoProxyServerRequest) Exec(r *ghttp.Request) (response MessageResp
 		data.Append(g.Map{"key": "port", "name": "端口", "value": info.Port})
 		data.Append(g.Map{"key": "status", "name": "状态", "value": server.Mallory.Status})
 		data.Append(g.Map{"key": "dns_addr", "name": "DNS", "value": info.DNSAddr})
-		data.Append(g.Map{"key": "balance", "name": "负载", "value": info.Status})
+		data.Append(g.Map{"key": "balance", "name": "负载", "value": info.Balance})
 		data.Append(g.Map{"key": "auto_start", "name": "启动", "value": info.AutoStart})
 		data.Append(g.Map{"key": "proxy_mode", "name": "模式", "value": info.ProxyMode})
 		data.Append(g.Map{"key": "enable_auth", "name": "认证", "value": info.EnableAuth})
