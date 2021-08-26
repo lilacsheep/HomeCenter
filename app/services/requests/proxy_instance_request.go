@@ -4,7 +4,6 @@ import (
 	"homeproxy/app/models"
 	"homeproxy/app/server"
 	"homeproxy/library/common"
-	"homeproxy/library/filedb2"
 	"net/http"
 
 	"github.com/asdine/storm/v3"
@@ -28,17 +27,13 @@ func (self *CreateProxyInstanceRequest) Exec(r *ghttp.Request) (response Message
 	instance.PrivateKey = self.PrivateKey
 	instance.Status = true
 
-	err := filedb2.DB.Save(&instance)
+	_, err := g.DB().Model(&models.ProxyInstance{}).Save(&instance)
 	if err != nil {
-		if err == storm.ErrAlreadyExists {
-			response.ErrorWithMessage(http.StatusInternalServerError, "该记录已存在")
-		} else {
-			response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
-		}
+		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
 		instance.RefreshCountry()
 		if server.Mallory.Status {
-			server.Mallory.AddInstances(instance.Url(), instance.Password, instance.PrivateKey, gconv.String(instance.ID))
+			server.Mallory.AddInstances(instance.Url(), instance.Password, instance.PrivateKey, gconv.String(instance.Id))
 		}
 		response.SuccessWithDetail(instance)
 	}
@@ -76,7 +71,8 @@ func (self *QueryAllInstanceRequest) Exec(r *ghttp.Request) (response MessageRes
 		instances []models.ProxyInstance
 	)
 	offset, limit := self.Pagination()
-	err = filedb2.DB.Select().Limit(limit).Skip(offset).Find(&instances)
+
+	err = g.DB().Model(&models.ProxyInstance{}).Limit(offset, limit).Structs(&instances)
 	if err != nil {
 		if err == storm.ErrNotFound {
 			response.SuccessWithDetail([]models.ProxyInstance{})
@@ -131,7 +127,7 @@ func (self *UpdateInstanceRequest) Exec(r *ghttp.Request) (response MessageRespo
 		err      error
 		instance = &models.ProxyInstance{}
 	)
-	err = filedb2.DB.One("ID", self.ID, instance)
+	err = g.DB().Model(&models.ProxyInstance{}).Where("id = ?", self.ID).Struct(instance)
 	if err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
@@ -146,11 +142,14 @@ func (self *UpdateInstanceRequest) Exec(r *ghttp.Request) (response MessageRespo
 				instance.Country = c.CN
 				instance.CountryCode = self.CountryCode
 				instance.ForceCountry = self.ForceCountry
-				err = filedb2.DB.Update(instance)
+				g.DB().Model(&models.ProxyInstance{}).Data(g.Map{
+					"country": c.CN,
+					"country_code": self.CountryCode,
+					"force_country": true,
+				}).Where("id = ?", self.ID).Update()
 			} else {
 				instance.ForceCountry = self.ForceCountry
-				err = filedb2.DB.Update(instance)
-				filedb2.DB.UpdateField(&models.ProxyInstance{ID: self.ID}, "ForceCountry", self.ForceCountry)
+				g.DB().Model(&models.ProxyInstance{}).Data(g.Map{"force_country": false}).Where("id = ?", self.ID).Update()
 				instance.RefreshCountry()
 			}
 
@@ -159,7 +158,7 @@ func (self *UpdateInstanceRequest) Exec(r *ghttp.Request) (response MessageRespo
 			} else {
 				if server.Mallory.Status {
 					server.Mallory.RemoveInstance(gconv.String(self.ID))
-					server.Mallory.AddInstances(instance.Url(), instance.Password, instance.PrivateKey, gconv.String(instance.ID))
+					server.Mallory.AddInstances(instance.Url(), instance.Password, instance.PrivateKey, gconv.String(instance.Id))
 				}
 				response.Success()
 			}
@@ -183,11 +182,11 @@ func (self *RemoveInstanceRequest) Exec(r *ghttp.Request) (response MessageRespo
 		err      error
 		instance models.ProxyInstance
 	)
-	err = filedb2.DB.One("ID", self.ID, &instance)
+	err = g.DB().Model(&models.ProxyInstance{}).Where("id = ?", self.ID).Struct(&instance)
 	if err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
-		err = filedb2.DB.DeleteStruct(&instance)
+		_, err = g.DB().Model(&models.ProxyInstance{}).Where("id = ?", self.ID).Delete()
 		if err != nil {
 			response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 		} else {
@@ -209,7 +208,7 @@ func (self *RemoveInstanceFromPoolRequest) Exec(r *ghttp.Request) (response Mess
 	var (
 		err error
 	)
-	err = filedb2.DB.UpdateField(models.ProxyInstance{ID: self.ID}, "status", false)
+	_, err = g.DB().Model(&models.ProxyInstance{}).Data(g.Map{"status": false}).Where("id = ?", self.ID).Update()
 	if err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
@@ -234,16 +233,16 @@ func (self *AddInstanceIntoPoolRequest) Exec(r *ghttp.Request) (response Message
 		err      error
 		instance models.ProxyInstance
 	)
-	err = filedb2.DB.One("ID", self.ID, &instance)
+	err = g.DB().Model(&models.ProxyInstance{}).Where("id = ?", self.ID).Struct(&instance)
 	if err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
-		err = filedb2.DB.UpdateField(&instance, "Status", true)
+		_, err = g.DB().Model(&models.ProxyInstance{}).Data(g.Map{"status": true}).Where("id = ?", self.ID).Update()
 		if err != nil {
 			response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 		} else {
 			if server.Mallory.Status {
-				server.Mallory.AddInstances(instance.Url(), instance.Password, instance.PrivateKey, gconv.String(instance.ID))
+				server.Mallory.AddInstances(instance.Url(), instance.Password, instance.PrivateKey, gconv.String(instance.Id))
 				response.Success()
 			} else {
 				response.ErrorWithMessage(http.StatusInternalServerError, "代理服务没有启动，但是会在代理启动时启动...")

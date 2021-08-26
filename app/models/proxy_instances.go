@@ -4,19 +4,19 @@ import (
 	"context"
 	"fmt"
 	"homeproxy/library/common"
-	"homeproxy/library/filedb2"
 	"net"
 	"strings"
 	"time"
 
-	"github.com/asdine/storm/v3/q"
+	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/os/glog"
+	"github.com/gogf/gf/util/gmeta"
 )
 
 type ProxyInstance struct {
-	ID           int    `json:"id" storm:"id,increment"`
+	DefaultModel
 	Protocol     int    `json:"protocol"`               // default 0(SSH)
-	Address      string `json:"address" storm:"unique"` //
+	Address      string `json:"address"` //
 	Username     string `json:"username"`
 	Password     string `json:"password"`
 	PrivateKey   string `json:"private_key"`
@@ -25,6 +25,7 @@ type ProxyInstance struct {
 	CountryCode  string `json:"country_code"`
 	Country      string `json:"country"`
 	Delay        int    `json:"delay"`
+	gmeta.Meta  `orm:"table:instances"`
 }
 
 func (self *ProxyInstance) Url() string {
@@ -69,16 +70,17 @@ func (self *ProxyInstance) RefreshCountry() {
 	if info != nil {
 		self.CountryCode = code
 		self.Country = info.CN
-		filedb2.DB.Update(self)
+		g.DB().Model(&ProxyInstance{}).Data(g.Map{"country": info.CN, "country_code": code}).Where("id = ?", self.Id).Update()
 	}
 	glog.Debugf("refresh instance: %s info done, code: %s", v[0], code)
 }
 
 func UpdateProxyInstanceDelay(id int, delay int) error {
-	return filedb2.DB.UpdateField(&ProxyInstance{ID: id}, "Delay", delay)
+	_, err := g.DB().Model(&ProxyInstance{}).Data(g.Map{"delay": delay}).Where("id=?", id).Update()
+	return err
 }
 
 func GetEnableProxyInstances() (instances []ProxyInstance, err error) {
-	err = filedb2.DB.Select(q.Eq("Status", true)).Find(&instances)
-	return
+	err = g.DB().Model(&ProxyInstance{}).Where("status", true).Structs(&instances)
+	return 
 }

@@ -413,7 +413,7 @@
           </el-autocomplete>
         </el-form-item>
         <el-form-item label="负载" label-width="80px">
-          <el-switch v-model="server.edit.form.status" active-text="轮训" inactive-text="随机"></el-switch>
+          <el-switch v-model="server.edit.form.balance" active-text="轮训" inactive-text="随机"></el-switch>
         </el-form-item>
         <el-form-item label="模式" label-width="80px">
           <el-select v-model="server.edit.form.proxy_mode" size="small" placeholder="请选择">
@@ -654,7 +654,7 @@ export default {
             name: "",
             port: 0,
             dns_addr: "",
-            status: false,
+            balance: false,
             username: "",
             password: "",
             proxy_mode: "",
@@ -780,7 +780,7 @@ export default {
             that.server.edit.form.dns_addr = row.value;
             break;
           case "balance":
-            that.server.edit.form.status = row.value;
+            that.server.edit.form.balance = row.value;
             break;
           case "proxy_mode":
             that.server.edit.form.proxy_mode = row.value;

@@ -2,6 +2,7 @@ package models
 
 import (
 	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/util/gconv"
 	"github.com/gogf/gf/util/gmeta"
 )
 
@@ -19,7 +20,8 @@ func (o GlobalConfig) Var() *g.Var {
 	return g.NewVar(o.Value, true)
 }
 
-func UpdateConfig(group, key, value string) error {
-	_, err := g.DB().Model(&GlobalConfig{}).Data(g.Map{"value": value}).Where("`group` = ? AND `key` = ?", group, key).Update()
+func UpdateConfig(group, key string, value interface{}) error {
+	_, err := g.DB().Model(&GlobalConfig{}).Data(
+		g.Map{"value": gconv.String(value)}).Where("`group` = ? AND `key` = ?", group, key).Update()
 	return err
 }

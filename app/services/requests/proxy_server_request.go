@@ -3,7 +3,6 @@ package requests
 import (
 	"homeproxy/app/models"
 	"homeproxy/app/server"
-	"homeproxy/library/filedb2"
 	"net/http"
 
 	"github.com/gogf/gf/container/garray"
@@ -43,7 +42,6 @@ func NewStopProxyServerRequest() *StopProxyServerRequest {
 }
 
 type UpdateProxyServerRequest struct {
-	Name       string `json:"name"`
 	Port       int    `json:"port"`
 	Username   string `json:"username"`
 	Password   string `json:"password"`
@@ -60,16 +58,16 @@ func (self *UpdateProxyServerRequest) Exec(r *ghttp.Request) (response MessageRe
 		response.ErrorWithMessage(http.StatusInternalServerError, err)
 	} else {
 		if self.Port != 0 && server2.Port != self.Port {
-			server2.Port = self.Port
+			err = models.UpdateConfig("mallory", "port", self.Port)
 		}
 		if self.Username != "" && server2.Username == self.Username {
-			server2.Username = self.Username
+			err = models.UpdateConfig("mallory", "username", self.Username)
 		}
 		if self.Password != "" && server2.Password == self.Password {
-			server2.Password = self.Password
+			err = models.UpdateConfig("mallory", "password", self.Password)
 		}
 		if self.DNSAddr != "" && server2.DNSAddr != self.DNSAddr {
-			server2.DNSAddr = self.DNSAddr
+			err = models.UpdateConfig("mallory", "dns_addr", self.DNSAddr)
 			server.Mallory.SwitchDNS(self.DNSAddr)
 		}
 		if self.Balance != server2.Balance {
@@ -78,13 +76,13 @@ func (self *UpdateProxyServerRequest) Exec(r *ghttp.Request) (response MessageRe
 			} else {
 				server.Mallory.SetBalance(0)
 			}
-			server2.Balance = self.Balance
+			err = models.UpdateConfig("mallory", "balance", self.Balance)
 		}
 		if self.ProxyMode != server2.ProxyMode {
 			if server.Mallory.Status {
 				server.Mallory.ProxyHandler.ProxyMode = self.ProxyMode
 			}
-			server2.ProxyMode = self.ProxyMode
+			err = models.UpdateConfig("mallory", "proxy_mode", self.ProxyMode)
 		}
 		if self.EnableAuth != server2.EnableAuth {
 			if self.EnableAuth {
@@ -92,9 +90,8 @@ func (self *UpdateProxyServerRequest) Exec(r *ghttp.Request) (response MessageRe
 			} else {
 				server.Mallory.ProxyHandler.DisableAuth()
 			}
-			server2.EnableAuth = self.EnableAuth
+			err = models.UpdateConfig("mallory", "enable_auth", self.EnableAuth)
 		}
-		err := filedb2.DB.Set("settings", "server", server2)
 		if err != nil {
 			response.ErrorWithMessage(http.StatusServiceUnavailable, err.Error())
 		} else {
