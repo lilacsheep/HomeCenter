@@ -1,26 +1,23 @@
 package models
 
 import (
-	"homeproxy/library/filedb2"
-	"time"
-
-	"github.com/asdine/storm/v3/q"
+	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/util/gmeta"
 )
 
 type User struct {
-	ID       int       `json:"id" storm:"id,increment"`
-	Username string    `json:"username" storm:"unique"`
-	Password string    `json:"password"`
-	Status   bool      `json:"status"`
-	CreateAt time.Time `json:"create_at"`
+	DefaultModel
+	Username   string `json:"username" storm:"unique"`
+	Password   string `json:"password"`
+	Status     bool   `json:"status"`
+	gmeta.Meta `orm:"table:auth_users"`
 }
 
 func UserLogin(username, password string) (*User, error) {
 	var (
 		user = User{}
 	)
-	query := filedb2.DB.Select(q.And(q.Eq("Username", username), q.Eq("Password", password)))
-	err := query.First(&user)
+	err := g.DB().Model(&User{}).Where("`username` = ? AND `password` = ?", username, password).Struct(&user)
 	return &user, err
 }
 
@@ -29,7 +26,6 @@ func CreateUser(username, password string) (user *User, err error) {
 	user.Username = username
 	user.Password = password
 	user.Status = true
-	user.CreateAt = time.Now()
-	err = filedb2.DB.Save(user)
+	_, err = g.DB().Model(&User{}).Save(user)
 	return
 }

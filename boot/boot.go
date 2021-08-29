@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/os/gcron"
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/os/glog"
 )
@@ -16,7 +17,7 @@ import (
 func Setup() error {
 	filedb2.Init()
 
-	sqlFile := []string{"dbsql/object_table.sql", "dbsql/global_config.sql", "dbsql/instances.sql"}
+	sqlFile := []string{"dbsql/object_table.sql", "dbsql/global_config.sql", "dbsql/instances.sql", "dbsql/auth_users.sql"}
 	for _, f := range sqlFile {
 		s := gfile.GetContents(f)
 		_, err := g.DB().Exec(s)
@@ -24,20 +25,19 @@ func Setup() error {
 			return err
 		}
 	}
-	
 
 	// 初始化用户
-	defaultUser := models.User{Username: "admin", Password: "!QAZ2wsx", Status: true, CreateAt: time.Now()}
-	if c, _ := filedb2.DB.Count(&models.User{}); c == 0 {
-		filedb2.DB.Save(&defaultUser)
+	if c, _ := g.DB().Model(&models.User{}).Count(); c == 0 {
+		models.CreateUser("admin", "!QAZ2wsx")
 	}
 	// 初始化下载配置
-	if found, _ := filedb2.DB.KeyExists("settings", "download"); !found {
-		if !found {
-			settings := models.DownloadSettings{}
-			filedb2.DB.Set("settings", "download", &settings)
-			glog.Info("init download settings")
-		}
+
+	downloadSettings, err := models.GetSettings()
+	if err != nil {
+		return err
+	}
+	if downloadSettings.Aria2Url != "" {
+		gcron.AddSingleton("*/2 * * * * *", tasks.ReloadAira2Manager)
 	}
 
 	// 初始化文件管理节点
