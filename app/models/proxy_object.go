@@ -36,11 +36,19 @@ func NewVersion(data string) (*Version, error) {
 	return &Version{first: gconv.Int(t[0]), second: gconv.Int(t[1]), latest: gconv.Int(t[2])}, nil
 }
 
+type Bucket struct {
+	DefaultModel
+	Name       string `json:"string"`
+	Public     bool   `json:"public"`
+	gmeta.Meta `orm:"table:object_bucket_table"`
+}
+
 type ObjectInfo struct {
 	DefaultModel
 	Name        string `json:"name"`
 	Key         string `json:"key"`
 	Size        int64  `json:"size"`
+	Bucket      int    `json:"bucket"`
 	Hash        string `json:"hash"`
 	RealPath    string `json:"real_path"`
 	ContextType string `json:"context_type"`
