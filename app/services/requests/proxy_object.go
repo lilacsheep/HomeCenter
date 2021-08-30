@@ -22,13 +22,13 @@ type CreateObjectTokenRequest struct {
 func (self *CreateObjectTokenRequest) Exec(r *ghttp.Request) (response MessageResponse) {
 	query := g.DB().Model(&models.ObjectToken{})
 	if c, err := query.Clone().Where("`name` = ?", self.Name).Count(); err != nil {
-		return
+		return *response.SystemError(err)
 	} else {
 		if c == 0 {
 			data := gconv.Map(self)
 			data["secret_key"] = guid.S()
-			if _, err := query.Data(gconv.Map(self)).Insert(); err != nil {
-				return *response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
+			if _, err := query.Data(data).Insert(); err != nil {
+				return *response.SystemError(err)
 			}
 		} else {
 			return *response.ErrorWithMessage(http.StatusInternalServerError, "token名已存在")
@@ -49,9 +49,7 @@ func (self *ListObjectTokenRequest) Exec(r *ghttp.Request) (response MessageResp
 	c, _ = query.Count()
 	err := query.Limit(offset, limit).Structs(&tokens)
 	if err != nil {
-		return *response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
+		return *response.SystemError(err)
 	}
 	return *response.DataTable(tokens, c)
 }
-
-type UploadObjectRequest struct{}

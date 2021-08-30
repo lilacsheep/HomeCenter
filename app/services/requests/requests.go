@@ -55,6 +55,13 @@ func (resp *MessageResponse) ErrorWithMessage(code int, message interface{}) *Me
 	return resp
 }
 
+func (resp *MessageResponse) SystemError(err error) *MessageResponse {
+	resp.ErrorCode = http.StatusInternalServerError
+	resp.Message = "失败"
+	resp.Detail = err.Error()
+	return resp
+}
+
 type Pagination struct {
 	Limit int `json:"limit"`
 	Page  int `json:"page"`
