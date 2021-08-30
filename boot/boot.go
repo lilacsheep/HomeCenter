@@ -17,7 +17,8 @@ import (
 func Setup() error {
 	filedb2.Init()
 
-	sqlFile := []string{"dbsql/object_table.sql", "dbsql/global_config.sql", "dbsql/instances.sql", "dbsql/auth_users.sql"}
+	sqlFile := []string{"dbsql/objects.sql", "dbsql/global_config.sql", 
+	"dbsql/instances.sql", "dbsql/auth_users.sql", "dbsql/object_bucket.sql", "dbsql/object_token.sql"}
 	for _, f := range sqlFile {
 		s := gfile.GetContents(f)
 		_, err := g.DB().Exec(s)

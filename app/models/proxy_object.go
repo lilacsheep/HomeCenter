@@ -36,11 +36,25 @@ func NewVersion(data string) (*Version, error) {
 	return &Version{first: gconv.Int(t[0]), second: gconv.Int(t[1]), latest: gconv.Int(t[2])}, nil
 }
 
+type ObjectToken struct {
+	DefaultModel
+	Name       string `json:"name"`
+	Effective  int    `json:"effective"`
+	SecretKey  string `json:"secret_key"`
+	Upload     bool   `json:"upload"`
+	Download   bool   `json:"download"`
+	Delete     bool   `json:"delete"`
+	List       bool   `json:"list"`
+	gmeta.Meta `orm:"table:object_token"`
+}
+
 type Bucket struct {
 	DefaultModel
-	Name       string `json:"string"`
+	Name       string `json:"name"`
 	Public     bool   `json:"public"`
-	gmeta.Meta `orm:"table:object_bucket_table"`
+	Referer    bool   `json:"referer"`
+	RefererUrl string `json:"referer_url"`
+	gmeta.Meta `orm:"table:object_bucket"`
 }
 
 type ObjectInfo struct {
@@ -53,7 +67,7 @@ type ObjectInfo struct {
 	RealPath    string `json:"real_path"`
 	ContextType string `json:"context_type"`
 	Version     string `json:"version"`
-	gmeta.Meta  `orm:"table:object_table"`
+	gmeta.Meta  `orm:"table:objects"`
 }
 
 func (s *ObjectInfo) GetVersion() (*Version, error) {
