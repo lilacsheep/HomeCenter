@@ -19,6 +19,18 @@ func (v Version) String() string {
 	return fmt.Sprintf("%d.%d.%d", v.first, v.second, v.latest)
 }
 
+func (v Version) Ints() (int, int, int) {
+	return v.first, v.second, v.latest
+}
+
+func (v Version) Gte(ver Version) bool {
+	return false
+}
+
+func (v Version) Gt(ver Version) bool {
+	return false
+}
+
 func (v *Version) Next() (string, error) {
 	v.latest += 1
 	nv := fmt.Sprintf("%d.%d.%d", v.first, v.second, v.latest)
