@@ -24,17 +24,34 @@ func (v Version) Ints() (int, int, int) {
 }
 
 func (v Version) Gte(ver Version) bool {
-	return false
+	first, second, latest := ver.Ints()
+	if v.first == first && v.second == second {
+		return v.latest >= latest
+	}
+	if v.first == first {
+		return v.second >= second
+	}
+	return v.first >= first
 }
 
 func (v Version) Gt(ver Version) bool {
-	return false
+	first, second, latest := ver.Ints()
+	if v.first == first && v.second == second {
+		return v.latest > latest
+	}
+	if v.first == first {
+		return v.second > second
+	}
+	return v.first > first
 }
 
-func (v *Version) Next() (string, error) {
-	v.latest += 1
-	nv := fmt.Sprintf("%d.%d.%d", v.first, v.second, v.latest)
-	return nv, nil
+func (v Version) Equal(ver Version) bool {
+	first, second, latest := ver.Ints()
+	return  v.first == first && v.second == second && v.latest == latest
+}
+
+func (v *Version) Next() Version {
+	return Version{v.first, v.second, v.latest+1}
 }
 
 func NewVersion(data string) (*Version, error) {
