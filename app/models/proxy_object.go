@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/gogf/gf/util/gmeta"
 )
@@ -101,4 +102,18 @@ type ObjectInfo struct {
 
 func (s *ObjectInfo) GetVersion() (*Version, error) {
 	return NewVersion(s.Version)
+}
+
+
+func (s *ObjectInfo) CopyNewRecord(bucket int, name, key string) g.Map {
+	return g.Map{
+		"name": name,
+		"key": key,
+		"bucket": bucket,
+		"hash": s.Hash,
+		"size": s.Size,
+		"real_path": s.RealPath,
+		"context_type": s.ContextType,
+		"verison": s.Version,
+	}
 }
