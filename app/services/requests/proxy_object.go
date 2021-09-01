@@ -2,10 +2,14 @@ package requests
 
 import (
 	"homeproxy/app/models"
+	"homeproxy/library/config"
 	"net/http"
+	"path"
 
+	"github.com/gogf/gf/crypto/gmd5"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/ghttp"
+	"github.com/gogf/gf/os/gfile"
 )
 
 type ListObjectRequest struct {
@@ -39,7 +43,7 @@ type UploadObjectRequest struct {
 
 func (self *UploadObjectRequest) Exec(r *ghttp.Request) (response MessageResponse) {
 	var (
-		hash       = r.Header.Get("FILE_HASH")
+		hash       = r.Header.Get("FILE_MD5")
 		query      = g.DB().Model(&models.ObjectInfo{})
 		object     = models.ObjectInfo{}
 		bucketName = r.GetString("bucket")
@@ -85,12 +89,13 @@ func (self *UploadObjectRequest) Exec(r *ghttp.Request) (response MessageRespons
 		return *response.SystemError(err)
 	}
 
+	savePath := path.Join(gfile.Abs(config.DataDir), bucket.Name)
+
 	version, _ := models.NewVersion("")
 	object.ContextType = http.DetectContentType(buffer)
 	object.Key = self.Key
 	object.Name = file.Filename
 	object.Bucket = bucket.Id
-	object.RealPath = ""
 	object.Hash = hash
 	object.Size = file.Size
 	object.Version = version.String()
@@ -99,6 +104,26 @@ func (self *UploadObjectRequest) Exec(r *ghttp.Request) (response MessageRespons
 	if err != nil {
 		return *response.SystemError(err)
 	}
+	newName, err := file.Save(savePath, true)
+	if err != nil {
+		return *response.SystemError(err)
+	}
+
+	realPath := path.Join(savePath, newName)
+
+	s, err := gmd5.EncryptFile(realPath)
+	if err != nil {
+		return *response.SystemError(err)
+	}
+	if s != hash {
+		query.Clone().Where("`id` = ?", object.Id).Delete()
+		return *response.ErrorWithMessage(http.StatusBadRequest, "Inconsistent with expected MD5 value")
+	}
+	_, err = query.Clone().Data(g.Map{"real_path": path.Join(savePath, newName)}).Where("`id` = ?", object.Id).Update()
+	if err != nil {
+		return *response.SystemError(err)
+	}
+
 	return *response.Success()
 }
 
@@ -112,10 +137,19 @@ func (self *DeleteObjectRequest) Exec(r *ghttp.Request) (response MessageRespons
 	if bucket == "" {
 		return *response.ErrorWithMessage(http.StatusBadRequest, "No bucket specified")
 	}
-	query := g.DB().Model(&models.ObjectInfo{})
+	query := g.DB().Model(&models.ObjectInfo{}).Where(g.Map{"bucket": bucket, "key": self.Key, "name": self.Name})
 
-	if _, err := query.Where(g.Map{"bucket": bucket, "key": self.Key, "name": self.Name}).Delete(); err != nil {
+	if c, err := query.Clone().Count(); err != nil {
 		return *response.SystemError(err)
+	} else {
+		if c == 1 {
+			if _, err := query.Clone().Delete(); err != nil {
+				return *response.SystemError(err)
+			}
+		} else {
+			return *response.ErrorWithMessage(http.StatusNotFound, "object does not exist")
+		}
 	}
+
 	return *response.Success()
 }
