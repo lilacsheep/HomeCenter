@@ -143,6 +143,12 @@ func (self *DeleteObjectRequest) Exec(r *ghttp.Request) (response MessageRespons
 		return *response.SystemError(err)
 	} else {
 		if c == 1 {
+			obj := models.ObjectInfo{}
+			err := query.Clone().Struct(&obj)
+			if err != nil {
+				return *response.SystemError(err)
+			}
+			gfile.Remove(obj.RealPath)
 			if _, err := query.Clone().Delete(); err != nil {
 				return *response.SystemError(err)
 			}
