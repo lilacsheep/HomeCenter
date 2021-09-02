@@ -3,6 +3,7 @@ import Herader from '../components/header.vue'
 import WebIndex from '../components/website/index.vue'
 import AgentIndex from '../components/agent/index.vue'
 import Login from '../components/login/login.vue'
+import Download from '../components/download/index.vue'
 import Vue from 'vue'
 
 
@@ -14,14 +15,20 @@ const router = new Router({
       // 动态路径参数 以冒号开头
       { 
         path: '/',
-        redirect: 'web',
+        redirect: 'dashboard',
         component: Herader,
         props: true,
         children:[
           {
-            path: '/web',
-            name: 'web',
+            path: '/dashboard',
+            name: 'dashboard',
             component: WebIndex,
+            props: true
+          },
+          {
+            path: '/download',
+            name: 'download',
+            component: Download,
             props: true
           },
           {

@@ -35,7 +35,7 @@ func init() {
 		"/message":    "/",
 		"/other":      "/",
 		"/login":      "/",
-		"/user":      "/",
+		"/user":       "/",
 	})
 	proxyInstanceApi := &api.ProxyInstanceApi{}
 	proxyServerApi := &api.ProxyServerApi{}
@@ -120,11 +120,11 @@ func init() {
 		group.POST("/ddns/setting/remove", ddnsApi.DeleteSetting)
 		group.POST("/ddns/setting/refresh", ddnsApi.RefreshSetting)
 
-		// system 
+		// system
 		systemMonApi := new(api.SystemApi)
 		group.GET("/system/info", systemMonApi.Info)
-		group.POST("/system/processes", systemMonApi.Processes)
-		
+		group.GET("/system/processes", systemMonApi.Processes)
+
 		// logs api
 		group.GET("/logs", proxyServerApi.Logs)
 

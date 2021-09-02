@@ -4,7 +4,7 @@
       <img :src="imgUrl" class="logo" :style="logo_style"/>
       <a-menu theme="dark" mode="inline" :default-selected-keys="['1']">
         <a-menu-item key="1">
-          <router-link :to="{path:'/web'}">
+          <router-link :to="{path:'/dashboard'}">
             <a-icon type="dashboard" />
             <span>控制面板</span>
           </router-link>
@@ -15,7 +15,13 @@
             <span>节点操作</span>
           </router-link>
         </a-menu-item>
-        <!-- <a-sub-menu key="3">
+        <a-menu-item key="3">
+          <router-link :to="{path:'/download'}">
+            <a-icon type="download" />
+            <span>文件下载</span>
+          </router-link>
+        </a-menu-item>
+        <a-sub-menu key="4">
           <span slot="title"><a-icon type="solution" /><span>权限管理</span></span>
           <a-menu-item-group key="31">
             <template slot="title"> <a-icon type="team" /><span>用户</span> </template>
@@ -26,7 +32,7 @@
               权限管理
             </a-menu-item>
           </a-menu-item-group>
-        </a-sub-menu> -->
+        </a-sub-menu>
       </a-menu>
     </a-layout-sider>
     <a-layout>
