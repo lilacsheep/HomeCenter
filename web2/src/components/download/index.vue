@@ -9,81 +9,37 @@
     <a-row :gutter="16" style="background: #fbfbfb;border: 1px solid #f4f4f4;height: 100%">
       <a-col>
         <a-tabs default-active-key="1" @change="tabClick">
-          <a-tab-pane key="1" tab="Tab 1">
-            Content of Tab Pane 1
-          </a-tab-pane>
-          <a-tab-pane key="2" tab="配置管理">
-            <a-card style="padding: 5px">
-              <a-form-model :model="settings.form" :label-col="labelCol" :wrapper-col="wrapperCol">
-                <el-form-item label="地址" label-width="100px">
-                  <el-input size="small" v-model="settings.form.aria2_url" style="width: 220px"></el-input>
-                </el-form-item>
-                <el-form-item label="Token" label-width="100px">
-                  <el-input size="small" v-model="settings.form.aria2_token" style="width: 220px"></el-input>
-                </el-form-item>
-                <el-form-item label="清理" label-width="100px">
-                  <el-input v-model="settings.form.auto_clean" style="width: 220px" size="small">
-                    <template slot="append">MB</template>
-                  </el-input>
-                  <span style="color: #909399;font-size: 11px">自动清理BT文件夹内不满足文件大小的文件, 0为关闭</span>
-                </el-form-item>
-                <el-form-item label="自动同步">
-                  <el-select size="small" v-model="settings.form.auto_update_bt_tracker" placeholder="请选择">
-                    <el-option label="关闭" value=""></el-option>
-                    <el-option label="每小时" value="@hourly"></el-option>
-                    <el-option label="每天" value="@every 24h"></el-option>
-                  </el-select>
-                  <span style="color: #909399;font-size: 11px">自动同步最新的BT服务器</span>
-                </el-form-item>
-                <el-form-item>
-                  <el-button size="small" type="primary"  @click="submit_update_settings">立即更新</el-button>
-                </el-form-item>
-              </a-form-model>
-            </a-card>
-          </a-tab-pane>
-          <a-tab-pane key="3" tab="Aria2配置">
-            <a-table :columns="aria2.columns"  :data="aria2.options" size="mini" style="margin-top: 10px;">
-            </a-table>
-          </a-tab-pane>
-        </a-tabs>
-      </a-col>
-    </a-row>
-  </a-layout-content>
-  
-  <el-row :gutter="20">
-    <el-col :span="24">
-      <el-tabs tab-position="left" @tab-click="tabClick">
-        <el-tab-pane label="下载任务">
-          <el-button-group>
-            <el-button size="mini" type="primary" icon="el-icon-edit" @click="download.create.visit = true">创建下载</el-button>
-            <el-button size="mini" type="primary" icon="el-icon-upload" @click="torrent.sync = true">上传种子</el-button>
-          </el-button-group>
+          <a-tab-pane key="1" tab="下载列表">
+            <a-button-group>
+              <a-button size="mini" type="primary" icon="edit" @click="download.create.visit = true">创建下载</a-button>
+              <a-button size="mini" type="primary" icon="upload" @click="torrent.sync = true">上传种子</a-button>
+            </a-button-group>
           
-          <!-- <el-input size="mini" placeholder="请输入内容" v-model="roles.filter" style="width: 250px;float: right;">
+          <!-- <a-input size="mini" placeholder="请输入内容" v-model="roles.filter" style="width: 250px;float: right;">
             <el-button slot="append" icon="el-icon-search"></el-button>
-          </el-input> -->
+          </a-input> -->
           <span style="float: right;">
-            <el-radio-group v-model="task.query.status" size="mini">
-              <el-radio-button label="全部"></el-radio-button>
-              <el-radio-button label="下载中"></el-radio-button>
-              <el-radio-button label="已完成"></el-radio-button>
-              <el-radio-button label="其他"></el-radio-button>
-            </el-radio-group>
-            <el-tag type="success" size="small"><i class="el-icon-top"></i>{{global.upload | diskSize}}/秒</el-tag>
-            <el-tag type="danger" size="small"><i class="el-icon-bottom"></i>{{global.download | diskSize}}/秒</el-tag>
+            <a-radio-group v-model="task.query.status" size="mini">
+              <a-radio-button size="small" value="全部">全部</a-radio-button>
+              <a-radio-button size="small" value="下载中">下载中</a-radio-button>
+              <a-radio-button size="small" value="已完成">已完成</a-radio-button>
+              <a-radio-button size="small" value="其他">其他</a-radio-button>
+            </a-radio-group>
+            <a-tag color="green" size="small"><i class="arrow-up"></i>{{global.upload | diskSize}}/秒</a-tag>
+            <a-tag color="orange" size="small"><i class="arrow-down"></i>{{global.download | diskSize}}/秒</a-tag>
           </span>
-          <el-table :data="download.tasks" stripe size="mini" style="margin-top: 10px;">
-            <el-table-column prop="gid" label="文件名">
+          <a-table :data="download.tasks" stripe size="mini" style="margin-top: 10px;">
+            <a-table-column prop="gid" label="文件名">
               <template slot-scope="scope">
                 <el-button size="mini" type="text" @click="taskInfoOpen(scope.row)">{{getTaskName(scope.row)}}</el-button>
               </template>
-            </el-table-column>
-            <el-table-column prop="totalLength" label="大小" width="100">
+            </a-table-column>
+            <a-table-column prop="totalLength" label="大小" width="100">
               <template slot-scope="scope">
                 {{scope.row.totalLength | diskSize}}
               </template>
-            </el-table-column>
-            <el-table-column prop="status" label="状态" width="100">
+            </a-table-column>
+            <a-table-column prop="status" label="状态" width="100">
               <template slot-scope="scope">
                 <span v-if="scope.row.status == 'active'">{{(scope.row.completedLength / scope.row.totalLength * 100).toFixed(2)}}%</span>
                 <span v-else-if="scope.row.status == 'stopped'">已停止</span>
@@ -91,19 +47,19 @@
                 <span v-else-if="scope.row.status == 'complete'">已完成</span>
                 <span v-else>{{scope.row.status}}</span>
               </template>
-            </el-table-column>
+            </a-table-column>
 
-            <el-table-column prop="downloadSpeed" label="下载" width="100">
+            <a-table-column prop="downloadSpeed" label="下载" width="100">
               <template slot-scope="scope">
                 {{scope.row.downloadSpeed | diskSize}}/秒
               </template>
-            </el-table-column>
-            <el-table-column prop="uploadSpeed" label="上传" width="100">
+            </a-table-column>
+            <a-table-column prop="uploadSpeed" label="上传" width="100">
               <template slot-scope="scope">
                 {{scope.row.uploadSpeed | diskSize}}/秒
               </template>
-            </el-table-column>
-            <el-table-column label="操作" fixed="right" width="100">
+            </a-table-column>
+            <a-table-column label="操作" fixed="right" width="100">
               <template slot-scope="scope">
                 <el-popconfirm v-if="scope.row.status == 'paused'" title="是否继续该任务？" @onConfirm="start_task(scope.row)">
                   <el-button slot="reference" style="color: green" type="text" size="mini" icon="el-icon-caret-right"></el-button>
@@ -118,108 +74,106 @@
                   <el-button slot="reference" style="color: red" type="text" size="mini" icon="el-icon-delete"></el-button>
                 </el-popconfirm>
               </template>
-            </el-table-column>
-          </el-table>
-        </el-tab-pane>
-        <el-tab-pane label="配置管理">
-          <el-card body-style="padding: 5px">
-            <el-form :model="settings.form" ref="ruleForm" label-width="100px" class="demo-ruleForm">
-              <el-form-item label="地址" label-width="100px">
-                <el-input size="small" v-model="settings.form.aria2_url" style="width: 220px"></el-input>
-              </el-form-item>
-              <el-form-item label="Token" label-width="100px">
-                <el-input size="small" v-model="settings.form.aria2_token" style="width: 220px"></el-input>
-              </el-form-item>
-              <el-form-item label="清理" label-width="100px">
-                <el-input v-model="settings.form.auto_clean" style="width: 220px" size="small">
-                  <template slot="append">MB</template>
-                </el-input>
-                <span style="color: #909399;font-size: 11px">自动清理BT文件夹内不满足文件大小的文件, 0为关闭</span>
-              </el-form-item>
-              <el-form-item label="自动同步">
-                <el-select size="small" v-model="settings.form.auto_update_bt_tracker" placeholder="请选择">
-                  <el-option label="关闭" value=""></el-option>
-                  <el-option label="每小时" value="@hourly"></el-option>
-                  <el-option label="每天" value="@every 24h"></el-option>
-                </el-select>
-                <span style="color: #909399;font-size: 11px">自动同步最新的BT服务器</span>
-              </el-form-item>
-              <el-form-item>
-                <el-button size="small" type="primary"  @click="submit_update_settings">立即更新</el-button>
-              </el-form-item>
-            </el-form>
-          </el-card>
-        </el-tab-pane>
-        <el-tab-pane label="Aria2配置">
-          <el-table :data="aria2.options" stripe size="mini" style="margin-top: 10px;">
-            <el-table-column prop="key" label="配置"></el-table-column>
-            <el-table-column prop="value" label="值"></el-table-column>
-          </el-table>
-        </el-tab-pane>
-      </el-tabs>
-    </el-col>
-
-    <el-dialog title="新建下载" :visible.sync="download.create.visit">
-      <el-form :model="download.create.form" label-position="right">
-        <el-form-item label="地址" label-width="100px">
-          <el-input size="small" type="textarea" v-model="download.create.form.url" :rows="3"></el-input>
-        </el-form-item>
-      </el-form>
-      <div slot="footer" class="dialog-footer">
-        <el-button size="small" @click="download.create.visit = false">取 消</el-button>
-        <el-button size="small" type="primary" @click="submit_create_task">确 定</el-button>
-      </div>
-    </el-dialog>
-    <el-dialog custom-class="upload_diglog" :title="种子上传" :visible.sync="torrent.sync"  width="380px">
-      <el-upload class="upload-demo" drag action="/api/download/torrent">
-        <i class="el-icon-upload"></i>
-        <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
-      </el-upload>
-    </el-dialog>
-    <el-drawer :withHeader="false" :visible.sync="task.visible" :before-close="taskInfoClose" size="60%">
-      <table style="border: 1px solid #f2f2f2" width="100%">
-        <tr>
-          <td width="100px" style="background-color: #f2f2f2;padding: 0">文件名</td>
-          <td colspan="3">{{task.info.filename}}</td>
-        </tr>
-        <tr>
-          <td width="100px" style="background-color: #f2f2f2;padding: 0">GID</td>
-          <td colspan="3">{{task.info.status.gid}}</td>
-        </tr>
-        <tr>
-          <td width="100px" style="background-color: #f2f2f2;padding: 0">错误</td>
-          <td colspan="3">{{task.info.status.errorMessage}}</td>
-        </tr>
-        <tr>
-          <td width="100px" style="background-color: #f2f2f2;padding: 0">大小</td>
-          <td>{{task.info.status.totalLength | diskSize}}</td>
-          <td width="100px" style="background-color: #f2f2f2;padding: 0">状态</td>
-          <td>{{task.info.status.status}}</td>
-        </tr>
-        <tr>
-          <td width="100px" style="background-color: #f2f2f2;padding: 0">已上传</td>
-          <td>{{task.info.status.uploadLength | diskSize}}</td>
-          <td width="100px" style="background-color: #f2f2f2;padding: 0">已完成</td>
-          <td>{{task.info.status.completedLength | diskSize}}</td>
-        </tr>
-      </table>
-      <el-table :data="task.info.status.files" stripe size="mini" style="margin-top: 10px;" max-height="500">
-         <el-table-column prop="path" label="文件">
-           <template slot-scope="scope">
-             {{scope.row.path.split("/").slice(-1)[0]}}
-           </template>
-         </el-table-column>
-         <el-table-column prop="completedLength" label="进度" width="100">
-           <template slot-scope="scope">{{(scope.row.completedLength / scope.row.length * 100).toFixed(2)}}%</template>
-          </el-table-column>
-         <el-table-column prop="length" label="大小" width="120">
-           <template slot-scope="scope">
-             {{scope.row.length | diskSize}}
-           </template>
-         </el-table-column>
-      </el-table>
-    </el-drawer>
-  </el-row>
+            </a-table-column>
+          </a-table>
+          </a-tab-pane>
+          <a-tab-pane key="2" tab="配置管理">
+            <a-card style="padding: 5px">
+              <a-form-model :model="settings.form" :label-col="labelCol" :wrapper-col="wrapperCol">
+                <a-form-model-item label="地址" label-width="100px">
+                  <a-input size="small" v-model="settings.form.aria2_url" style="width: 220px"></a-input>
+                </a-form-model-item>
+                <a-form-model-item label="Token" label-width="100px">
+                  <a-input size="small" v-model="settings.form.aria2_token" style="width: 220px"></a-input>
+                </a-form-model-item>
+                <a-form-model-item label="清理" label-width="100px">
+                  <a-input v-model="settings.form.auto_clean" style="width: 220px" size="small">
+                    <template slot="append">MB</template>
+                  </a-input>
+                  <span style="color: #909399;font-size: 11px">自动清理BT文件夹内不满足文件大小的文件, 0为关闭</span>
+                </a-form-model-item>
+                <a-form-model-item label="自动同步">
+                  <el-select size="small" v-model="settings.form.auto_update_bt_tracker" placeholder="请选择">
+                    <a-select-option label="关闭" value=""></a-select-option>
+                    <a-select-option label="每小时" value="@hourly"></a-select-option>
+                    <a-select-option label="每天" value="@every 24h"></a-select-option>
+                  </el-select>
+                  <span style="color: #909399;font-size: 11px">自动同步最新的BT服务器</span>
+                </a-form-model-item>
+                <a-form-model-item :wrapper-col="{ span: 14, offset: 4 }">
+                  <a-button size="small" type="primary"  @click="submit_update_settings">立即更新</a-button>
+                </a-form-model-item>
+              </a-form-model>
+            </a-card>
+          </a-tab-pane>
+          <a-tab-pane key="3" tab="Aria2配置">
+            <a-table :columns="aria2.columns"  :data="aria2.options" size="mini" style="margin-top: 10px;">
+            </a-table>
+          </a-tab-pane>
+        </a-tabs>
+        <el-dialog title="新建下载" :visible.sync="download.create.visit">
+          <el-form :model="download.create.form" label-position="right">
+            <a-form-model-item label="地址" label-width="100px">
+              <a-input size="small" type="textarea" v-model="download.create.form.url" :rows="3"></a-input>
+            </a-form-model-item>
+          </el-form>
+          <div slot="footer" class="dialog-footer">
+            <el-button size="small" @click="download.create.visit = false">取 消</el-button>
+            <el-button size="small" type="primary" @click="submit_create_task">确 定</el-button>
+          </div>
+        </el-dialog>
+        <el-dialog custom-class="upload_diglog" :title="种子上传" :visible.sync="torrent.sync"  width="380px">
+          <el-upload class="upload-demo" drag action="/api/download/torrent">
+            <i class="el-icon-upload"></i>
+            <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+          </el-upload>
+        </el-dialog>
+        <el-drawer :withHeader="false" :visible.sync="task.visible" :before-close="taskInfoClose" size="60%">
+          <table style="border: 1px solid #f2f2f2" width="100%">
+            <tr>
+              <td width="100px" style="background-color: #f2f2f2;padding: 0">文件名</td>
+              <td colspan="3">{{task.info.filename}}</td>
+            </tr>
+            <tr>
+              <td width="100px" style="background-color: #f2f2f2;padding: 0">GID</td>
+              <td colspan="3">{{task.info.status.gid}}</td>
+            </tr>
+            <tr>
+              <td width="100px" style="background-color: #f2f2f2;padding: 0">错误</td>
+              <td colspan="3">{{task.info.status.errorMessage}}</td>
+            </tr>
+            <tr>
+              <td width="100px" style="background-color: #f2f2f2;padding: 0">大小</td>
+              <td>{{task.info.status.totalLength | diskSize}}</td>
+              <td width="100px" style="background-color: #f2f2f2;padding: 0">状态</td>
+              <td>{{task.info.status.status}}</td>
+            </tr>
+            <tr>
+              <td width="100px" style="background-color: #f2f2f2;padding: 0">已上传</td>
+              <td>{{task.info.status.uploadLength | diskSize}}</td>
+              <td width="100px" style="background-color: #f2f2f2;padding: 0">已完成</td>
+              <td>{{task.info.status.completedLength | diskSize}}</td>
+            </tr>
+          </table>
+          <a-table :data="task.info.status.files" stripe size="mini" style="margin-top: 10px;" max-height="500">
+            <a-table-column prop="path" label="文件">
+              <template slot-scope="scope">
+                {{scope.row.path.split("/").slice(-1)[0]}}
+              </template>
+            </a-table-column>
+            <a-table-column prop="completedLength" label="进度" width="100">
+              <template slot-scope="scope">{{(scope.row.completedLength / scope.row.length * 100).toFixed(2)}}%</template>
+              </a-table-column>
+            <a-table-column prop="length" label="大小" width="120">
+              <template slot-scope="scope">
+                {{scope.row.length | diskSize}}
+              </template>
+            </a-table-column>
+          </a-table>
+        </el-drawer>
+      </a-col>
+    </a-row>
+  </a-layout-content>
 </template>
 
 <script>
@@ -230,6 +184,8 @@ export default {
       torrent: {
         sync: false
       },
+      labelCol: { span: 4 },
+      wrapperCol: { span: 14 },
       aria2: {
         options: [],
         columns: [

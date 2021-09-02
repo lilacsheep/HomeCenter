@@ -1,5 +1,5 @@
 import api from "../api/api"
-import { Message } from 'element-ui';
+import { Message } from 'ant-design-vue';
 
 
 const aria2_uri = {
