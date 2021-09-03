@@ -6,19 +6,17 @@ import (
 	"homeproxy/app/server/aria2"
 	"homeproxy/app/services/tasks"
 	"homeproxy/library/filedb2"
-	"time"
 
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/os/gcron"
 	"github.com/gogf/gf/os/gfile"
-	"github.com/gogf/gf/os/glog"
 )
 
 func Setup() error {
 	filedb2.Init()
 
-	sqlFile := []string{"dbsql/objects.sql", "dbsql/global_config.sql", 
-	"dbsql/instances.sql", "dbsql/auth_users.sql", "dbsql/object_bucket.sql", "dbsql/object_token.sql"}
+	sqlFile := []string{"dbsql/objects.sql", "dbsql/global_config.sql",
+		"dbsql/instances.sql", "dbsql/auth_users.sql", "dbsql/object_bucket.sql", "dbsql/object_token.sql"}
 	for _, f := range sqlFile {
 		s := gfile.GetContents(f)
 		_, err := g.DB().Exec(s)
@@ -42,18 +40,16 @@ func Setup() error {
 	}
 
 	// 初始化文件管理节点
-	count, _ := filedb2.DB.Count(&models.ProxyFileSystemNode{})
-	if count == 0 {
-		node := models.ProxyFileSystemNode{
-			Path:     gfile.Abs("download/"),
-			Name:     "下载",
-			CreateAt: time.Now(),
-		}
-		filedb2.DB.Save(&node)
-	}
+	// count, _ := filedb2.DB.Count(&models.ProxyFileSystemNode{})
+	// if count == 0 {
+	// 	node := models.ProxyFileSystemNode{
+	// 		Path:     gfile.Abs("download/"),
+	// 		Name:     "下载",
+	// 		CreateAt: time.Now(),
+	// 	}
+	// 	filedb2.DB.Save(&node)
+	// }
 
-	glog.Debugf("clean all monitor info")
-	filedb2.DB.Drop(&models.ProxyMonitorInfo{})
 	aria2.InitClient()
 
 	server.Setup()

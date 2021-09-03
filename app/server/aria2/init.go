@@ -3,24 +3,21 @@ package aria2
 import (
 	"context"
 	"homeproxy/app/models"
-	"homeproxy/library/filedb2"
 	"time"
 
 	"github.com/gogf/gf/os/glog"
 	"github.com/zyxar/argo/rpc"
 )
 
-
 var server rpc.Client
 
 const (
-	ConfigPathKey = "conf-path"
+	ConfigPathKey      = "conf-path"
 	ConfigBTTrackerKey = "bt-tracker"
 )
 
 func InitClient() error {
-	settings := models.DownloadSettings{}
-	err := filedb2.DB.Get("settings", "download", &settings)
+	settings, err := models.GetSettings()
 	if err != nil {
 		return err
 	}
