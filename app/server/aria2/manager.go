@@ -1,12 +1,9 @@
 package aria2
 
 import (
-	"homeproxy/app/models"
-	"homeproxy/library/filedb2"
 	"os/exec"
 	"strings"
 
-	"github.com/gogf/gf/encoding/gjson"
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/zyxar/argo/rpc"
@@ -15,7 +12,7 @@ import (
 var Manager *manager
 
 type manager struct {
-	Change   bool
+	Change bool
 }
 
 func (self *manager) GetGlobalStat() (info rpc.GlobalStatInfo, err error) {
@@ -53,7 +50,7 @@ func (self *manager) RemoveTask(gid string, force bool) (err error) {
 	if err != nil {
 		return err
 	}
-	if status.Status == "active"{
+	if status.Status == "active" {
 		server.Pause(gid)
 	}
 
@@ -104,21 +101,6 @@ func (self *manager) GetOption(key string) (string, error) {
 		}
 	}
 	return "", err
-}
-
-func UpdateSettings(data interface{}) error {
-	settings := &models.DownloadSettings{}
-	err := filedb2.DB.Get("settings", "download", settings)
-	if err != nil {
-		return err
-	}
-	new_ := gjson.New(data)
-	settings.Aria2Url = new_.GetString("aria2_url", settings.Aria2Url)
-	settings.Aria2Token = new_.GetString("aria2_token", settings.Aria2Token)
-	settings.AutoClean = new_.GetInt("auto_clean", settings.AutoClean)
-	settings.AutoUpdateBTTracker = new_.GetString("auto_update_bt_tracker", settings.AutoUpdateBTTracker)
-	Manager.Change = true
-	return filedb2.DB.Set("settings", "download", settings)
 }
 
 func RestartAria2() {
