@@ -1,5 +1,5 @@
 import api from "../api/api"
-import { Message } from 'ant-design-vue';
+import { message } from 'ant-design-vue';
 
 
 const aria2_uri = {
@@ -16,19 +16,19 @@ const aria2_uri = {
 
 export function pause(gid, callback = function (response) { }) {
     api.post(aria2_uri['pause'], {id: gid}).then(function (response) {
-        Message({ message: '已经暂停', type: 'success' })
+        message.success('已经暂停')
         callback(response)
     }).catch(function (response) {
-        Message({ message: '暂停失败:' + response.message, type: 'error' })
+        message.error('暂停失败:' + response.message)
     })
 }
 
 export function unpause(gid, callback = function (response) { }) {
     api.post(aria2_uri['unpause'], { id: gid }).then(function (response) {
-        Message({ message: '启动成功', type: 'success' })
+        message.success('启动成功')
         callback(response)       
     }).catch(function (response) {
-        Message({ message: '启动失败:' + response.message, type: 'error' })
+        message.error('启动失败:' + response.message)
     })
 }
 
@@ -40,7 +40,7 @@ export function globalStat(callback = function (response) { }) {
 
 export function addUri(url, callback = function (response) { }) {
     api.post(aria2_uri['addUri'], {url: url}).then(function (response) {
-        Message({ message: '创建成功', type: 'success' })
+        message.success('创建成功')
         callback(response)
     }).catch(function (response) {
         Message({ message: '创建失败:' + response.message, type: 'error' })
@@ -49,7 +49,7 @@ export function addUri(url, callback = function (response) { }) {
 
 export function addTorrent(params={}, callback=function (response){}) {
     api.post(aria2_uri['addTorrent'], { url: url }).then(function (response) {
-        Message({ message: '创建成功', type: 'success' })
+        message.success('创建成功')
         callback(response)       
     }).catch(function (response) {
         Message({ message: '创建失败:' + response.message, type: 'error' })
@@ -66,10 +66,10 @@ export function tasks(params = {}, callback = function (response) {}) {
 
 export function removeTask(gid, callback = function (response) {}) {
     api.post(aria2_uri["remove"], {id: gid}).then(function (response) {
-        Message({ message: '删除成功', type: 'success' })
+        message.success('删除成功')
         callback(response)
     }).catch(function (response) {
-        Message({ message: '删除失败:' + response.message, type: 'error' })
+        message.error('删除失败:' + response.message)
     })
 }
 
@@ -77,7 +77,7 @@ export function taskStatus(gid, callback = function (response) {}) {
     api.post(aria2_uri["taskStatus"], { id: gid }).then(function (response) {
         callback(response)
     }).catch(function (response) {
-        Message({ message: '获取任务状态失败:' + response.message, type: 'error' })
+        message.error('获取任务状态失败:' + response.message)
     })
 }
 
@@ -85,7 +85,7 @@ export function globalOptions(callback = function (response) { }) {
     api.get(aria2_uri["globalOptions"]).then(function (response) {
         callback(response)
     }).catch(function (response) {
-        Message({ message: '获取全局配置失败:' + response.message, type: 'error' })
+        message.error('获取全局配置失败:' + response.message)
     })
 }
 

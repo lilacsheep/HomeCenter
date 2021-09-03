@@ -11,20 +11,20 @@
         <a-tabs default-active-key="1" @change="tabClick" tab-position="left">
           <a-tab-pane key="1" tab="下载列表">
             <a-button-group>
-              <a-button icon="edit" @click="download.create.visit = true">创建下载</a-button>
+              <a-button type="primary" icon="edit" @click="download.create.visit = true">创建下载</a-button>
               <a-upload name="file" :multiple="false" accept=".torrent" action="/api/download/torrent">
-                <a-button icon="upload">上传种子</a-button>
+                <a-button type="primary" icon="upload">上传种子</a-button>
               </a-upload>
             </a-button-group>
             <span style="float: right;">
-              <a-radio-group v-model="task.query.status" size="small">
+              <a-radio-group v-model="task.query.status" size="small" button-style="solid">
                 <a-radio-button value="全部">全部</a-radio-button>
                 <a-radio-button value="下载中">下载中</a-radio-button>
                 <a-radio-button value="已完成">已完成</a-radio-button>
                 <a-radio-button value="其他">其他</a-radio-button>
               </a-radio-group>
-              <a-tag color="green" size="small"><i class="arrow-up"></i>{{global.upload | diskSize}}/秒</a-tag>
-              <a-tag color="orange" size="small"><i class="arrow-down"></i>{{global.download | diskSize}}/秒</a-tag>
+              <a-tag color="green" size="small"><a-icon type="arrow-up"></a-icon>{{global.upload | diskSize}}/秒</a-tag>
+              <a-tag color="orange" size="small"><a-icon type="arrow-down"></a-icon>{{global.download | diskSize}}/秒</a-tag>
             </span>
             <a-table :data="download.tasks" stripe size="mini" style="margin-top: 10px;">
               <a-table-column prop="gid" label="文件名">
@@ -79,17 +79,17 @@
             <a-card style="padding: 0">
               <a-form-model :model="settings.form" :label-col="labelCol" :wrapper-col="wrapperCol">
                 <a-form-model-item label="地址">
-                  <a-input v-model="settings.form.aria2_url" style="width: 220px"></a-input>
+                  <a-input v-model="settings.form.aria2_url" style="width: 300px"></a-input>
                 </a-form-model-item>
                 <a-form-model-item label="Token">
-                  <a-input v-model="settings.form.aria2_token" style="width: 220px"></a-input>
+                  <a-input v-model="settings.form.aria2_token" style="width: 300px"></a-input>
                 </a-form-model-item>
                 <a-form-model-item label="清理">
-                  <a-input v-model="settings.form.auto_clean" style="width: 220px" addon-after="MB"></a-input>
+                  <a-input v-model="settings.form.auto_clean" style="width: 300px" addon-after="MB"></a-input>
                   <span style="color: #909399;font-size: 11px">自动清理BT文件夹内不满足文件大小的文件, 0为关闭</span>
                 </a-form-model-item>
                 <a-form-model-item label="自动同步">
-                  <a-select v-model="settings.form.auto_update_bt_tracker" placeholder="请选择" style="width: 220px">
+                  <a-select v-model="settings.form.auto_update_bt_tracker" placeholder="请选择" style="width: 300px">
                     <a-select-option value="">关闭</a-select-option>
                     <a-select-option value="@hourly">每小时</a-select-option>
                     <a-select-option value="@every 24h">每天</a-select-option>
@@ -103,7 +103,7 @@
             </a-card>
           </a-tab-pane>
           <a-tab-pane key="3" tab="Aria2配置">
-            <a-table :columns="aria2.columns"  :data="aria2.options" size="mini" style="margin-top: 10px;">
+            <a-table :columns="aria2.columns"  :data="aria2.options" size="mini">
             </a-table>
           </a-tab-pane>
         </a-tabs>
@@ -114,7 +114,7 @@
         <a-button @click="download.create.visit = false">取 消</a-button>
         <a-button type="primary" @click="submit_create_task">确 定</a-button>
       </template>
-      <a-form-model :model="download.create.form" :label-col="labelCol" :wrapper-col="wrapperCol" label-position="right">
+      <a-form-model :model="download.create.form" :label-col="labelCol" :wrapper-col="wrapperCol">
         <a-form-model-item label="地址">
           <a-input type="textarea" v-model="download.create.form.url" :rows="3"></a-input>
         </a-form-model-item>
@@ -382,36 +382,5 @@ export default {
 </script>
 
 <style>
-.el-card__header {
-  padding: 5px;
-}
 
-.el-dialog__header {
-  padding: 10px 10px 5px;
-  border-bottom: 1px solid whitesmoke;
-}
-
-.el-dialog__headerbtn {
-  top: 12px;
-}
-.el-dialog__body {
-  padding: 15px 10px;
-}
-.el-dialog__footer {
-  border-top: 1px solid whitesmoke;
-  padding: 5px 10px 10px;
-}
-
-.el-drawer__header {
-  margin-bottom: 0px;
-  padding: 10px 10px 0;
-}
-
-.el-drawer__body {
-  padding: 5px;
-}
-
-.el-drawer__body table tr td {
-  border: 1px solid #f2f2f2;
-}
 </style>
