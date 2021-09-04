@@ -7,7 +7,5 @@ CREATE TABLE IF NOT EXISTS `proxy_role` (
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP COMMENT 'create time',
   `updated_at` datetime DEFAULT CURRENT_TIMESTAMP COMMENT 'update time',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `hash` (`hash`),
-  UNIQUE KEY `real_path` (`real_path`),
-  KEY `bucket_key` (`key`, `bucket`)
+  KEY `sub_domain` (`sub`, `domain`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;

@@ -2,7 +2,6 @@ package aria2
 
 import (
 	"homeproxy/app/models"
-	"homeproxy/library/filedb2"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -20,8 +19,7 @@ func (CustomNotify) OnDownloadPause(events []rpc.Event)      {}
 func (CustomNotify) OnDownloadStop(events []rpc.Event)       {}
 func (CustomNotify) OnDownloadComplete(events []rpc.Event)   {
 	var cleanSize int
-	settings := models.DownloadSettings{}
-	err := filedb2.DB.Get("settings", "download", &settings)
+	settings, err := models.GetSettings()
 	if err != nil {
 		glog.Error("get settings error: %s", err.Error())
 		return

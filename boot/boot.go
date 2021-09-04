@@ -5,7 +5,6 @@ import (
 	"homeproxy/app/server"
 	"homeproxy/app/server/aria2"
 	"homeproxy/app/services/tasks"
-	"homeproxy/library/filedb2"
 
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/os/gcron"
@@ -13,10 +12,10 @@ import (
 )
 
 func Setup() error {
-	filedb2.Init()
-
 	sqlFile := []string{"dbsql/objects.sql", "dbsql/global_config.sql",
-		"dbsql/instances.sql", "dbsql/auth_users.sql", "dbsql/object_bucket.sql", "dbsql/object_token.sql"}
+		"dbsql/instances.sql", "dbsql/auth_users.sql", "dbsql/object_bucket.sql", "dbsql/object_token.sql",
+		"dbsql/proxy_role.sql", "dbsql/ddns_operation_settings.sql",
+	}
 	for _, f := range sqlFile {
 		s := gfile.GetContents(f)
 		_, err := g.DB().Exec(s)
@@ -38,18 +37,6 @@ func Setup() error {
 	if downloadSettings.Aria2Url != "" {
 		gcron.AddSingleton("*/2 * * * * *", tasks.ReloadAira2Manager)
 	}
-
-	// 初始化文件管理节点
-	// count, _ := filedb2.DB.Count(&models.ProxyFileSystemNode{})
-	// if count == 0 {
-	// 	node := models.ProxyFileSystemNode{
-	// 		Path:     gfile.Abs("download/"),
-	// 		Name:     "下载",
-	// 		CreateAt: time.Now(),
-	// 	}
-	// 	filedb2.DB.Save(&node)
-	// }
-
 	aria2.InitClient()
 
 	server.Setup()

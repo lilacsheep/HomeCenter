@@ -2,7 +2,6 @@ package requests
 
 import (
 	"homeproxy/app/models"
-	"homeproxy/library/filedb2"
 	"net/http"
 
 	"github.com/gogf/gf/net/ghttp"
@@ -59,9 +58,9 @@ func (self *ChangeSelfPasswordRequest) Exec(r *ghttp.Request) (response MessageR
 		if err != nil {
 			response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 		} else {
-			err = filedb2.DB.UpdateField(u, "Password", self.Password1)
+			err = u.ChangePassword(self.Password1)
 			if err != nil {
-				response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
+				response.SystemError(err)
 			} else {
 				response.Success()
 			}
@@ -74,7 +73,7 @@ func NewChangeSelfPasswordRequest() *ChangeSelfPasswordRequest {
 	return &ChangeSelfPasswordRequest{}
 }
 
-type LogoutRequest struct {}
+type LogoutRequest struct{}
 
 func (self *LogoutRequest) Exec(r *ghttp.Request) (response MessageResponse) {
 	r.Session.RemoveAll()
@@ -86,9 +85,8 @@ func NewLogoutRequest() *LogoutRequest {
 	return &LogoutRequest{}
 }
 
-
 type CreateUserRequest struct {
-	Username string `v:"username@required|length:5,30#请输入用户名称|用户名称长度非法"`
+	Username  string `v:"username@required|length:5,30#请输入用户名称|用户名称长度非法"`
 	Password1 string `v:"password1@required|password2"`
 	Password2 string `json:"password2" v:"password2@required|same:password1"`
 }

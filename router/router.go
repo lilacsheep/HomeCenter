@@ -65,14 +65,12 @@ func init() {
 		group.POST("/proxy/server/stop", proxyServerApi.Stop)
 		group.POST("/proxy/server/update", proxyServerApi.Update)
 		group.GET("/proxy/server/info", proxyServerApi.Info)
-		group.GET("/proxy/server/monitor", proxyServerApi.Monitor)
+
 		// proxy url role
 		group.POST("/proxy/role/add", proxyRoleApi.AddRole)
 		group.POST("/proxy/role/remove", proxyRoleApi.Remove)
 		group.POST("/proxy/role/change", proxyRoleApi.Change)
 		group.GET("/proxy/roles", proxyRoleApi.All)
-		group.GET("/proxy/logs", proxyRoleApi.RoleVisitLogs)
-		group.POST("/proxy/log/add", proxyRoleApi.AddLogToRole)
 
 		// download api
 		group.POST("/download/create", downloadApi.Create)
@@ -90,24 +88,6 @@ func init() {
 		group.GET("/download/settings", downloadApi.Settings)
 		group.POST("/download/settings/update", downloadApi.UpdateSettings)
 
-		// filesystem api
-		filesystemApi := &api.ProxyFilesystemApi{}
-		group.GET("/filesystem/nodes", filesystemApi.Nodes)
-		group.POST("/filesystem/files", filesystemApi.Files)
-		group.POST("/filesystem/file/remove", filesystemApi.RemoveFile)
-		group.POST("/filesystem/file/upload", filesystemApi.UploadFile)
-		group.POST("/filesystem/node/create", filesystemApi.CreateNode)
-		group.POST("/filesystem/node/remove", filesystemApi.RemoveNode)
-		group.POST("/filesystem/dir/create", filesystemApi.CreateDir)
-		group.POST("/filesystem/dir/remove", filesystemApi.RemoveDir)
-		group.GET("/filesystem/download", filesystemApi.DownloadFile)
-		group.POST("/filesystem/file/info", filesystemApi.FileInfo)
-		group.POST("/filesystem/remove/empty/dir", filesystemApi.RemoveEmptyDir)
-
-		// message api
-		messageApi := new(api.ProxyMessageApi)
-		group.GET("/messages", messageApi.All)
-
 		// ddns api
 		ddnsApi := new(api.ProxyDDnsApi)
 		group.GET("/ddns/settings", ddnsApi.GetSettings)
@@ -124,9 +104,6 @@ func init() {
 		systemMonApi := new(api.SystemApi)
 		group.GET("/system/info", systemMonApi.Info)
 		group.GET("/system/processes", systemMonApi.Processes)
-
-		// logs api
-		group.GET("/logs", proxyServerApi.Logs)
 
 		// common api
 		group.GET("/common/countrys", common.Countrys)

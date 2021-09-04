@@ -28,13 +28,3 @@ func (self *ProxyRoleApi) All(r *ghttp.Request) {
 	request := requests.NewQueryAllRoleRequest()
 	self.DoRequestValid(request, r)
 }
-
-func (self *ProxyRoleApi) RoleVisitLogs(r *ghttp.Request) {
-	request := requests.NewGetRoleAllVisitRequest()
-	self.DoRequestValid(request, r)
-}
-
-func (self *ProxyRoleApi) AddLogToRole(r *ghttp.Request) {
-	request := requests.NewAddErrorSiteToProxyRequest()
-	self.DoRequestValid(request, r)
-}

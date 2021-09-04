@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/util/gconv"
@@ -48,11 +49,11 @@ func (v Version) Gt(ver Version) bool {
 
 func (v Version) Equal(ver Version) bool {
 	first, second, latest := ver.Ints()
-	return  v.first == first && v.second == second && v.latest == latest
+	return v.first == first && v.second == second && v.latest == latest
 }
 
 func (v *Version) Next() Version {
-	return Version{v.first, v.second, v.latest+1}
+	return Version{v.first, v.second, v.latest + 1}
 }
 
 func NewVersion(data string) (*Version, error) {
@@ -104,16 +105,24 @@ func (s *ObjectInfo) GetVersion() (*Version, error) {
 	return NewVersion(s.Version)
 }
 
-
 func (s *ObjectInfo) CopyNewRecord(bucket int, name, key string) g.Map {
 	return g.Map{
-		"name": name,
-		"key": key,
-		"bucket": bucket,
-		"hash": s.Hash,
-		"size": s.Size,
-		"real_path": s.RealPath,
+		"name":         name,
+		"key":          key,
+		"bucket":       bucket,
+		"hash":         s.Hash,
+		"size":         s.Size,
+		"real_path":    s.RealPath,
 		"context_type": s.ContextType,
-		"verison": s.Version,
+		"verison":      s.Version,
 	}
+}
+
+// 分享文件
+type ShareFileList struct {
+	DefaultModel
+	ID       int       `json:"id"`
+	Vkey     string    `json:"vkey"`
+	ObjectId int       `json:"object_id"`
+	CreateAt time.Time `json:"create_at"`
 }

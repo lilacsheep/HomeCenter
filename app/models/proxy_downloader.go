@@ -1,8 +1,6 @@
 package models
 
 import (
-	"time"
-
 	"github.com/gogf/gf/encoding/gjson"
 	"github.com/gogf/gf/frame/g"
 )
@@ -35,11 +33,4 @@ func GetSettings() (*DownloadSettings, error) {
 	settings := &DownloadSettings{}
 	err = gjson.New(configs).Struct(settings)
 	return settings, err
-}
-
-type DownloadFileList struct {
-	ID       int       `json:"id" storm:"id,increment"`
-	Vkey     string    `json:"vkey"`
-	Path     string    `json:"path"`
-	CreateAt time.Time `json:"create_at"`
 }

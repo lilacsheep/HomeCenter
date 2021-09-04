@@ -1,12 +1,8 @@
 package mallory
 
 import (
-	"homeproxy/library/filedb2"
 	"time"
-
-	"github.com/gogf/gf/os/glog"
 )
-
 
 type ProxyRole struct {
 	ID         int    `json:"id" storm:"id,increment"`
@@ -28,19 +24,4 @@ type ProxyVisitLog struct {
 	Address  string    `json:"address" storm:"index"`
 	Host     string    `json:"host" storm:"index"`
 	Datetime time.Time `json:"datetime"`
-}
-
-func AllRoles() (proxies []ProxyRole) {
-	if err := filedb2.DB.All(&proxies); err != nil {
-		glog.Errorf("get all proxies error: %s", err.Error())
-	}
-	return proxies
-}
-
-func AllVisitLogs() (data []ProxyRoleAnalysis) {
-	err := filedb2.DB.All(&data)
-	if err != nil {
-		glog.Errorf("get all proxies error: %s", err.Error())
-	}
-	return
 }

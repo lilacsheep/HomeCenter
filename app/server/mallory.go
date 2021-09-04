@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"homeproxy/app/models"
-	"homeproxy/library/filedb2"
 	"homeproxy/library/mallory"
 	"net"
 	"net/http"
@@ -63,15 +62,7 @@ func (self *MalloryManger) Init() error {
 	// init http server
 	self.HttpServer = &http.Server{}
 	self.HttpServer.SetKeepAlivesEnabled(false)
-	//fix 老的客户端无此配置导致的域名解析异常
-	if info.DNSAddr == "" {
-		info.DNSAddr = "8.8.8.8"
-		filedb2.DB.Set("settings", "server", info)
-	}
-	if info.ProxyMode == 0 {
-		info.ProxyMode = 2
-		filedb2.DB.Set("settings", "server", info)
-	}
+
 	// init Handler
 	dnsCache := &mallory.DnsCache{
 		DNS: &net.Resolver{
@@ -92,8 +83,12 @@ func (self *MalloryManger) Init() error {
 		DNSCache:     dnsCache,
 	}
 	// init url role
-	for _, p := range mallory.AllRoles() {
-		self.ProxyHandler.AddUrlRole(p.Sub, p.Domain, p.Status, gconv.String(p.ID))
+	roles, err := models.AllProxyRole()
+	if err != nil {
+		return err
+	}
+	for _, p := range roles {
+		self.ProxyHandler.AddUrlRole(p.Sub, p.Domain, p.Status, gconv.String(p.Id))
 	}
 
 	// get enable instances

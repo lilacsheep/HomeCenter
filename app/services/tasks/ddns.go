@@ -2,26 +2,26 @@ package tasks
 
 import (
 	"fmt"
+	"homeproxy/app/models"
+	"homeproxy/library/ddns"
+	"time"
+
+	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/os/gcron"
 	"github.com/gogf/gf/os/glog"
 	"github.com/gogf/gf/util/gconv"
-	"homeproxy/app/models"
-	"homeproxy/library/ddns"
-	"homeproxy/library/filedb2"
-	"time"
 )
 
 func InitDDnsTask() {
-	var roles []models.DDnsProviderSettings
-	err := filedb2.DB.All(&roles)
+	settings, err := models.AllDDnsSettings()
 	if err != nil {
 		glog.Error("init ddns task error: %s", err.Error())
 	} else {
-		for _, role := range roles {
-			if role.TimeInterval != "" && role.Status {
-				glog.Infof("start ddns task %s, %s.%s", role.ID, role.SubDomain, role.Domain)
-				DDnsSyncTask(role.ID)()
-				gcron.AddSingleton(role.TimeInterval, DDnsSyncTask(role.ID), gconv.String(role.ID))
+		for _, s := range settings {
+			if s.TimeInterval != "" && s.Status {
+				glog.Infof("start ddns task %s, %s.%s", s.Id, s.SubDomain, s.Domain)
+				DDnsSyncTask(s.Id)()
+				gcron.AddSingleton(s.TimeInterval, DDnsSyncTask(s.Id), gconv.String(s.Id))
 			}
 		}
 	}
@@ -32,9 +32,10 @@ func DDnsSyncTask(roleID int) func() {
 		var (
 			addresses []ddns.Address
 			err       error
+			query     = g.DB().Model(&models.DDnsProviderSettings{})
 		)
 		setting := models.DDnsProviderSettings{}
-		err = filedb2.DB.One("ID", roleID, &setting)
+		err = query.Where("`id` = ?", roleID).Struct(&setting)
 		if err != nil {
 			glog.Errorf("error: %s", err.Error())
 			return
@@ -59,9 +60,12 @@ func DDnsSyncTask(roleID int) func() {
 			var (
 				provider ddns.Provider
 				History  = models.OperationRecord{}
+				recordHistoryQuery = g.DB().Model(&models.OperationRecord{})
 			)
+			History.SettingId = setting.Id
 			History.Value = addr.String()
 			History.Date = time.Now().Format("2006-01-02 15:04:05")
+			History.SettingId = setting.Id
 
 			switch setting.Provider {
 			case "dnspod":
@@ -70,11 +74,7 @@ func DDnsSyncTask(roleID int) func() {
 				glog.Error("unknown provider: ", setting.Provider)
 				History.Error = fmt.Sprintf("unknown provider: %s", setting.Provider)
 				History.Status = 1
-				if len(setting.History) >= 5 {
-					setting.History = setting.History[1:]
-				}
-				setting.History = append(setting.History, History)
-				filedb2.DB.Update(&setting)
+				recordHistoryQuery.Clone().Save(&History)
 				return
 			}
 			switch setting.RecordID {
@@ -98,11 +98,7 @@ func DDnsSyncTask(roleID int) func() {
 					History.Status = 0
 				}
 			}
-			if len(setting.History) >= 5 {
-				setting.History = setting.History[1:]
-			}
-			setting.History = append(setting.History, History)
-			filedb2.DB.Update(&setting)
+			recordHistoryQuery.Clone().Save(&History)
 		}
 	}
 }

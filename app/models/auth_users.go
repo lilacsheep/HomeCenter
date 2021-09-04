@@ -7,10 +7,15 @@ import (
 
 type User struct {
 	DefaultModel
-	Username   string `json:"username" storm:"unique"`
+	Username   string `json:"username"`
 	Password   string `json:"password"`
 	Status     bool   `json:"status"`
 	gmeta.Meta `orm:"table:auth_users"`
+}
+
+func (u *User) ChangePassword(password string) error {
+	_, err := g.DB().Model(&User{}).Data(g.Map{"password": password}).Where("`username` = ?", u.Username).Update()
+	return err
 }
 
 func UserLogin(username, password string) (*User, error) {

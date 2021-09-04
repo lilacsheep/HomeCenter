@@ -5,7 +5,6 @@ import (
 	"homeproxy/app/models"
 	"homeproxy/app/services/tasks"
 	"homeproxy/library/ddns"
-	"homeproxy/library/filedb2"
 	"net/http"
 	"time"
 
@@ -36,7 +35,7 @@ type GetDDnsSettingsRequest struct{}
 
 func (self *GetDDnsSettingsRequest) Exec(r *ghttp.Request) (response MessageResponse) {
 	var data []models.DDnsProviderSettings
-	err := filedb2.DB.All(&data)
+	err := g.DB().Model(&models.DDnsProviderSettings{}).Structs(&data)
 	if err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
@@ -74,7 +73,6 @@ func (self *CreateDDnsSettingRequest) Exec(r *ghttp.Request) (response MessageRe
 	setting.UpdatedOn = time.Now().Format("2006-01-02 15:04:05")
 	setting.RecordID = self.RecordID
 	setting.TimeInterval = self.TimeInterval
-	setting.History = []models.OperationRecord{}
 	setting.Status = true
 	if !self.Mode {
 		setting.UsePublicIP = true
@@ -87,16 +85,16 @@ func (self *CreateDDnsSettingRequest) Exec(r *ghttp.Request) (response MessageRe
 		setting.DNSPodToken = self.DNSPodToken
 	}
 
-	err := filedb2.DB.Save(&setting)
+	_, err := g.DB().Model(&models.DDnsProviderSettings{}).Save(&setting)
 	if err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
-		tasks.DDnsSyncTask(setting.ID)()
-		_, err = gcron.AddSingleton(setting.TimeInterval, tasks.DDnsSyncTask(setting.ID), gconv.String(setting.ID))
+		tasks.DDnsSyncTask(setting.Id)()
+		_, err = gcron.AddSingleton(setting.TimeInterval, tasks.DDnsSyncTask(setting.Id), gconv.String(setting.Id))
 		if err != nil {
 			response.ErrorWithMessage(http.StatusInternalServerError, "任务不存在")
 		} else {
-			response.SuccessWithDetail(setting.ID)
+			response.SuccessWithDetail(setting.Id)
 		}
 	}
 	return
@@ -143,7 +141,7 @@ func NewGetProviderRecordsRequest() *GetProviderRecordsRequest {
 }
 
 type GetSettingsInfoRequest struct {
-	ID int `json:"id"`
+	ID int `json:"id" v:"required"`
 }
 
 func (self *GetSettingsInfoRequest) Exec(r *ghttp.Request) (response MessageResponse) {
@@ -157,7 +155,7 @@ func (self *GetSettingsInfoRequest) Exec(r *ghttp.Request) (response MessageResp
 	}
 	info["entry"] = entryInfo
 	var setting models.DDnsProviderSettings
-	err := filedb2.DB.One("ID", self.ID, &setting)
+	err := g.DB().Model(&models.DDnsProviderSettings{}).Where("`id` = ?", self.ID).Struct(&setting)
 	if err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
@@ -172,7 +170,7 @@ func NewGetSettingsInfoRequest() *GetSettingsInfoRequest {
 }
 
 type StopRoleTaskRequest struct {
-	ID int `json:"id"`
+	ID int `json:"id" v:"required"`
 }
 
 func (self *StopRoleTaskRequest) Exec(r *ghttp.Request) (response MessageResponse) {
@@ -180,12 +178,15 @@ func (self *StopRoleTaskRequest) Exec(r *ghttp.Request) (response MessageRespons
 	if entry == nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, "任务不存在")
 	} else {
-		var role models.DDnsProviderSettings
-		err := filedb2.DB.One("ID", self.ID, &role)
+		var (
+			setting models.DDnsProviderSettings
+			query   = g.DB().Model(&models.DDnsProviderSettings{})
+		)
+		err := query.Clone().Where("`id` = ?", self.ID).Struct(&setting)
 		if err != nil {
 			response.ErrorWithMessage(http.StatusInternalServerError, "任务不存在")
 		} else {
-			err := filedb2.DB.UpdateField(&role, "Status", false)
+			_, err := query.Clone().Data(g.Map{"status": false}).Where("`id` = ?", self.ID).Update()
 			if err != nil {
 				response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 			}
@@ -201,22 +202,25 @@ func NewStopRoleTaskRequest() *StopRoleTaskRequest {
 }
 
 type StartRoleTaskRequest struct {
-	ID int `json:"id"`
+	ID int `json:"id" v:"required"`
 }
 
 func (self *StartRoleTaskRequest) Exec(r *ghttp.Request) (response MessageResponse) {
 	entry := gcron.Search(gconv.String(self.ID))
 	if entry == nil {
-		var role models.DDnsProviderSettings
-		err := filedb2.DB.One("ID", self.ID, &role)
+		var (
+			setting models.DDnsProviderSettings
+			query   = g.DB().Model(&models.DDnsProviderSettings{})
+		)
+		err := query.Clone().Where("`id` = ?", self.ID).Struct(&setting)
 		if err != nil {
 			response.ErrorWithMessage(http.StatusInternalServerError, "任务不存在")
 		} else {
-			_, err = gcron.AddSingleton(role.TimeInterval, tasks.DDnsSyncTask(role.ID), gconv.String(role.ID))
+			_, err = gcron.AddSingleton(setting.TimeInterval, tasks.DDnsSyncTask(setting.Id), gconv.String(setting.Id))
 			if err != nil {
 				response.ErrorWithMessage(http.StatusInternalServerError, "任务不存在")
 			} else {
-				err := filedb2.DB.UpdateField(&role, "Status", true)
+				_, err := query.Clone().Data(g.Map{"status": true}).Where("`id` = ?", self.ID).Update()
 				if err != nil {
 					response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 				} else {
@@ -236,7 +240,7 @@ func NewStartRoleTaskRequest() *StartRoleTaskRequest {
 }
 
 type DeleteSettingRequest struct {
-	ID int `json:"id"`
+	ID int `json:"id" v:"required"`
 }
 
 func (self *DeleteSettingRequest) Exec(r *ghttp.Request) (response MessageResponse) {
@@ -244,7 +248,7 @@ func (self *DeleteSettingRequest) Exec(r *ghttp.Request) (response MessageRespon
 	if entry != nil {
 		entry.Close()
 	}
-	err := filedb2.DB.DeleteStruct(&models.DDnsProviderSettings{ID: self.ID})
+	_, err := g.DB().Model(&models.DDnsProviderSettings{}).Where("`id` = ?", self.ID).Delete()
 	if err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
@@ -258,8 +262,8 @@ func NewDeleteSettingRequest() *DeleteSettingRequest {
 }
 
 type RefreshSettingRequest struct {
-	ID           int    `json:"id"`
-	TimeInterval string `json:"time_interval"`
+	ID           int    `json:"id" v:"required"`
+	TimeInterval string `json:"time_interval" v:"required"`
 }
 
 func (self *RefreshSettingRequest) Exec(r *ghttp.Request) (response MessageResponse) {
@@ -267,14 +271,17 @@ func (self *RefreshSettingRequest) Exec(r *ghttp.Request) (response MessageRespo
 	if entry != nil {
 		entry.Close()
 	}
-	var setting models.DDnsProviderSettings
-	err := filedb2.DB.One("ID", self.ID, &setting)
+	var (
+		setting models.DDnsProviderSettings
+		query   = g.DB().Model(&models.DDnsProviderSettings{})
+	)
+	err := query.Clone().Where("`id` = ?", self.ID).Struct(&setting)
 	if err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 		return
 	}
 	setting.TimeInterval = self.TimeInterval
-	err = filedb2.DB.UpdateField(&setting, "TimeInterval", self.TimeInterval)
+	_, err = query.Clone().Data(g.Map{"time_interval": self.TimeInterval}).Where("`id` = ?", self.ID).Update()
 	if err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {

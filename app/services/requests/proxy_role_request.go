@@ -2,14 +2,13 @@ package requests
 
 import (
 	"fmt"
+	"homeproxy/app/models"
 	"homeproxy/app/server"
-	"homeproxy/library/filedb2"
 	"homeproxy/library/mallory"
 	"net/http"
 	"strings"
 
-	"github.com/asdine/storm/v3"
-	"github.com/asdine/storm/v3/q"
+	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/ghttp"
 	"github.com/gogf/gf/util/gconv"
 	"golang.org/x/net/publicsuffix"
@@ -35,14 +34,16 @@ func (self *AddUrlRoleRequest) UrlSplit(url string) (string, string) {
 
 func (self *AddUrlRoleRequest) Exec(r *ghttp.Request) (response MessageResponse) {
 	sub, domain := self.UrlSplit(self.Url)
-	var data []mallory.ProxyRole
+	var (
+		data  []models.ProxyRole
+		query = g.DB().Model(&models.ProxyRole{})
+	)
 	if sub == "" {
 		sub = "*"
 	}
-	query := filedb2.DB.Select(q.Eq("Status", self.Status), q.Eq("Sub", sub), q.Eq("Domain", domain))
-	err := query.Find(&data)
-	if err != nil && err != storm.ErrNotFound {
-		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
+	err := query.Clone().Where("`status` = ? AND `sub` = ? AND `domain` = ? ", self.Status, sub, domain).Structs(&data)
+	if err != nil {
+		response.SystemError(err)
 	} else {
 		if len(data) > 0 {
 			response.ErrorWithMessage(http.StatusInternalServerError, "规则已经存在")
@@ -53,9 +54,9 @@ func (self *AddUrlRoleRequest) Exec(r *ghttp.Request) (response MessageResponse)
 				Sub:        sub,
 				Domain:     domain,
 			}
-			err = filedb2.DB.Save(&role)
+			_, err = query.Save(&role)
 			if err != nil {
-				response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
+				response.SystemError(err)
 			} else {
 				if server.Mallory.Status {
 					server.Mallory.ProxyHandler.AddUrlRole(role.Sub, role.Domain, self.Status, gconv.String(self.InstanceID))
@@ -76,12 +77,14 @@ type RemoveUrlRoleRequest struct {
 }
 
 func (self *RemoveUrlRoleRequest) Exec(r *ghttp.Request) (response MessageResponse) {
-	var role mallory.ProxyRole
-
-	if err := filedb2.DB.One("ID", self.ID, &role); err != nil {
+	var (
+		role  mallory.ProxyRole
+		query = g.DB().Model(&mallory.ProxyRole{}).Where("`id` = ?", self.ID)
+	)
+	if err := query.Clone().Struct(&role); err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
-		filedb2.DB.DeleteStruct(&role)
+		query.Delete()
 		if server.Mallory.Status {
 			server.Mallory.ProxyHandler.RemoveUrlRole(role.Sub, role.Domain, role.Status)
 		}
@@ -100,23 +103,17 @@ type QueryAllRoleRequest struct {
 }
 
 func (self *QueryAllRoleRequest) Exec(r *ghttp.Request) (response MessageResponse) {
-	var data []mallory.ProxyRole
-	offset, limit := self.Next()
-	var query storm.Query
+	var (
+		data  []mallory.ProxyRole
+		query = g.DB().Model(&mallory.ProxyRole{})
+	)
 	if self.Filter != "" {
-		query = filedb2.DB.Select(q.Re("Domain", self.Filter))
-	} else {
-		query = filedb2.DB.Select()
+		query = query.Where("`domain` LIKE %%%s%%", self.Filter)
 	}
 	c, _ := query.Count(&mallory.ProxyRole{})
-
-	err := query.Skip(offset).Limit(limit).Find(&data)
+	err := query.Limit(self.OffsetLimit()...).Structs(&data)
 	if err != nil {
-		if err == storm.ErrNotFound {
-			response.DataTable([]mallory.ProxyRole{}, 0)
-		} else {
-			response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
-		}
+		response.SystemError(err)
 	} else {
 		response.DataTable(data, c)
 	}
@@ -134,19 +131,20 @@ type ChangeRoleInstanceRequest struct {
 }
 
 func (self *ChangeRoleInstanceRequest) Exec(r *ghttp.Request) (response MessageResponse) {
-	role := mallory.ProxyRole{}
-	err := filedb2.DB.One("ID", self.ID, &role)
+	var (
+		query = g.DB().Model(&mallory.ProxyRole{}).Where("`id` = ?", self.ID)
+		role  = mallory.ProxyRole{}
+	)
+	err := query.Clone().Struct(&role)
 	if err != nil {
-		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
+		response.SystemError(err)
 	} else {
 		if server.Mallory.Status {
 			server.Mallory.ProxyHandler.RemoveUrlRole(role.Sub, role.Domain, role.Status)
 		}
-		role.InstanceID = self.InstanceID
-		role.Status = self.Status
-		err = filedb2.DB.Update(&role)
+		_, err = query.Clone().Data(g.Map{"instance_id": self.InstanceID, "status": self.Status}).Update()
 		if err != nil {
-			response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
+			response.SystemError(err)
 		} else {
 			if server.Mallory.Status {
 				server.Mallory.ProxyHandler.AddUrlRole(role.Sub, role.Domain, role.Status, gconv.String(role.InstanceID))
@@ -154,7 +152,6 @@ func (self *ChangeRoleInstanceRequest) Exec(r *ghttp.Request) (response MessageR
 			response.Success()
 		}
 	}
-
 	return
 }
 

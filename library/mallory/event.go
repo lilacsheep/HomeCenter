@@ -3,13 +3,11 @@ package mallory
 import (
 	"fmt"
 	"homeproxy/library/events"
-	"homeproxy/library/filedb2"
 	"net"
 	"os"
 	"strings"
 	"time"
 
-	"github.com/asdine/storm/v3"
 	"github.com/gogf/gf/os/glog"
 	"golang.org/x/net/publicsuffix"
 )
@@ -25,7 +23,7 @@ func (self *VisitLogEvent) DoEvent() error {
 	log.Address = self.Address
 	log.Host = self.Host
 	log.Datetime = self.DateTime
-	return filedb2.DB.Save(&log)
+	return nil
 }
 
 type DomainErrorEvent struct {
@@ -46,49 +44,27 @@ func (self *DomainErrorEvent) urlSplit(url string) (string, string) {
 }
 
 func (self *DomainErrorEvent) DoEvent() error {
-	_, domain := self.urlSplit(self.Domain)
-	var data = ProxyRoleAnalysis{}
-	err := filedb2.DB.One("Domain", domain, &data)
-	if err != nil {
-		if err != storm.ErrNotFound {
-			return err
-		} else {
-			data.Domain = domain
-			data.Times = 1
-			data.Error = self.Error
-			err = filedb2.DB.Save(&data)
-			if err != nil {
-				return err
-			}
-		}
-	} else {
-		data.Times += 1
-		data.Error = self.Error
-		err = filedb2.DB.Update(&data)
-		if err != nil {
-			return err
-		}
-	}
+	// _, domain := self.urlSplit(self.Domain)
 	return nil
 }
 
 func errorEvent(host string, err error) {
 	netErr, ok := err.(net.Error)
-    if !ok {
+	if !ok {
 		glog.Error("unknow error: ", err.Error())
-        return
+		return
 	}
 	if netErr.Timeout() {
 		glog.Error("unknow error: timeout")
-        return
+		return
 	}
 	opErr, ok := netErr.(*net.OpError)
-    if !ok {
+	if !ok {
 		glog.Error("unknow net error: ", netErr.Error())
-        return
-    }
+		return
+	}
 	switch t := opErr.Err.(type) {
-    case *net.DNSError:
+	case *net.DNSError:
 		glog.Printf("net.DNSError:%+v", t)
 	case *os.SyscallError:
 		glog.Printf("os.SyscallError:%+v", t)
