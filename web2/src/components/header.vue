@@ -10,9 +10,9 @@
           </router-link>
         </a-menu-item>
         <a-menu-item key="2">
-          <router-link :to="{path:'/agent'}">
+          <router-link :to="{path:'/ddns'}">
             <a-icon type="bars" />
-            <span>节点操作</span>
+            <span>动态域名</span>
           </router-link>
         </a-menu-item>
         <a-menu-item key="3">
@@ -26,10 +26,9 @@
           <a-menu-item-group key="31">
             <template slot="title"> <a-icon type="team" /><span>用户</span> </template>
             <a-menu-item key="32">
-              用户管理
-            </a-menu-item>
-            <a-menu-item key="33">
-              权限管理
+              <router-link :to="{path:'/users'}">
+                <span>用户管理</span>
+              </router-link>
             </a-menu-item>
           </a-menu-item-group>
         </a-sub-menu>

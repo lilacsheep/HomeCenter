@@ -4,6 +4,8 @@ import Dashboard from '../components/website/index.vue'
 import AgentIndex from '../components/agent/index.vue'
 import Login from '../components/login/login.vue'
 import Download from '../components/download/index.vue'
+import Users from '../components/user/index.vue'
+import DDNS from '../components/ddns/index.vue'
 import Vue from 'vue'
 
 
@@ -32,9 +34,15 @@ const router = new Router({
             props: true
           },
           {
-            path: '/agent',
-            name: 'agent',
-            component: AgentIndex,
+            path: '/ddns',
+            name: 'ddns',
+            component: DDNS,
+            props: true
+          },
+          {
+            path: '/users',
+            name: 'users',
+            component: Users,
             props: true
           },
         ],

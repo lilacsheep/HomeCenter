@@ -87,12 +87,12 @@ func (self *CreateDDnsSettingRequest) Exec(r *ghttp.Request) (response MessageRe
 
 	_, err := g.DB().Model(&models.DDnsProviderSettings{}).Save(&setting)
 	if err != nil {
-		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
+		response.SystemError(err)
 	} else {
 		tasks.DDnsSyncTask(setting.Id)()
 		_, err = gcron.AddSingleton(setting.TimeInterval, tasks.DDnsSyncTask(setting.Id), gconv.String(setting.Id))
 		if err != nil {
-			response.ErrorWithMessage(http.StatusInternalServerError, "任务不存在")
+			response.SystemError(err)
 		} else {
 			response.SuccessWithDetail(setting.Id)
 		}
