@@ -6,58 +6,37 @@
         控制面板
       </a-breadcrumb-item>
     </a-breadcrumb>
-    <a-row :gutter="16" style="background: #fbfbfb;border: 1px solid #f4f4f4;height: 100%">
-      <a-col>
-        <a-tabs default-active-key="1" tab-position="top">
-        <a-tab-pane tab="状态信息" key="1">
-          <a-row :gutter="16">
-            <a-col span="8">
-              <a-descriptions bordered :loading="system.loading">
-                <a-descriptions-item label="主机名" span="3">{{system.info.host.hostname}}</a-descriptions-item>
-                <a-descriptions-item label="运行时间" span="3">{{system.info.host.uptime|formatSeconds}}</a-descriptions-item>
-                <a-descriptions-item label="核心数" span="3">{{system.info.cpu_info[0].cores}}</a-descriptions-item>
-                <a-descriptions-item label="主频率" span="3">{{(system.info.cpu_info[0].mhz / 1000).toFixed(2)}} GHz</a-descriptions-item>
-                <a-descriptions-item label="总内存" span="3">{{humanSize(system.info.memory.total)}}</a-descriptions-item>
-                <a-descriptions-item label="操作系统" span="3">{{system.info.host.platform}}</a-descriptions-item>
-                <a-descriptions-item label="系统架构" span="3">{{`${system.info.host.os} ${system.info.host.kernelArch}`}}</a-descriptions-item>
-              </a-descriptions>
-              <a-card :loading="system.loading">
-                <h3>性能指标</h3>
-                <span>CPU使用率</span>
-                <a-progress :percent="90" />
-                <span>内存使用率</span>
-                <a-progress :percent="system.info.memory.usedPercent.toFixed(2)"  status="active" />
-              </a-card>
-              <a-card :loading="system.loading">
-                <h3>磁盘信息</h3>
-                <template v-for="(info, i) in system.info.disk">
-                  <span v-if="info.total != 0" :key="i">{{`${info.path} 可用: ${humanSize(info.free)} 共计: ${humanSize(info.total)}`}}</span>
-                  <a-progress v-if="info.total != 0" :key="i" :percent="((info.total - info.free)/info.total*100).toFixed(1)" :stroke-color="(info.total - info.free)/info.total*100 < 60 ? '#99FF66' : (info.free - info.total)/info.total*100 < 80 ? '#CCFF66' : '#FF3366'"/>
-                </template>
-              </a-card>
-
-            </a-col>
-            <a-col span="16">
-              <a-card id="processes">
-                <a-table size="small" :columns="system.process.columns" :row-key="record => record.pid" :data-source="system.processes">
-                  <span slot="cpu" slot-scope="text">{{text.toFixed(1)}}%</span>
-                  <span slot="mem" slot-scope="text">{{text.toFixed(1)}}%</span>
-                </a-table>
-              </a-card>
-            </a-col>
-
-          </a-row>
-        </a-tab-pane>
-        <a-tab-pane tab="节点配置" key="2">
-
-        </a-tab-pane>
-        <a-tab-pane tab="同步记录" key="3">
-
-        </a-tab-pane>
-        <a-tab-pane tab="访问记录" key="4">
-
-        </a-tab-pane>
-        </a-tabs>
+    <a-row :gutter="16" style="height: 100%">
+      <a-col span="8">
+        <a-descriptions bordered :loading="system.loading" style="background: #FFFFFF;">
+          <a-descriptions-item label="主机名" span="3">{{system.info.host.hostname}}</a-descriptions-item>
+          <a-descriptions-item label="运行时间" span="3">{{system.info.host.uptime|formatSeconds}}</a-descriptions-item>
+          <a-descriptions-item label="核心数" span="3">{{system.info.cpu_info[0].cores}}</a-descriptions-item>
+          <a-descriptions-item label="主频率" span="3">{{(system.info.cpu_info[0].mhz / 1000).toFixed(2)}} GHz</a-descriptions-item>
+          <a-descriptions-item label="总内存" span="3">{{humanSize(system.info.memory.total)}}</a-descriptions-item>
+          <a-descriptions-item label="操作系统" span="3">{{system.info.host.platform}}</a-descriptions-item>
+          <a-descriptions-item label="系统架构" span="3">{{`${system.info.host.os} ${system.info.host.kernelArch}`}}</a-descriptions-item>
+        </a-descriptions>
+        <a-card :loading="system.loading" style="margin-top: 5px">
+          <h3>性能指标</h3>
+          <span>CPU使用率</span>
+          <a-progress :percent="90" />
+          <span>内存使用率</span>
+          <a-progress :percent="system.info.memory.usedPercent.toFixed(2)"  status="active" />
+        </a-card>
+        <a-card :loading="system.loading" style="margin-top: 5px">
+          <h3>磁盘信息</h3>
+          <template v-for="(info, i) in system.info.disk">
+            <span v-if="info.total != 0" :key="i">{{`${info.path} 可用: ${humanSize(info.free)} 共计: ${humanSize(info.total)}`}}</span>
+            <a-progress v-if="info.total != 0" :key="i" :percent="((info.total - info.free)/info.total*100).toFixed(1)" :stroke-color="(info.total - info.free)/info.total*100 < 60 ? '#99FF66' : (info.free - info.total)/info.total*100 < 80 ? '#CCFF66' : '#FF3366'"/>
+          </template>
+        </a-card>
+      </a-col>
+      <a-col span="16">
+        <a-table size="small" :columns="system.process.columns" :row-key="record => record.pid" :data-source="system.processes" style="background: #FFFFFF;">
+          <span slot="cpu" slot-scope="text">{{text.toFixed(1)}}%</span>
+          <span slot="mem" slot-scope="text">{{text.toFixed(1)}}%</span>
+        </a-table>
       </a-col>
     </a-row>
   </a-layout-content>
@@ -183,7 +162,4 @@ export default {
   padding: 5px;
 }
 
-#processes .ant-card-body {
-  padding: 0
-}
 </style>
