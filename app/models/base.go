@@ -5,7 +5,7 @@ import (
 )
 
 type DefaultModel struct {
-	Id         int
-	UpdatedAt time.Time `orm:"updated_at"`
-	CreatedAt time.Time `orm:"created_at"`
+	Id        int       `json:"id"`
+	UpdatedAt time.Time `json:"updated_at" orm:"updated_at"`
+	CreatedAt time.Time `json:"created_at" orm:"created_at"`
 }

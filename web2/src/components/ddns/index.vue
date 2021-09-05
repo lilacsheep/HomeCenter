@@ -14,6 +14,14 @@
         </a-col>
         <a-col :span="24" style="margin-top: 10px">
             <a-table style="background: #FFFFFF" :data-source="ddns.roles" size="small" :columns="ddns.columns" >
+              <span slot="domain" slot-scope="text, record">
+                <a-button type="link" @click="get_setting(record.id)" >{{`${record.sub_domain}.${record.domain}`}}</a-button>
+              </span>
+              <span slot="net_card" slot-scope="text, record">{{search_net_card(record.net_card)}}</span>
+              <span slot="status" slot-scope="text, record" >
+                <a-icon v-if="record.status" type="check-circle" style="color:#52c41a"/>
+                <a-icon v-else type="close-circle" style="color:#eb2f96"/>
+              </span>
             </a-table>
         </a-col>
     </a-row>
@@ -63,6 +71,72 @@
         <a-button type="primary" @click="submit_create_settings">确 定</a-button>
       </div>
     </a-modal>
+
+    <a-drawer :visible="ddns.setting.visit" width="40%" @close="ddns.setting.visit = false">
+      <a-button-group style="margin-bottom: 10px;">
+        <a-button type="warning" v-if="ddns.setting.info.setting.status" icon="el-icon-circle-close" @click="disable_role">关闭同步</a-button>
+        <a-button type="success" v-else icon="el-icon-circle-close" @click="start_role">开启同步</a-button>
+        <a-button type="danger" icon="el-icon-delete" @click="delete_role">删除记录</a-button>
+      </a-button-group>
+      <table class="descriptions">
+        <tbody>
+          <tr>
+            <th class="title">域名</th>
+            <td class="details">{{ddns.setting.info.setting.sub_domain}}.{{ddns.setting.info.setting.domain}}</td>
+          </tr>
+          <tr>
+            <th class="title">运营商</th>
+            <td class="details">{{ddns.setting.info.setting.provider}}</td>
+          </tr>
+          <tr>
+            <th class="title">状态</th>
+            <td class="details">
+              <i v-if="ddns.setting.info.setting.status" style="color: green" class="el-icon-success"></i>
+              <i v-else style="color: red" class="el-icon-error"></i>
+            </td>
+          </tr>
+          <tr>
+            <th class="title">同步周期</th>
+            <td class="details">
+              <el-select size="small" v-model="ddns.setting.info.setting.time_interval" @change="setting_change" placeholder="请选择">
+                <el-option label="每小时" value="@hourly"></el-option>
+                <el-option label="半小时" value="@every 30m"></el-option>
+                <el-option label="每天" value="@every 24h"></el-option>
+              </el-select>
+            </td>
+          </tr>
+          <tr>
+            <th class="title">同步模式</th>
+            <td class="details">
+              <el-tag size="small" type="success" v-if="ddns.setting.info.setting.use_public_ip">公网地址</el-tag>
+              <el-tag size="small" type="warning" v-else>网卡模式({{search_net_card(ddns.setting.info.setting.net_card)}})</el-tag>
+            </td>
+          </tr>
+          <tr>
+            <th class="title">任务状态</th>
+            <td class="details">
+              <a-tag size="small" effect="plain">{{task_status_filter(ddns.setting.info.entry.status)}}</a-tag>
+            </td>
+          </tr>
+          <tr>
+            <th class="title">更新记录</th>
+            <td class="details">
+              <a-timeline>
+                <a-timeline-item
+                  v-for="(info, index) in ddns.setting.info.setting.history"
+                  :key="index"
+                  :type="info.status ? 'danger': 'success'"
+                  :timestamp="info.date" placement="top">
+                  <span v-if="info.status == 0">同步: {{info.value}}</span>
+                  <span v-else>同步失败: {{info.error}}</span>
+                  {{info.error}}
+                </a-timeline-item>
+              </a-timeline>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </a-drawer>
   </a-layout-content>
 </template>
 
@@ -76,10 +150,10 @@ export default {
         records: [],
         roles: [],
         columns: [
-          {title: '域名', dataIndex: 'domain', key: 'domain'},
+          {title: '域名', dataIndex: 'domain', key: 'domain', scopedSlots: {customRender: 'domain'},},
           {title: '渠道', dataIndex: 'provider', key: 'provider'},
-          {title: '网卡', dataIndex: 'net_card', key: 'net_card'},
-          {title: '状态', dataIndex: 'status', key: 'status'},
+          {title: '网卡', dataIndex: 'net_card', key: 'net_card', scopedSlots: {customRender: 'net_card'}},
+          {title: '状态', dataIndex: 'status', key: 'status', scopedSlots: {customRender: 'status'}},
           {title: '更新时间', dataIndex: 'updated_on', key: 'updated_on'},
         ],
         net_cards: [],
@@ -216,11 +290,11 @@ export default {
           dnspod_token: this.ddns.settings.create.form.dnspod_token,
         }
         if (this.ddns.settings.create.form.dnspod_id == "") {
-          this.$message.error({message: "请先填写ID", type: 'error'})
+          this.$message.error("请先填写ID")
           this.ddns.records_loading = false
           return
         } else if (this.ddns.settings.create.form.dnspod_token == "") {
-          this.$message.error({message: "请先填写Token", type: 'error'})
+          this.$message.error("请先填写Token")
           this.ddns.records_loading = false
           return
         }
@@ -229,7 +303,7 @@ export default {
           that.ddns.records_loading = false
         }).catch(function (response) {
           that.ddns.records_loading = false
-          that.$message.error({message: response.message, type: 'error'})
+          that.$message.error(response.message)
         })
       } else {
         this.records = []
@@ -241,7 +315,7 @@ export default {
         that.ddns.setting.visit = true
         that.ddns.setting.info = response.detail
       }).catch(function (response) {
-        that.$message({message: response.message, type: 'error'})
+        that.$message.error(response.message)
       })
     },
     setting_change: function (value) {
@@ -249,9 +323,9 @@ export default {
       this.$api.post('/ddns/setting/refresh', {id: this.ddns.setting.info.setting.id, time_interval: value}).then(function (response) {
         that.get_setting(that.ddns.setting.info.setting.id)
         that.refresh_settings()
-        that.$message({message: "修改成功", type: 'success'})
+        that.$message.success("修改成功")
       }).catch(function (response) {
-        that.$message({message: response.message, type: 'error'})
+        that.$message.error(response.message)
       })
     },
     disable_role: function () {
@@ -260,17 +334,17 @@ export default {
         that.get_setting(that.ddns.setting.info.setting.id)
         that.refresh_settings()
       }).catch(function (response) {
-        that.$message({message: response.message, type: 'error'})
+        that.$message.error(response.message)
       })
     },
     delete_role: function () {
       let that = this
       this.$api.post('/ddns/setting/remove', {id: this.ddns.setting.info.setting.id}).then(function (response) {
-        that.$message({message: "删除成功", type: 'success'})
+        that.$message.success("删除成功")
         that.refresh_settings()
         that.ddns.setting.visit = false
       }).catch(function (response) {
-        that.$message({message: response.message, type: 'error'})
+        that.$message.error(response.message)
       })
     },
     start_role: function () {
@@ -316,3 +390,25 @@ export default {
   mounted: function () {}
 };
 </script>
+
+<style>
+.descriptions  {
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.descriptions .title {
+  background: #fafafa;
+  border: 1px solid #e8e8e8;
+  padding: 5px;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5;
+  text-align: left;
+}
+
+.descriptions .details {
+  border: 1px solid #e8e8e8;
+  padding: 5px;
+}
+</style>

@@ -27,15 +27,14 @@ func init() {
 		r.Response.WriteTpl("index.html")
 	})
 	s.SetRewriteMap(map[string]string{
-		"/dashboard":  "/",
-		"/roles":      "/",
-		"/monitor":    "/",
-		"/download":   "/",
-		"/filesystem": "/",
-		"/message":    "/",
-		"/other":      "/",
-		"/login":      "/",
-		"/user":       "/",
+		"/dashboard": "/",
+		"/roles":     "/",
+		"/monitor":   "/",
+		"/download":  "/",
+		"/other":     "/",
+		"/login":     "/",
+		"/users":     "/",
+		"/ddns":      "/",
 	})
 	proxyInstanceApi := &api.ProxyInstanceApi{}
 	proxyServerApi := &api.ProxyServerApi{}
