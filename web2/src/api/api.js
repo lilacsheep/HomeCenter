@@ -208,6 +208,130 @@ export function systemProcesses() {
     });
 }
 
+export function updateServer(params) {
+    return new Promise((resolve, reject) => {
+        httpService({
+            url: '/proxy/server/update',
+            method: 'post',
+            data: params,
+            headers: {
+                'Content-type': 'application/json;charset=UTF-8'
+            },
+        }).then(response => {
+            resolve(response);
+        }).catch(error => {
+            reject(error);
+        });
+    });
+}
+
+export function createInstance(params) {
+    return new Promise((resolve, reject) => {
+        httpService({
+            url: '/proxy/instance/create',
+            method: 'post',
+            data: params,
+            headers: {
+                'Content-type': 'application/json;charset=UTF-8'
+            },
+        }).then(response => {
+            resolve(response);
+        }).catch(error => {
+            reject(error);
+        });
+    });
+}
+
+export function updateInstance(params) {
+    return new Promise((resolve, reject) => {
+        httpService({
+            url: '/proxy/instance/update',
+            method: 'post',
+            data: params,
+            headers: {
+                'Content-type': 'application/json;charset=UTF-8'
+            },
+        }).then(response => {
+            resolve(response);
+        }).catch(error => {
+            reject(error);
+        });
+    });
+}
+
+export function  instance_remove(id) {
+    return new Promise((resolve, reject) => {
+        httpService({
+            url: '/proxy/instance/remove',
+            method: 'post',
+            data:  { id: id },
+            headers: {
+                'Content-type': 'application/json;charset=UTF-8'
+            },
+        }).then(response => {
+            resolve(response);
+        }).catch(error => {
+            reject(error);
+        });
+    });
+}
+
+export function  refresh_server() {
+    return new Promise((resolve, reject) => {
+        httpService({
+            url: '/proxy/server/info',
+            method: 'get',
+            data: {},
+        }).then(response => {
+            resolve(response);
+        }).catch(error => {
+            reject(error);
+        });
+    });
+}
+
+export function refresh_instances() {
+    return new Promise((resolve, reject) => {
+        httpService({
+            url: '/proxy/instances',
+            method: 'get',
+            data: {},
+        }).then(response => {
+            resolve(response);
+        }).catch(error => {
+            reject(error);
+        });
+    });
+}
+
+export function start_server() {
+    return new Promise((resolve, reject) => {
+        httpService({
+            url: '/proxy/server/start',
+            method: 'post',
+            data: {},
+        }).then(response => {
+            resolve(response);
+        }).catch(error => {
+            reject(error);
+        });
+    });
+}
+
+export function stop_server() {
+    return new Promise((resolve, reject) => {
+        httpService({
+            url: '/proxy/server/stop',
+            method: 'post',
+            data: {},
+        }).then(response => {
+            resolve(response);
+        }).catch(error => {
+            reject(error);
+        });
+    });
+}
+
 export default {
     get,
     post,
@@ -215,4 +339,12 @@ export default {
     fileUpload,
     systemInfo,
     systemProcesses,
+    updateServer,
+    createInstance,
+    updateInstance,
+    instance_remove,
+    refresh_server,
+    refresh_instances,
+    start_server,
+    stop_server,
 }
