@@ -2,6 +2,7 @@ package router
 
 import (
 	"homeproxy/app/api"
+	"homeproxy/app/middleware"
 	"net/http"
 
 	"github.com/gogf/gf/frame/g"
@@ -72,16 +73,20 @@ func init() {
 		group.GET("/proxy/roles", proxyRoleApi.All)
 
 		// download api
-		group.POST("/download/create", downloadApi.Create)
-		group.POST("/download/torrent", downloadApi.AddTorrent)
-		group.GET("/download/tasks", downloadApi.Query)
-		group.POST("/download/remove", downloadApi.Remove)
-		group.POST("/download/task/pause", downloadApi.Pause)
-		group.POST("/download/task/unpause", downloadApi.UnPause)
-		group.POST("/download/task/status", downloadApi.TaskStatus)
-		group.GET("/download/global/stat", downloadApi.GlobalStatInfo)
-		group.GET("/download/global/options", downloadApi.Options)
-		group.POST("/download/make/download", downloadApi.MakeDownloadUrl)
+		group.Group("/download", func(group *ghttp.RouterGroup) {
+			group.Middleware(middleware.CheckAria2Cli)
+			group.POST("/create", downloadApi.Create)
+			group.POST("/torrent", downloadApi.AddTorrent)
+			group.GET("/tasks", downloadApi.Query)
+			group.POST("/remove", downloadApi.Remove)
+			group.POST("/task/pause", downloadApi.Pause)
+			group.POST("/task/unpause", downloadApi.UnPause)
+			group.POST("/task/status", downloadApi.TaskStatus)
+			group.GET("/global/stat", downloadApi.GlobalStatInfo)
+			group.GET("/global/options", downloadApi.Options)
+			group.POST("/make/download", downloadApi.MakeDownloadUrl)
+		})
+		
 
 		// download settings api
 		group.GET("/download/settings", downloadApi.Settings)

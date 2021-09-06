@@ -332,6 +332,75 @@ export function stop_server() {
     });
 }
 
+export function tasks_list(params = {}) {
+    return new Promise((resolve, reject) => {
+        httpService({
+            url: '/download/tasks',
+            method: 'post',
+            data: params,
+        }).then(response => {
+            resolve(response);
+        }).catch(error => {
+            reject(error);
+        });
+    });
+}
+
+export function refresh_settings(params={}) {
+    return new Promise((resolve, reject) => {
+        httpService({
+            url: '/download/settings',
+            method: 'get',
+            data: params,
+        }).then(response => {
+            resolve(response);
+        }).catch(error => {
+            reject(error);
+        });
+    });
+}
+
+export function aria2_settings_update(params = {}) {
+    return new Promise((resolve, reject) => {
+        httpService({
+            url: '/download/settings/update',
+            method: 'post',
+            data: params,
+        }).then(response => {
+            resolve(response);
+        }).catch(error => {
+            reject(error);
+        });
+    });    
+}
+
+export function aria2_global_stats() {
+    return new Promise((resolve, reject) => {
+        httpService({
+            url: '/download/global/stat',
+            method: 'get',
+        }).then(response => {
+            resolve(response);
+        }).catch(error => {
+            reject(error);
+        });
+    });
+}
+
+export function aria2_global_options() {
+    return new Promise((resolve, reject) => {
+        httpService({
+            url: '/download/global/options',
+            method: 'get',
+        }).then(response => {
+            resolve(response);
+        }).catch(error => {
+            reject(error);
+        });
+    });
+    
+}
+
 export default {
     get,
     post,
@@ -347,4 +416,9 @@ export default {
     refresh_instances,
     start_server,
     stop_server,
+    tasks_list,
+    refresh_settings,
+    aria2_settings_update,
+    aria2_global_stats,
+    aria2_global_options,
 }

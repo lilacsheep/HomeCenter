@@ -12,8 +12,8 @@
           <a-tab-pane key="1" tab="下载列表">
             <a-button-group>
               <a-button type="primary" icon="edit" @click="download.create.visit = true">创建下载</a-button>
-              <a-upload name="file" :multiple="false" accept=".torrent" action="/api/download/torrent">
-                <a-button type="primary" icon="upload">上传种子</a-button>
+              <a-upload name="file" :fileList="false" :loading="download.uploadloading" :multiple="false" @change="uploadChange" accept=".torrent" action="/api/download/torrent">
+                <a-button  type="primary" icon="upload">上传种子</a-button>
               </a-upload>
             </a-button-group>
             <span style="float: right;">
@@ -199,6 +199,7 @@ export default {
       },
       download: {
         tasks: [],
+        uploadloading: false,
         create: {
           visit: false,
           form: {
@@ -248,8 +249,11 @@ export default {
       aria2Api.unpause(item.gid)
     },
     refresh_tasks () {
+      if (this.settings.form.aria2_url == "") {
+        return
+      }
       let that = this, tasks = []
-      aria2Api.tasks({}, function (response) {
+      this.$api.tasks_list().then(function (response) {
         if (that.task.query.status === "全部") {
           response.detail.forEach(function (item) {
             if ((item.status != "error") && (!item.followedBy)){
@@ -279,15 +283,17 @@ export default {
           })
           that.download.tasks = tasks
         }
+      }).catch(function (response) {
+        that.$message.error("刷新任务列表失败: "+response.message)
       })
-      aria2Api.globalStat(function (response) {
+      this.$api.aria2_global_stats().then(function (response) {
         that.global.upload = response.detail.uploadSpeed
         that.global.download = response.detail.downloadSpeed
       })
     },
     refresh_settings () {
       let that = this
-      this.$api.get("/download/settings").then(function (response) {
+      this.$api.refresh_settings().then(function (response) {
         that.settings.form = response.detail
         that.download.create.form.thread_num = response.detail.thread_num
         that.download.create.form.path = response.detail.path
@@ -295,16 +301,18 @@ export default {
     },
     submit_update_settings () {
       let that = this
-      this.$api.post("/download/settings/update", this.settings.form).then(function (response) {
-        that.$message({message: '更新成功', type: 'success'})
+      this.$api.aria2_settings_update(this.settings.form).then(function (response) {
+        that.$message.success('更新成功')
       }).catch(function (resp) {
-        that.$message({message: '更新失败', type: 'error'})
+        that.$message.error('更新失败')
       })
     },
     refresh_global_options() {
       let that = this, options = []
-      aria2Api.globalOptions(function (response) {
+      this.$api.aria2_global_options().then(function (response) {
         that.aria2.options = response.detail
+      }).catch(function (response) {
+        that.$message.error('获取全局配置失败:' + response.message)
       })
     },
     tabClick: function (key) {
@@ -334,6 +342,14 @@ export default {
         taskName = this.getFileName(info.files[0]);
       }
       return taskName
+    },
+    uploadChange(info) {
+      if (info.file.status !== 'uploading') {
+        this.download.uploadloading = true
+      }
+      if (info.file.status === 'done') {
+        this.download.uploadloading = false
+      }
     },
     getFileName: function (file) {
       if (!file) {
@@ -370,9 +386,20 @@ export default {
     }
   },
   created: function () {
-    this.refresh_settings()
-    this.refresh_tasks()
-    this.timer = setInterval(this.refresh_tasks, 1000)
+    let that = this
+    this.$api.refresh_settings().then(function (response) {
+      that.settings.form = response.detail
+      that.download.create.form.thread_num = response.detail.thread_num
+      that.download.create.form.path = response.detail.path
+    }).catch(function(response) {
+      that.$message.error("加载配置失败: "+response.message)
+    })
+    this.$api.tasks_list().then(function (response) {
+      that.refresh_tasks()
+      that.timer = setInterval(this.refresh_tasks, 1000)
+    }).catch(function(response) {
+      that.$message.error("任务列表获取失败: "+response.message)
+    })
   },
   beforeDestroy () {
     clearInterval(this.timer)
