@@ -332,12 +332,11 @@ export function stop_server() {
     });
 }
 
-export function tasks_list(params = {}) {
+export function aria2_tasks(params = {}) {
     return new Promise((resolve, reject) => {
         httpService({
             url: '/download/tasks',
-            method: 'post',
-            data: params,
+            method: 'get',
         }).then(response => {
             resolve(response);
         }).catch(error => {
@@ -346,7 +345,7 @@ export function tasks_list(params = {}) {
     });
 }
 
-export function refresh_settings(params={}) {
+export function aria2_refresh_settings(params={}) {
     return new Promise((resolve, reject) => {
         httpService({
             url: '/download/settings',
@@ -401,6 +400,76 @@ export function aria2_global_options() {
     
 }
 
+export function aria2_task_pause(gid) {
+    return new Promise((resolve, reject) => {
+        httpService({
+            url: '/download/task/pause',
+            method: 'post',
+            data: {id: gid},
+        }).then(response => {
+            resolve(response);
+        }).catch(error => {
+            reject(error);
+        });
+    });
+}
+
+export function aria2_task_unpause(gid) {
+    return new Promise((resolve, reject) => {
+        httpService({
+            url: '/download/task/unpause',
+            method: 'post',
+            data: {id: gid},
+        }).then(response => {
+            resolve(response);
+        }).catch(error => {
+            reject(error);
+        });
+    });
+}
+
+export function aria2_add_uri(url) {
+    return new Promise((resolve, reject) => {
+        httpService({
+            url: '/download/create',
+            method: 'post',
+            data: {url: url},
+        }).then(response => {
+            resolve(response);
+        }).catch(error => {
+            reject(error);
+        });
+    });
+}
+
+export function aria2_remove_task(gid) {
+    return new Promise((resolve, reject) => {
+        httpService({
+            url: '/download/remove',
+            method: 'post',
+            data: {id: gid},
+        }).then(response => {
+            resolve(response);
+        }).catch(error => {
+            reject(error);
+        });
+    });
+}
+
+export function aria2_task_status(gid) {
+    return new Promise((resolve, reject) => {
+        httpService({
+            url: '/download/task/status',
+            method: 'post',
+            data: {id: gid},
+        }).then(response => {
+            resolve(response);
+        }).catch(error => {
+            reject(error);
+        });
+    });
+}
+
 export default {
     get,
     post,
@@ -416,9 +485,14 @@ export default {
     refresh_instances,
     start_server,
     stop_server,
-    tasks_list,
-    refresh_settings,
+    aria2_tasks,
+    aria2_refresh_settings,
     aria2_settings_update,
     aria2_global_stats,
     aria2_global_options,
+    aria2_task_unpause,
+    aria2_task_pause,
+    aria2_add_uri,
+    aria2_remove_task,
+    aria2_task_status,
 }

@@ -2,7 +2,7 @@
   <a-layout id="components-layout-demo-custom-trigger">
     <a-layout-sider v-model="collapsed" :trigger="null" collapsible>
       <img :src="imgUrl" class="logo" :style="logo_style"/>
-      <a-menu theme="dark" mode="inline" :default-selected-keys="['1']">
+      <a-menu theme="dark" mode="inline" :default-selected-keys="['1']" :selectedKeys="selectedKeys" @select="select">
         <a-menu-item key="1">
           <router-link :to="{path:'/dashboard'}">
             <a-icon type="dashboard" />
@@ -40,6 +40,7 @@
           class="trigger"
           :type="collapsed ? 'menu-unfold' : 'menu-fold'"
           @click="hideMenuClick"
+
         />
       </a-layout-header>
         <router-view></router-view>
@@ -53,6 +54,7 @@ export default {
       collapsed: false,
       imgUrl:require("../assets/logo.png"),
       logo_style: "",
+      selectedKeys: ["1"]
     };
   },
   methods: {
@@ -60,6 +62,16 @@ export default {
       this.collapsed = !this.collapsed
       this.collapsed ? this.logo_style = "display: none" : this.logo_style = ""
       this.collapsed ? this.imgUrl = "" : this.imgUrl = require("../assets/logo.png")
+    },
+    select: function(item) {
+      this.selectedKeys = item.selectedKeys
+    }
+  },
+  created: function() {
+    var params = {"/dashboard": "1", "/ddns":"2", "/download":"3", "/users":"32"}
+    let key = params[this.$route.path]
+    if (key !== "") {
+      this.selectedKeys = [key]
     }
   },
 };

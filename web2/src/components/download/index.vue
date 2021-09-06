@@ -103,7 +103,7 @@
             </a-card>
           </a-tab-pane>
           <a-tab-pane key="3" tab="Aria2配置">
-            <a-table :columns="aria2.columns"  :data="aria2.options" size="mini">
+            <a-table :columns="aria2.columns"  :data="aria2.options" size="small">
             </a-table>
           </a-tab-pane>
         </a-tabs>
@@ -167,7 +167,6 @@
 </template>
 
 <script>
-import { aria2Api } from "../../scripts/aria2"
 export default {
   data() {
     return {
@@ -227,33 +226,36 @@ export default {
     taskInfoOpen(info) {
       let that = this
       this.task.info.filename = this.getTaskName(info)
-      aria2Api.taskStatus(info.gid, function (response) {
+
+      this.$api.aria2_task_status(info.gid).then(function (response) {
         that.task.info.status = response.detail
         that.task.visible = true
+      }).catch(function(response) {
+        that.$message.error('获取任务信息失败：'+response.message)
       })
     },
     submit_create_task () {
       let that = this
-      aria2Api.addUri(this.download.create.form.url, function (){
+      this.$api.aria2_add_uri(this.download.create.form.url).then(function (response) {
         that.download.create.visit = false
         that.refresh_tasks()
       })
     },
     remove_task (item) {
-      aria2Api.removeTask(item.gid)
+      this.$api.aria2_remove_task(item.gid)
     },
     cancel_task (item) {
-      aria2Api.pause(item.gid)
+      this.$api.aria2_task_pause(item.gid)
     },
     start_task (item) {
-      aria2Api.unpause(item.gid)
+      this.$api.aria2_task_unpause(item.gid)
     },
     refresh_tasks () {
       if (this.settings.form.aria2_url == "") {
         return
       }
       let that = this, tasks = []
-      this.$api.tasks_list().then(function (response) {
+      this.$api.aria2_tasks().then(function (response) {
         if (that.task.query.status === "全部") {
           response.detail.forEach(function (item) {
             if ((item.status != "error") && (!item.followedBy)){
@@ -293,7 +295,7 @@ export default {
     },
     refresh_settings () {
       let that = this
-      this.$api.refresh_settings().then(function (response) {
+      this.$api.aria2_refresh_settings().then(function (response) {
         that.settings.form = response.detail
         that.download.create.form.thread_num = response.detail.thread_num
         that.download.create.form.path = response.detail.path
@@ -387,14 +389,14 @@ export default {
   },
   created: function () {
     let that = this
-    this.$api.refresh_settings().then(function (response) {
+    this.$api.aria2_refresh_settings().then(function (response) {
       that.settings.form = response.detail
       that.download.create.form.thread_num = response.detail.thread_num
       that.download.create.form.path = response.detail.path
     }).catch(function(response) {
       that.$message.error("加载配置失败: "+response.message)
     })
-    this.$api.tasks_list().then(function (response) {
+    this.$api.aria2_tasks().then(function (response) {
       that.refresh_tasks()
       that.timer = setInterval(this.refresh_tasks, 1000)
     }).catch(function(response) {
