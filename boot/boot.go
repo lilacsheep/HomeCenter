@@ -16,11 +16,13 @@ func Setup() error {
 		"dbsql/instances.sql", "dbsql/auth_users.sql", "dbsql/object_bucket.sql", "dbsql/object_token.sql",
 		"dbsql/proxy_role.sql", "dbsql/ddns_operation_settings.sql",
 	}
-	for _, f := range sqlFile {
-		s := gfile.GetContents(f)
-		_, err := g.DB().Exec(s)
-		if err != nil {
-			return err
+	if gfile.Exists("dbsql") {
+		for _, f := range sqlFile {
+			s := gfile.GetContents(f)
+			_, err := g.DB().Exec(s)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
