@@ -17,7 +17,7 @@
             <a-input-search placeholder="input search text" enter-button />
           </a-col>
           <a-col :span="24" style="margin-top: 10px;">
-            <a-table :columns="columns" :data-source="data" :loading="tableloading" size="small">
+            <a-table :columns="columns" :data-source="data" :loading="tableloading" size="small" style="background: #FFFFFF">
               <a-button slot="id" slot-scope="text" type="link" size="small" @click="container_detail(text)">
                 {{ text.slice(0,12) }}
               </a-button>
