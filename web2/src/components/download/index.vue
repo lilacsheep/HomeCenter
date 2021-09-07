@@ -398,7 +398,7 @@ export default {
     })
     this.$api.aria2_tasks().then(function (response) {
       that.refresh_tasks()
-      that.timer = setInterval(this.refresh_tasks, 1000)
+      that.timer = setInterval(that.refresh_tasks, 1000)
     }).catch(function(response) {
       that.$message.error("任务列表获取失败: "+response.message)
     })
