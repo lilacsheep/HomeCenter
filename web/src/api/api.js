@@ -1,7 +1,5 @@
 import axios from "axios"
 
-// let apiUrl = "http://127.0.0.1:8200/api/control"
-// let apiUrl = "http://192.168.2.23:8200/api/control"
 let apiUrl = "/api"
 
 

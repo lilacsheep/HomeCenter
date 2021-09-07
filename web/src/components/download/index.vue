@@ -26,7 +26,7 @@
               <a-tag color="green" size="small"><a-icon type="arrow-up"></a-icon>{{global.upload | diskSize}}/秒</a-tag>
               <a-tag color="orange" size="small"><a-icon type="arrow-down"></a-icon>{{global.download | diskSize}}/秒</a-tag>
             </span>
-            <a-table :data="download.tasks" stripe size="mini" :columns="download.columns" style="margin-top: 10px;">
+            <a-table :data="download.tasks" stripe size="small" :columns="download.columns" style="margin-top: 10px;">
               <span slot="gid" slot-scope="text, record">
                 <el-button type="link" @click="taskInfoOpen(record)">{{getTaskName(record)}}</el-button>
               </span>
