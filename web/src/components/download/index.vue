@@ -48,7 +48,7 @@
               </span>
               <span slot="action" slot-scope="text, record">
                 <a-popconfirm v-if="record.status == 'paused'" title="是否继续该任务？" @onConfirm="start_task(record)">
-                  <a-button slot="reference" style="color: green" type="link" icon="play-circle"></a-button>
+                  <a-button  style="color: green" type="link" icon="play-circle"></a-button>
                 </a-popconfirm>
                 <a-popconfirm v-if="record.status == 'error'" title="是否继续该任务？" @confirm="start_task(record)">
                     <a-button style="color: green" type="link" icon="play-circle"></a-button>
