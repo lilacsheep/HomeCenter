@@ -5,6 +5,7 @@ import (
 	"homeproxy/app/server"
 	"homeproxy/app/server/aria2"
 	"homeproxy/app/services/tasks"
+	"homeproxy/library/docker"
 
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/os/gcron"
@@ -40,7 +41,7 @@ func Setup() error {
 		gcron.AddSingleton("*/2 * * * * *", tasks.ReloadAira2Manager)
 	}
 	aria2.InitClient()
-
+	docker.InitDockerClient()
 	server.Setup()
 	tasks.InitDDnsTask()
 	tasks.SetupMonitor()

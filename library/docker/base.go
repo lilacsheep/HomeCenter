@@ -1,6 +1,7 @@
 package docker
 
 import (
+	"github.com/gogf/gf/os/glog"
 	"github.com/moby/moby/client"
 )
 
@@ -14,6 +15,6 @@ func InitDockerClient() {
 	var err error
 	Docker, err = client.NewClient(client.DefaultDockerHost, "", nil, nil)
 	if err != nil {
-		panic(err)
+		glog.Warningf("加载docker客户端失败: %s", err.Error())
 	}
 }
