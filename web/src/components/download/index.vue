@@ -40,17 +40,12 @@
                   <span v-else-if="record.status == 'complete'">已完成</span>
                   <span v-else>{{record.status}}</span>
               </span>
-
-              <a-table-column prop="downloadSpeed" label="下载" width="100">
-                <template slot-scope="scope">
-                  {{scope.row.downloadSpeed | diskSize}}/秒
-                </template>
-              </a-table-column>
-              <a-table-column prop="uploadSpeed" label="上传" width="100">
-                <template slot-scope="scope">
-                  {{scope.row.uploadSpeed | diskSize}}/秒
-                </template>
-              </a-table-column>
+              <span slot="downloadSpeed" slot-scope="text, record">
+                {{record.downloadSpeed | diskSize}}/秒
+              </span>
+              <span slot="uploadSpeed" slot-scope="text, record">
+                {{record.uploadSpeed | diskSize}}/秒
+              </span>
               <a-table-column label="操作" fixed="right" width="100">
                 <template slot-scope="scope">
                   <el-popconfirm v-if="scope.row.status == 'paused'" title="是否继续该任务？" @onConfirm="start_task(scope.row)">
@@ -197,6 +192,8 @@ export default {
           {title: '文件名', dataIndex: 'gid', key: 'gid', scopedSlots: { customRender: 'gid' }},
           {title: '大小', dataIndex: 'totalLength', key: 'totalLength', scopedSlots: { customRender: 'totalLength' }},
           {title: '状态', dataIndex: 'status', key: 'status', scopedSlots: { customRender: 'status' }},
+          {title: '速度', dataIndex: 'downloadSpeed', key: 'downloadSpeed', scopedSlots: { customRender: 'downloadSpeed' }},
+          {title: '上传', dataIndex: 'uploadSpeed', key: 'uploadSpeed', scopedSlots: { customRender: 'uploadSpeed' }},
         ],
         create: {
           visit: false,
