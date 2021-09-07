@@ -249,20 +249,3 @@ export default {
   }
 }
 </script>
-
-<style>
-.ant-table-thead > tr >th{
-  color: white;
-  background: #5069d6 !important;
-}
-
-.ant-table-tbody > tr >th{
-  color: white;
-  background: #5069d6 !important;
-}
-
-.ant-table-small > .ant-table-content > .ant-table-body {
-    margin: 0 0px;
-}
-
-</style>

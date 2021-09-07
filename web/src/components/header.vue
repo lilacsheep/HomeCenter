@@ -117,4 +117,18 @@ export default {
   height: 48px;
   margin: 5px 25px;
 }
+
+.ant-table-thead > tr >th{
+  color: white;
+  background: #5069d6 !important;
+}
+
+.ant-table-tbody > tr >th{
+  color: white;
+  background: #5069d6 !important;
+}
+
+.ant-table-small > .ant-table-content > .ant-table-body {
+    margin: 0 0px;
+}
 </style>
