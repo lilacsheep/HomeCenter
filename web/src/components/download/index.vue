@@ -46,22 +46,20 @@
               <span slot="uploadSpeed" slot-scope="text, record">
                 {{record.uploadSpeed | diskSize}}/秒
               </span>
-              <a-table-column label="操作" fixed="right" width="100">
-                <template slot-scope="scope">
-                  <el-popconfirm v-if="scope.row.status == 'paused'" title="是否继续该任务？" @onConfirm="start_task(scope.row)">
-                    <el-button slot="reference" style="color: green" type="text" size="mini" icon="el-icon-caret-right"></el-button>
-                  </el-popconfirm>
-                  <el-popconfirm v-if="scope.row.status == 'error'" title="是否继续该任务？" @onConfirm="start_task(scope.row)">
-                    <el-button slot="reference" style="color: green" type="text" size="mini" icon="el-icon-caret-right"></el-button>
-                  </el-popconfirm>
-                  <el-popconfirm v-if="scope.row.status == 'active'" title="是否暂停该任务？" @onConfirm="cancel_task(scope.row)">
-                    <el-button slot="reference" style="color: red" type="text" size="mini" icon="el-icon-switch-button"></el-button>
-                  </el-popconfirm>
-                  <el-popconfirm title="是否删除该任务？" @onConfirm="remove_task(scope.row)">
-                    <el-button slot="reference" style="color: red" type="text" size="mini" icon="el-icon-delete"></el-button>
-                  </el-popconfirm>
-                </template>
-              </a-table-column>
+              <span slot="action" slot-scope="text, record">
+                <a-popconfirm v-if="scope.row.status == 'paused'" title="是否继续该任务？" @onConfirm="start_task(record)">
+                  <a-button slot="reference" style="color: green" type="link" icon="el-icon-caret-right"></a-button>
+                </a-popconfirm>
+                <a-popconfirm v-if="scope.row.status == 'error'" title="是否继续该任务？" @confirm="start_task(record)">
+                    <a-button style="color: green" type="link" icon="play-circle"></a-button>
+                  </a-popconfirm>
+                  <a-popconfirm v-if="scope.row.status == 'active'" title="是否暂停该任务？" @confirm="cancel_task(record)">
+                    <a-button style="color: red" type="link" icon="pause-circle"></a-button>
+                  </a-popconfirm>
+                  <a-popconfirm title="是否删除该任务？" @onConfirm="remove_task(record)">
+                    <a-button style="color: red" type="link" icon="delete"></a-button>
+                  </a-popconfirm>
+              </span>
             </a-table>
           </a-tab-pane>
           <a-tab-pane key="2" tab="配置管理">
@@ -194,6 +192,7 @@ export default {
           {title: '状态', dataIndex: 'status', key: 'status', scopedSlots: { customRender: 'status' }},
           {title: '速度', dataIndex: 'downloadSpeed', key: 'downloadSpeed', scopedSlots: { customRender: 'downloadSpeed' }},
           {title: '上传', dataIndex: 'uploadSpeed', key: 'uploadSpeed', scopedSlots: { customRender: 'uploadSpeed' }},
+          {title: 'Action', key: 'action',scopedSlots: { customRender: 'action' }},
         ],
         create: {
           visit: false,
