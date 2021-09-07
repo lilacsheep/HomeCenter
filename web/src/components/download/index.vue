@@ -26,26 +26,20 @@
               <a-tag color="green" size="small"><a-icon type="arrow-up"></a-icon>{{global.upload | diskSize}}/秒</a-tag>
               <a-tag color="orange" size="small"><a-icon type="arrow-down"></a-icon>{{global.download | diskSize}}/秒</a-tag>
             </span>
-            <a-table :data="download.tasks" stripe size="mini" style="margin-top: 10px;">
-              <a-table-column prop="gid" label="文件名">
-                <template slot-scope="scope">
-                  <el-button size="mini" type="text" @click="taskInfoOpen(scope.row)">{{getTaskName(scope.row)}}</el-button>
-                </template>
-              </a-table-column>
-              <a-table-column prop="totalLength" label="大小" width="100">
-                <template slot-scope="scope">
-                  {{scope.row.totalLength | diskSize}}
-                </template>
-              </a-table-column>
-              <a-table-column prop="status" label="状态" width="100">
-                <template slot-scope="scope">
-                  <span v-if="scope.row.status == 'active'">{{(scope.row.completedLength / scope.row.totalLength * 100).toFixed(2)}}%</span>
-                  <span v-else-if="scope.row.status == 'stopped'">已停止</span>
-                  <span v-else-if="scope.row.status == 'paused'">已暂停</span>
-                  <span v-else-if="scope.row.status == 'complete'">已完成</span>
-                  <span v-else>{{scope.row.status}}</span>
-                </template>
-              </a-table-column>
+            <a-table :data="download.tasks" stripe size="mini" :columns="download.columns" style="margin-top: 10px;">
+              <span slot="gid" slot-scope="text, record">
+                <el-button type="link" @click="taskInfoOpen(record)">{{getTaskName(record)}}</el-button>
+              </span>
+              <span slot="gid" slot-scope="text, record">
+                {{record.totalLength | diskSize}}
+              </span>
+              <span slot="status" slot-scope="text, record">
+                <span v-if="record.status == 'active'">{{(record.completedLength / record.totalLength * 100).toFixed(2)}}%</span>
+                  <span v-else-if="record.status == 'stopped'">已停止</span>
+                  <span v-else-if="record.status == 'paused'">已暂停</span>
+                  <span v-else-if="record.status == 'complete'">已完成</span>
+                  <span v-else>{{record.status}}</span>
+              </span>
 
               <a-table-column prop="downloadSpeed" label="下载" width="100">
                 <template slot-scope="scope">
@@ -199,6 +193,11 @@ export default {
       download: {
         tasks: [],
         uploadloading: false,
+        columns: [
+          {title: '文件名', dataIndex: 'gid', key: 'gid', scopedSlots: { customRender: 'gid' }},
+          {title: '大小', dataIndex: 'totalLength', key: 'totalLength', scopedSlots: { customRender: 'totalLength' }},
+          {title: '状态', dataIndex: 'status', key: 'status', scopedSlots: { customRender: 'status' }},
+        ],
         create: {
           visit: false,
           form: {
