@@ -26,7 +26,7 @@
               <a-tag color="green" size="small"><a-icon type="arrow-up"></a-icon>{{global.upload | diskSize}}/秒</a-tag>
               <a-tag color="orange" size="small"><a-icon type="arrow-down"></a-icon>{{global.download | diskSize}}/秒</a-tag>
             </span>
-            <a-table :data-source="download.tasks" stripe size="small" :columns="download.columns" style="margin-top: 10px;background: #FFFFFF">
+            <a-table :data-source="download.tasks" size="small" :columns="download.columns" style="margin-top: 10px;background: #FFFFFF">
               <span slot="gid" slot-scope="text, record">
                 <a-button type="link" @click="taskInfoOpen(record)">{{getTaskName(record)}}</a-button>
               </span>
@@ -109,7 +109,7 @@
         </a-form-model-item>
       </a-form-model>
     </a-modal>
-    <a-drawer :withHeader="false" :visible.sync="task.visible" :before-close="taskInfoClose" size="60%">
+    <a-drawer :withHeader="false" :visible="task.visible" :close="taskInfoClose" width="60%">
       <table style="border: 1px solid #f2f2f2" width="100%">
         <tr>
           <td width="100px" style="background-color: #f2f2f2;padding: 0">文件名</td>
@@ -136,7 +136,7 @@
           <td>{{task.info.status.completedLength | diskSize}}</td>
         </tr>
       </table>
-      <a-table :data="task.info.status.files" stripe size="mini" style="margin-top: 10px;" max-height="500">
+      <a-table :data-source="task.info.status.files" size="small" style="margin-top: 10px;background: #FFFFFF" max-height="500">
         <a-table-column prop="path" label="文件">
           <template slot-scope="scope">
             {{scope.row.path.split("/").slice(-1)[0]}}
