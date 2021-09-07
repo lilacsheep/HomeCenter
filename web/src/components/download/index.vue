@@ -47,16 +47,16 @@
                 {{record.uploadSpeed | diskSize}}/秒
               </span>
               <span slot="action" slot-scope="text, record">
-                <a-popconfirm v-if="scope.row.status == 'paused'" title="是否继续该任务？" @onConfirm="start_task(record)">
-                  <a-button slot="reference" style="color: green" type="link" icon="el-icon-caret-right"></a-button>
+                <a-popconfirm v-if="record.status == 'paused'" title="是否继续该任务？" @onConfirm="start_task(record)">
+                  <a-button slot="reference" style="color: green" type="link" icon="play-circle"></a-button>
                 </a-popconfirm>
-                <a-popconfirm v-if="scope.row.status == 'error'" title="是否继续该任务？" @confirm="start_task(record)">
+                <a-popconfirm v-if="record.status == 'error'" title="是否继续该任务？" @confirm="start_task(record)">
                     <a-button style="color: green" type="link" icon="play-circle"></a-button>
                   </a-popconfirm>
-                  <a-popconfirm v-if="scope.row.status == 'active'" title="是否暂停该任务？" @confirm="cancel_task(record)">
+                  <a-popconfirm v-if="record.status == 'active'" title="是否暂停该任务？" @confirm="cancel_task(record)">
                     <a-button style="color: red" type="link" icon="pause-circle"></a-button>
                   </a-popconfirm>
-                  <a-popconfirm title="是否删除该任务？" @onConfirm="remove_task(record)">
+                  <a-popconfirm title="是否删除该任务？" @confirm="remove_task(record)">
                     <a-button style="color: red" type="link" icon="delete"></a-button>
                   </a-popconfirm>
               </span>
@@ -137,15 +137,15 @@
       <a-table :data-source="task.info.status.files" size="small" style="margin-top: 10px;background: #FFFFFF" max-height="500">
         <a-table-column prop="path" label="文件">
           <template slot-scope="scope">
-            {{scope.row.path.split("/").slice(-1)[0]}}
+            {{scope.path.split("/").slice(-1)[0]}}
           </template>
         </a-table-column>
         <a-table-column prop="completedLength" label="进度" width="100">
-          <template slot-scope="scope">{{(scope.row.completedLength / scope.row.length * 100).toFixed(2)}}%</template>
+          <template slot-scope="scope">{{(scope.completedLength / scope.length * 100).toFixed(2)}}%</template>
           </a-table-column>
         <a-table-column prop="length" label="大小" width="120">
           <template slot-scope="scope">
-            {{scope.row.length | diskSize}}
+            {{scope.length | diskSize}}
           </template>
         </a-table-column>
       </a-table>
@@ -192,7 +192,7 @@ export default {
           {title: '状态', dataIndex: 'status', key: 'status', scopedSlots: { customRender: 'status' }},
           {title: '速度', dataIndex: 'downloadSpeed', key: 'downloadSpeed', scopedSlots: { customRender: 'downloadSpeed' }},
           {title: '上传', dataIndex: 'uploadSpeed', key: 'uploadSpeed', scopedSlots: { customRender: 'uploadSpeed' }},
-          {title: 'Action', key: 'action',scopedSlots: { customRender: 'action' }},
+          {title: '操作', key: 'action',scopedSlots: { customRender: 'action' }},
         ],
         create: {
           visit: false,
