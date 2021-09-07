@@ -28,9 +28,9 @@
             </span>
             <a-table :data-source="download.tasks" stripe size="small" :columns="download.columns" style="margin-top: 10px;">
               <span slot="gid" slot-scope="text, record">
-                <el-button type="link" @click="taskInfoOpen(record)">{{getTaskName(record)}}</el-button>
+                <a-button type="link" @click="taskInfoOpen(record)">{{getTaskName(record)}}</a-button>
               </span>
-              <span slot="gid" slot-scope="text, record">
+              <span slot="totalLength" slot-scope="text, record">
                 {{record.totalLength | diskSize}}
               </span>
               <span slot="status" slot-scope="text, record">
