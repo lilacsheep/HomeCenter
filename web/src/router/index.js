@@ -1,20 +1,14 @@
 import Router from 'vue-router'
 import Herader from '../components/header.vue'
-import Dashboard from '../components/index.vue'
-import Monitor from '../components/monitor/index.vue'
+import Dashboard from '../components/website/index.vue'
+import AgentIndex from '../components/agent/index.vue'
+import Login from '../components/login/login.vue'
 import Download from '../components/download/index.vue'
-import Filesystem from '../components/filesystem/index.vue'
-import Other from '../components/other/index.vue'
-import Login from '../components/login/index.vue'
-import User from '../components/user/index.vue'
+import Users from '../components/user/index.vue'
+import DDNS from '../components/ddns/index.vue'
+import Containers from '../components/docker/containers.vue'
 import Vue from 'vue'
 
-
-// 解决ElementUI导航栏中的vue-router在3.0版本以上重复点菜单报错问题
-const originalPush = Router.prototype.push
-Router.prototype.push = function push(location) {
-  return originalPush.call(this, location).catch(err => err)
-}
 
 Vue.use(Router)
 
@@ -26,64 +20,43 @@ const router = new Router({
         path: '/',
         redirect: 'dashboard',
         component: Herader,
+        props: true,
         children:[
           {
             path: '/dashboard',
             name: 'dashboard',
             component: Dashboard,
-            meta: {
-              title: '面板'
-            }
+            props: true
           },
           {
             path: '/download',
             name: 'download',
             component: Download,
-            meta: {
-              title: '资源下载'
-            }
+            props: true
           },
           {
-            path: '/filesystem',
-            name: 'filesystem',
-            component: Filesystem,
-            meta: {
-              title: '资源管理'
-            }
+            path: '/ddns',
+            name: 'ddns',
+            component: DDNS,
+            props: true
           },
           {
-            path: '/monitor',
-            name: 'monitor',
-            component: Monitor,
-            meta: {
-              title: '应用监控'
-            }
+            path: '/users',
+            name: 'users',
+            component: Users,
+            props: true
           },
           {
-            path: '/other',
-            name: 'other',
-            component: Other,
-            meta: {
-              title: '其他功能'
-            }
-          },
-          {
-            path: '/user',
-            name: 'user',
-            component: User,
-            meta: {
-              title: '登录'
-            }
-          },
-          {
-            path: '/login',
-            name: 'login',
-            component: Login,
-            meta: {
-              title: '登录'
-            }
+            path: '/containers',
+            name: 'containers',
+            component: Containers,
+            props: true
           },
         ],
+      },
+      {
+        path: '/login',
+        component: Login,
       }
     ]
   })

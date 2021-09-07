@@ -1,6 +1,6 @@
 {
-  "name": "blog",
-  "description": "blog web",
+  "name": "webcache",
+  "description": "网站缓存加速",
   "author": "dukeshi@vip.qq.com",
   "private": true,
   "scripts": {
@@ -8,21 +8,18 @@
     "build": "rimraf dist && webpack -p --progress --hide-modules"
   },
   "dependencies": {
+    "ant-design-vue": "^1.6.5",
     "axios": "^0.19.2",
     "deepmerge": "^4.2.2",
     "echarts": "^4.9.0",
-    "element-ui": "^2.13.2",
     "fibers": "^5.0.0",
-    "font-awesome": "^4.7.0",
+    "moment": "^2.26.0",
     "sass": "^1.26.10",
     "sass-loader": "^10.0.2",
     "v-charts": "^1.19.0",
-    "video.js": "^7.10.2",
     "vue": "^2.5.16",
     "vue-clipboard2": "^0.3.1",
-    "vue-router": "^3.3.2",
-    "vue-video-player": "^5.0.2",
-    "yarn": "^1.22.10"
+    "vue-router": "^3.3.2"
   },
   "engines": {
     "node": ">=6"

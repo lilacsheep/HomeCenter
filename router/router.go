@@ -36,6 +36,7 @@ func init() {
 		"/login":     "/",
 		"/users":     "/",
 		"/ddns":      "/",
+		"/containers":      "/",
 	})
 	proxyInstanceApi := &api.ProxyInstanceApi{}
 	proxyServerApi := &api.ProxyServerApi{}
@@ -86,7 +87,6 @@ func init() {
 			group.GET("/global/options", downloadApi.Options)
 			group.POST("/make/download", downloadApi.MakeDownloadUrl)
 		})
-		
 
 		// download settings api
 		group.GET("/download/settings", downloadApi.Settings)
@@ -111,5 +111,39 @@ func init() {
 
 		// common api
 		group.GET("/common/countrys", common.Countrys)
+
+		// docker containers
+		dockerContainerApi := new(api.ContainersController)
+		group.Group("/docker/container", func(group *ghttp.RouterGroup) {
+			group.Middleware(middleware.CheckDockerCli)
+			group.POST("/list", dockerContainerApi.List)
+			group.POST("/start", dockerContainerApi.Start)
+			group.POST("/stop", dockerContainerApi.Stop)
+			group.POST("/restart", dockerContainerApi.Restart)
+			group.POST("/update", dockerContainerApi.Update)
+			group.POST("/pause", dockerContainerApi.Pause)
+			group.POST("/unpause", dockerContainerApi.Unpause)
+			group.POST("/info", dockerContainerApi.Info)
+			group.POST("/stats", dockerContainerApi.Stats)
+			group.POST("/rename", dockerContainerApi.Rename)
+		})
+
+		dockerImageApi := new(api.ImageController)
+		group.Group("/docker/image", func(group *ghttp.RouterGroup) {
+			group.Middleware(middleware.CheckDockerCli)
+			group.POST("/list", dockerImageApi.List)
+			group.POST("/history", dockerImageApi.History)
+			group.POST("/info", dockerImageApi.Info)
+			group.POST("/pull", dockerImageApi.Pull)
+			group.POST("/remove", dockerImageApi.Remove)
+		})
+
+		dockerVolumeApi := new(api.VolumeApi)
+		group.Group("/docker/volume", func(group *ghttp.RouterGroup) {
+			group.Middleware(middleware.CheckDockerCli)
+			group.POST("/list", dockerVolumeApi.List)
+			group.POST("/create", dockerVolumeApi.Create)
+			group.POST("/remove", dockerVolumeApi.Remove)
+		})
 	})
 }

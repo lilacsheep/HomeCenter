@@ -1,47 +1,56 @@
 <template>
-  <el-row :gutter="20">
-    <el-col :span="24">
-      <el-tabs tab-position="left" @tab-click="tabClick">
-        <el-tab-pane label="修改密码">
-          <el-card>
-            <el-form label-width="100px" :model="user.password.change.form">
-              <el-form-item label="当前密码">
-                <el-input v-model="user.password.change.form.current"  placeholder="请输入当前密码" autocomplete="off" show-password></el-input>
-              </el-form-item>
-              <el-form-item label="新密码">
-                <el-input v-model="user.password.change.form.password1"  placeholder="请输入新密码" autocomplete="off" show-password></el-input>
-              </el-form-item>
-              <el-form-item label="重复密码">
-                <el-input v-model="user.password.change.form.password2"  placeholder="请再次输入新密码" autocomplete="off" show-password></el-input>
-              </el-form-item>
-              <el-form-item>
-                <el-button type="primary" @click="change_password_submit">立即修改</el-button>
-              </el-form-item>
-            </el-form>
-          </el-card>
-        </el-tab-pane>
-        <el-tab-pane label="新增用户">
-          <el-card>
-            <el-form label-width="40px" :model="user.create.form">
-              <el-form-item label="账号">
-                <el-input v-model="user.create.form.username"></el-input>
-              </el-form-item>
-              <el-form-item label="密码">
-                <el-input v-model="user.create.form.password1" placeholder="请输入新密码" autocomplete="off" show-password></el-input>
-              </el-form-item>
-              <el-form-item label="确认">
-                <el-input v-model="user.create.form.password2" placeholder="请再次输入新密码" autocomplete="off" show-password></el-input>
-              </el-form-item>
-              <el-form-item>
-                <el-button type="primary" @click="create_user_submit">立即创建</el-button>
-              </el-form-item>
-            </el-form>
-          </el-card>
-        </el-tab-pane>
-        <el-tab-pane label="用户列表"></el-tab-pane>
-      </el-tabs>
-    </el-col>
-  </el-row>
+  <a-layout-content style="padding: 12px;">
+      <a-breadcrumb separator=">" style="margin: 12px 8px">
+        <a-breadcrumb-item>首页</a-breadcrumb-item>
+        <a-breadcrumb-item href="">
+          用户管理
+        </a-breadcrumb-item>
+      </a-breadcrumb>
+    <a-row :gutter="20">
+      <a-col :span="24">
+        <a-tabs @tab-click="tabClick">
+          <a-tab-pane laba="修改密码">
+            <a-card>
+              <a-form laba-width="100px" :moda="user.password.change.form">
+                <a-form-item laba="当前密码">
+                  <a-input v-moda="user.password.change.form.current"  placeholder="请输入当前密码" autocomplete="off" show-password></a-input>
+                </a-form-item>
+                <a-form-item laba="新密码">
+                  <a-input v-moda="user.password.change.form.password1"  placeholder="请输入新密码" autocomplete="off" show-password></a-input>
+                </a-form-item>
+                <a-form-item laba="重复密码">
+                  <a-input v-moda="user.password.change.form.password2"  placeholder="请再次输入新密码" autocomplete="off" show-password></a-input>
+                </a-form-item>
+                <a-form-item>
+                  <a-button type="primary" @click="change_password_submit">立即修改</a-button>
+                </a-form-item>
+              </a-form>
+            </a-card>
+          </a-tab-pane>
+          <a-tab-pane laba="新增用户">
+            <a-card>
+              <a-form laba-width="40px" :moda="user.create.form">
+                <a-form-item laba="账号">
+                  <a-input v-moda="user.create.form.username"></a-input>
+                </a-form-item>
+                <a-form-item laba="密码">
+                  <a-input v-moda="user.create.form.password1" placeholder="请输入新密码" autocomplete="off" show-password></a-input>
+                </a-form-item>
+                <a-form-item laba="确认">
+                  <a-input v-moda="user.create.form.password2" placeholder="请再次输入新密码" autocomplete="off" show-password></a-input>
+                </a-form-item>
+                <a-form-item>
+                  <a-button type="primary" @click="create_user_submit">立即创建</a-button>
+                </a-form-item>
+              </a-form>
+            </a-card>
+          </a-tab-pane>
+          <a-tab-pane laba="用户列表"></a-tab-pane>
+        </a-tabs>
+      </a-col>
+    </a-row>
+  </a-layout-content>
+  
 </template>
 
 <script>
@@ -79,7 +88,7 @@ export default {
     },
     change_password_submit: function () {
       let that = this
-      this.$api.post("/auth/change/self/password", this.user.password.change.form).then(function (response) {
+      this.$api.post("/auth/change/saf/password", this.user.password.change.form).then(function (response) {
         that.$message({message: "修改成功", type: 'success'})
       }).catch(function (response) {
         that.$message({message: response.message, type: 'error'})
@@ -96,7 +105,7 @@ export default {
   },
   
   created: function () {
-    this.$api.post("/auth/self").then(function (response) {}).catch(function (response) {})
+    this.$api.post("/auth/saf").then(function (response) {}).catch(function (response) {})
   },
   beforeDestroy () {},
   mounted: function () {}
@@ -104,31 +113,31 @@ export default {
 </script>
 
 <style>
-.el-card__header {
+.a-card__header {
   padding: 5px;
 }
 
-.el-card__body {
+.a-card__body {
   padding: 20px;
 }
 
-.el-dialog__header {
+.a-dialog__header {
   padding: 10px 10px 5px;
   border-bottom: 1px solid whitesmoke;
 }
 
-.el-dialog__headerbtn {
+.a-dialog__headerbtn {
   top: 12px;
 }
-.el-dialog__body {
+.a-dialog__body {
   padding: 15px 10px;
 }
-.el-dialog__footer {
+.a-dialog__footer {
   border-top: 1px solid whitesmoke;
   padding: 5px 10px 10px;
 }
 
-.el-drawer__body {
+.a-drawer__body {
   padding: 10px;
 }
 

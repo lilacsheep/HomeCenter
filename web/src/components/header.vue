@@ -1,105 +1,120 @@
 <template>
-  <el-container>
-    <el-header>
-      <el-menu class="menu" v-if="login" :default-active="activeIndex" mode="horizontal" @select="handleSelect">
-        <el-menu-item index="dashboard"><i class="el-icon-s-home"></i>首页</el-menu-item>
-        <el-menu-item index="download"><i class="el-icon-download"></i>资源下载</el-menu-item>
-        <el-menu-item index="filesystem"><i class="el-icon-folder"></i>资源管理</el-menu-item>
-        <el-menu-item index="monitor"><i class="el-icon-data-analysis"></i>应用监控</el-menu-item>
-        <el-menu-item index="other"><i class="el-icon-more"></i>其他功能</el-menu-item>
-        <el-submenu style="float: right">
-          <template slot="title">用户操作</template>
-          <el-menu-item index="user">信息操作</el-menu-item>
-          <el-menu-item index="logout">注销</el-menu-item>
-        </el-submenu>
-      </el-menu>
-    </el-header>
-    <el-main>
-      <router-view></router-view>
-    </el-main>
-    <el-dialog title="提示" :visible.sync="logout" width="300px">
-      <span>确认是否登出?</span>
-      <span slot="footer" class="dialog-footer">
-        <el-button size="small" @click="logout = false">取 消</el-button>
-        <el-button size="small" type="primary" @click="logout_complete">确 定</el-button>
-      </span>
-    </el-dialog>
-  </el-container>
+  <a-layout id="components-layout-demo-custom-trigger">
+    <a-layout-sider v-model="collapsed" :trigger="null" collapsible>
+      <img :src="imgUrl" class="logo" :style="logo_style"/>
+      <a-menu theme="dark" mode="inline" :default-selected-keys="['1']" :selectedKeys="selectedKeys" @select="select">
+        <a-menu-item key="1">
+          <router-link :to="{path:'/dashboard'}">
+            <a-icon type="dashboard" />
+            <span>控制面板</span>
+          </router-link>
+        </a-menu-item>
+        <a-menu-item key="2">
+          <router-link :to="{path:'/ddns'}">
+            <a-icon type="bars" />
+            <span>动态域名</span>
+          </router-link>
+        </a-menu-item>
+        <a-menu-item key="3">
+          <router-link :to="{path:'/download'}">
+            <a-icon type="download" />
+            <span>文件下载</span>
+          </router-link>
+        </a-menu-item>
+        <a-sub-menu key="4">
+          <span slot="title"><a-icon type="solution" /><span>Docker</span></span>
+          <a-menu-item-group key="40">
+            <a-menu-item key="41">
+              <router-link :to="{path:'/containers'}">
+                <a-icon type="team" />
+                <span>容器管理</span>
+              </router-link>
+            </a-menu-item>
+          </a-menu-item-group>
+        </a-sub-menu>
+        <a-sub-menu key="5">
+          <span slot="title"><a-icon type="solution" /><span>权限管理</span></span>
+          <a-menu-item-group key="50">
+            <template slot="title"> <a-icon type="team" /><span>用户</span> </template>
+            <a-menu-item key="51">
+              <router-link :to="{path:'/users'}">
+                <span>用户管理</span>
+              </router-link>
+            </a-menu-item>
+          </a-menu-item-group>
+        </a-sub-menu>
+      </a-menu>
+    </a-layout-sider>
+    <a-layout>
+      <a-layout-header style="background: #fff; padding: 0">
+        <a-icon
+          class="trigger"
+          :type="collapsed ? 'menu-unfold' : 'menu-fold'"
+          @click="hideMenuClick"
+
+        />
+      </a-layout-header>
+        <router-view></router-view>
+    </a-layout>
+  </a-layout>
 </template>
 <script>
 export default {
   data() {
     return {
-      activeIndex: this.$route.name,
-      logout: false,
-      login: false
+      collapsed: false,
+      imgUrl:require("../assets/logo.png"),
+      logo_style: "",
+      selectedKeys: ["1"]
     };
   },
   methods: {
-    handleSelect: function (index, path) {
-      if (index != "logout") {
-        this.$router.push({name: index})
-      } else {
-        this.logout = true
-      }
+    hideMenuClick: function () {
+      this.collapsed = !this.collapsed
+      this.collapsed ? this.logo_style = "display: none" : this.logo_style = ""
+      this.collapsed ? this.imgUrl = "" : this.imgUrl = require("../assets/logo.png")
     },
-    logout_complete: function () {
-      let that = this
-      this.$api.get("/auth/logout").then(function (response) {
-        window.location.reload()
-      }).catch(function (response) {
-        window.location.reload()
-      })
+    select: function(item) {
+      this.selectedKeys = item.selectedKeys
     }
   },
-  mounted: function () {
-    if (this.$route.name != "login") {
-      var that = this
-      this.$api.post("/auth/self").then(function (response) {
-        that.login = true
-      }).catch(function (response) {})
+  created: function() {
+    var params = {"/dashboard": "1", "/ddns":"2", "/download":"3", "/users":"51"}
+    let key = params[this.$route.path]
+    if (key !== "") {
+      this.selectedKeys = [key]
     }
-  }
+  },
 };
 </script>
 <style>
-html body #app{
+.ant-layout {
   height: 100%;
-  background-color: #DDDDDD;
-  overflow: auto;
 }
 
-.el-container .el-header {
-  height: 40px!important;
-  background-color: white;
+.ant-layout-header {
+  height: 48px!important;
+  line-height: 48px!important;
 }
 
-.menu {
-  width: 1200px;
-  margin: 0 auto;
+#components-layout-demo-custom-trigger {
+  min-width: 1080px;
 }
 
-.el-main {
-  height: 100%;
-  width: 1200px;
-  margin: 0 auto;
+#components-layout-demo-custom-trigger .trigger {
+  font-size: 18px;
+  line-height: 32px;
+  padding: 0 24px;
+  cursor: pointer;
+  transition: color 0.3s;
 }
 
-.el-menu {
-  height: 40px;
+#components-layout-demo-custom-trigger .trigger:hover {
+  color: #1890ff;
 }
 
-.el-menu--horizontal>.el-menu-item {
-  height: 40px;
-  line-height: 40px
-}
-
-.el-menu--horizontal>.el-submenu .el-submenu__title {
-  height: 40px;
-  line-height: 40px
-}
-
-.el-menu--collapse .el-menu .el-submenu, .el-menu--popup {
-  min-width: 150px;
+#components-layout-demo-custom-trigger .logo {
+  height: 48px;
+  margin: 5px 25px;
 }
 </style>

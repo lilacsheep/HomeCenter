@@ -168,7 +168,7 @@
             style="width: 100%"
           >
             <el-table-column prop="address">
-              <template slot="header" slot-scope="scope">
+              <template slot="header">
                 <el-button
                   type="text"
                   size="mini"

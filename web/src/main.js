@@ -2,29 +2,26 @@ import Vue from 'vue'
 import App from './App.vue'
 import axios from 'axios'
 import router from './router'
+import moment from 'moment'
 import api from "./api/api"
 import VueClipboard from 'vue-clipboard2'
-import ElementUI from 'element-ui';
-import VeLine from 'v-charts/lib/line.common'
-import 'element-ui/lib/theme-chalk/index.css';
-import numerify from 'numerify'
-import numerifyBytes from 'numerify/lib/plugins/bytes.umd.js'
-import VideoPlayer from 'vue-video-player'
-import 'vue-video-player/src/custom-theme.css'
-import 'video.js/dist/video-js.css'
-  
-
+import Antd from 'ant-design-vue';
+import 'ant-design-vue/dist/antd.css';
+import VCharts from 'v-charts'
 
 Vue.config.productionTip = false;
 
 axios.defaults.withCredentials = true;
 Vue.prototype.$axios = axios;
+Vue.prototype.$moment = moment;
 Vue.prototype.$api = api;
 Vue.use(VueClipboard)
-Vue.use(VideoPlayer)
-Vue.use(ElementUI)
-Vue.component(VeLine.name, VeLine)
-numerify.register('bytes', numerifyBytes)
+Vue.use(Antd)
+Vue.use(VCharts)
+
+Vue.filter('dateformat', (dataStr, pattern = 'YYYY-MM-DD HH:mm') =>{
+  return moment(dataStr).format(pattern)
+})
 
 Vue.filter('hideStr', (src, endOf) => {
   if (src.length > endOf) {
@@ -47,6 +44,39 @@ Vue.filter('diskSize', (num) => {
   return (num / Math.pow(k, i)).toFixed(2) + ' ' + sizeStr[i];  //循环结束 或 条件成立 返回字符
 })
 
+Vue.filter("formatSeconds", (value) => { 
+    var theTime = parseInt(value);// 需要转换的时间秒 
+    var theTime1 = 0;// 分 
+    var theTime2 = 0;// 小时 
+    var theTime3 = 0;// 天
+    if(theTime > 60) { 
+    theTime1 = parseInt(theTime/60); 
+    theTime = parseInt(theTime%60); 
+    if(theTime1 > 60) { 
+      theTime2 = parseInt(theTime1/60); 
+      theTime1 = parseInt(theTime1%60); 
+      if(theTime2 > 24){
+      //大于24小时
+      theTime3 = parseInt(theTime2/24);
+      theTime2 = parseInt(theTime2%24);
+      }
+    } 
+    } 
+    var result = '';
+    if(theTime > 0){
+      result = ""+parseInt(theTime)+"秒";
+    }
+    if(theTime1 > 0) { 
+      result = ""+parseInt(theTime1)+"分"+result; 
+    } 
+    if(theTime2 > 0) { 
+      result = ""+parseInt(theTime2)+"小时"+result; 
+    } 
+    if(theTime3 > 0) { 
+      result = ""+parseInt(theTime3)+"天"+result; 
+    }
+    return result; 
+ })
 new Vue({
   el: '#app',
   router,
