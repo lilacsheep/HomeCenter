@@ -2,15 +2,15 @@
   <a-layout id="components-layout-demo-custom-trigger" :style="{backgroundImage: `url(${backgroundImage})`}">
     <a-layout-content :style="{ margin: '8px', padding: '12px', minHeight: '280px', 'text-align': 'center'}">
         <img :src="imgUrl" class="logo" style="height: 150px;"/>
-        <a-row :gutter="16" style="margin: 0 auto; text-align:center; background: #fff;width:400px; padding: 10px;border: 1px solid #f2f2f2;opacity:0.4">
+        <a-row :gutter="16" id="login" style="margin: 0 auto;">
             <a-form-model :model="formInline" @submit="handleSubmit" @submit.native.prevent style="">
               <a-form-model-item>
-              <a-input style="BACKGROUND-COLOR: transparent;" v-model="formInline.username" placeholder="用户名">
+              <a-input v-model="formInline.username" placeholder="用户名">
                   <a-icon slot="prefix" type="user" style="color:rgba(0,0,0,.25)" />
               </a-input>
               </a-form-model-item>
               <a-form-model-item>
-              <a-input style="BACKGROUND-COLOR: transparent;" v-model="formInline.password" type="password" placeholder="密码">
+              <a-input v-model="formInline.password" type="password" placeholder="密码">
                   <a-icon slot="prefix" type="lock" style="color:rgba(0,0,0,.25)" />
               </a-input>
               </a-form-model-item>
@@ -51,6 +51,15 @@ export default {
 <style>
 .ant-layout {
   height: 100%;
+}
+
+#login {
+  width:400px;
+  padding: 20px;
+  background:rgba(0,0,0,0.5);
+  border: 1px solid rgba(0,0,0, 0.3);
+  border-radius: 25px;
+  box-shadow: 5px 2px 2px rgba(0,0,0, 0.4);
 }
 
 #components-layout-demo-custom-trigger .trigger {
