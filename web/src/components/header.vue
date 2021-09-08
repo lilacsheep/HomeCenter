@@ -22,10 +22,10 @@
           </router-link>
         </a-menu-item>
         <a-sub-menu key="4">
-          <span slot="title"><a-icon type="solution" /><span>Docker</span></span>
+          <span slot="title"><a-icon type="appstore" /><span>Docker</span></span>
             <a-menu-item key="41">
               <router-link :to="{path:'/containers'}">
-                <a-icon type="team" />
+                <a-icon type="build" />
                 <span>容器管理</span>
               </router-link>
             </a-menu-item>
