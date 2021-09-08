@@ -1,7 +1,7 @@
 <template>
-  <a-layout id="components-layout-demo-custom-trigger">
+  <a-layout id="components-layout-demo-custom-trigger" :style="{backgroundImage: `url(${backgroundImage})`}">
     <a-layout>      
-      <a-layout-content :style="{ margin: '8px', padding: '12px', minHeight: '280px', 'text-align': 'center', backgroundImage: `url(${backgroundImage})`}">
+      <a-layout-content :style="{ margin: '8px', padding: '12px', minHeight: '280px', 'text-align': 'center'}">
           <img :src="imgUrl" class="logo" style="height: 150px;"/>
           <a-row :gutter="16" style="margin: 0 auto; text-align:center;  background: #fff;width:400px; padding: 10px;border: 1px solid #f2f2f2">
               <a-form-model :model="formInline" @submit="handleSubmit" @submit.native.prevent style="">
