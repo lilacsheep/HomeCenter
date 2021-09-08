@@ -30,6 +30,12 @@
               </router-link>
             </a-menu-item>
         </a-sub-menu>
+        <a-menu-item key="WebSSH">
+          <router-link :to="{path:'/webssh'}">
+            <a-icon type="code" />
+            <span>网页SSH</span>
+          </router-link>
+        </a-menu-item>
         <a-sub-menu key="5">
           <span slot="title"><a-icon type="solution" /><span>权限管理</span></span>
           <a-menu-item-group key="50">
