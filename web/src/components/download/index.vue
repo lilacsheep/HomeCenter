@@ -107,7 +107,7 @@
         </a-form-model-item>
       </a-form-model>
     </a-modal>
-    <a-drawer :withHeader="false" :visible="task.visible" @close="taskInfoClose" width="60%">
+    <a-drawer :withHeader="false" :visible="task.visible" @close="taskInfoClose" :closable="false" width="60%">
       <a-descriptions bordered size="small">
         <a-descriptions-item :span="3" label="文件名">
           {{task.info.filename}}
@@ -139,7 +139,7 @@
           {{(record.completedLength / record.length * 100).toFixed(2)}}%
         </span>
         <span slot="length" slot-scope="text, record">
-          {{scope.length | diskSize}}
+          {{record.length | diskSize}}
         </span>
       </a-table>
     </a-drawer>
@@ -154,7 +154,7 @@ export default {
         sync: false
       },
       labelCol: { span: 2 },
-      wrapperCol: { span: 16 },
+      wrapperCol: { span: 22 },
       aria2: {
         options: [],
         columns: [
