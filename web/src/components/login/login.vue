@@ -1,9 +1,7 @@
 <template>
   <a-layout id="components-layout-demo-custom-trigger">
-    <a-layout>
-      <a-layout-header style="background: #fff; padding: 0"></a-layout-header>
-      
-      <a-layout-content :style="{ margin: '8px', padding: '12px', minHeight: '280px', 'text-align': 'center'}">
+    <a-layout>      
+      <a-layout-content :style="{ margin: '8px', padding: '12px', minHeight: '280px', 'text-align': 'center', backgroundImage: `url(${backgroundImage})`}">
           <img :src="imgUrl" class="logo" style="height: 150px;"/>
           <a-row :gutter="16" style="margin: 0 auto; text-align:center;  background: #fff;width:400px; padding: 10px;border: 1px solid #f2f2f2">
               <a-form-model :model="formInline" @submit="handleSubmit" @submit.native.prevent style="">
@@ -33,6 +31,7 @@ export default {
   data() {
     return {
       imgUrl:require("../../assets/login.png"),
+      backgroundImage: require("../../assets/beijing.png"),
       formInline: {
         username: '',
         password: '',
@@ -56,11 +55,9 @@ export default {
   height: 100%;
 }
 
-.ant-layout-header {
-  height: 48px!important;
-  line-height: 48px!important;
+#background {
+  background-image: url();
 }
-
 #components-layout-demo-custom-trigger .trigger {
   font-size: 18px;
   line-height: 32px;
