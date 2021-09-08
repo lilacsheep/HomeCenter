@@ -90,7 +90,7 @@
             </a-card>
           </a-tab-pane>
           <a-tab-pane key="3" tab="Aria2配置">
-            <a-table :columns="aria2.columns"  :data="aria2.options" size="small">
+            <a-table :columns="aria2.columns"  :data-source="aria2.options" size="small">
             </a-table>
           </a-tab-pane>
         </a-tabs>
@@ -107,47 +107,40 @@
         </a-form-model-item>
       </a-form-model>
     </a-modal>
-    <a-drawer :withHeader="false" :visible="task.visible" :close="taskInfoClose" width="60%">
-      <table style="border: 1px solid #f2f2f2" width="100%">
-        <tr>
-          <td width="100px" style="background-color: #f2f2f2;padding: 0">文件名</td>
-          <td colspan="3">{{task.info.filename}}</td>
-        </tr>
-        <tr>
-          <td width="100px" style="background-color: #f2f2f2;padding: 0">GID</td>
-          <td colspan="3">{{task.info.status.gid}}</td>
-        </tr>
-        <tr>
-          <td width="100px" style="background-color: #f2f2f2;padding: 0">错误</td>
-          <td colspan="3">{{task.info.status.errorMessage}}</td>
-        </tr>
-        <tr>
-          <td width="100px" style="background-color: #f2f2f2;padding: 0">大小</td>
-          <td>{{task.info.status.totalLength | diskSize}}</td>
-          <td width="100px" style="background-color: #f2f2f2;padding: 0">状态</td>
-          <td>{{task.info.status.status}}</td>
-        </tr>
-        <tr>
-          <td width="100px" style="background-color: #f2f2f2;padding: 0">已上传</td>
-          <td>{{task.info.status.uploadLength | diskSize}}</td>
-          <td width="100px" style="background-color: #f2f2f2;padding: 0">已完成</td>
-          <td>{{task.info.status.completedLength | diskSize}}</td>
-        </tr>
-      </table>
-      <a-table :data-source="task.info.status.files" size="small" style="margin-top: 10px;background: #FFFFFF" max-height="500">
-        <a-table-column prop="path" label="文件">
-          <template slot-scope="scope">
-            {{scope.path.split("/").slice(-1)[0]}}
-          </template>
-        </a-table-column>
-        <a-table-column prop="completedLength" label="进度" width="100">
-          <template slot-scope="scope">{{(scope.completedLength / scope.length * 100).toFixed(2)}}%</template>
-          </a-table-column>
-        <a-table-column prop="length" label="大小" width="120">
-          <template slot-scope="scope">
-            {{scope.length | diskSize}}
-          </template>
-        </a-table-column>
+    <a-drawer :withHeader="false" :visible="task.visible" @close="taskInfoClose" width="60%">
+      <a-descriptions bordered size="small">
+        <a-descriptions-item :span="3" label="文件名">
+          {{task.info.filename}}
+        </a-descriptions-item>
+        <a-descriptions-item :span="3" label="GID">
+          {{task.info.status.gid}}
+        </a-descriptions-item>
+        <a-descriptions-item v-if="task.info.status.errorMessage != ''" :span="3" label="错误">
+          {{task.info.status.errorMessage}}
+        </a-descriptions-item>
+        <a-descriptions-item label="大小">
+          {{task.info.status.totalLength | diskSize}}
+        </a-descriptions-item>
+        <a-descriptions-item :span="2" label="状态">
+          {{task.info.status.status}}
+        </a-descriptions-item>
+        <a-descriptions-item label="已上传">
+          {{task.info.status.uploadLength | diskSize}}
+        </a-descriptions-item>
+        <a-descriptions-item label="已完成">
+          {{task.info.status.completedLength | diskSize}}
+        </a-descriptions-item>
+      </a-descriptions>
+      <a-table :columns="task.info.columns" :data-source="task.info.status.files" size="small" style="margin-top: 10px;background: #FFFFFF" max-height="500">
+        <span slot="path" slot-scope="text">
+          {{text.split("/").slice(-1)[0]}}
+        </span>
+        <span slot="completedLength" slot-scope="text, record">
+          {{(record.completedLength / record.length * 100).toFixed(2)}}%
+        </span>
+        <span slot="length" slot-scope="text, record">
+          {{scope.length | diskSize}}
+        </span>
       </a-table>
     </a-drawer>
   </a-layout-content>
@@ -176,7 +169,14 @@ export default {
         },
         info: {
           filename: "",
-          status: {}
+          status: {
+            files: [],
+          },
+          columns: [
+            {title: '文件名', dataIndex: 'path', key: 'path', scopedSlots: { customRender: 'path' }},
+            {title: '进度', dataIndex: 'completedLength', key: 'completedLength', scopedSlots: { customRender: 'completedLength' }},
+            {title: '大小', dataIndex: 'length', key: 'length', scopedSlots: { customRender: 'length' }},
+          ]
         }
       },
       global: {
