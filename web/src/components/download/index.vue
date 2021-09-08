@@ -66,7 +66,7 @@
             <a-card style="padding: 0">
               <a-form-model :model="settings.form" :label-col="labelCol" :wrapper-col="wrapperCol">
                 <a-form-model-item label="地址">
-                  <a-input v-model="settings.form.aria2_url" style="width: 300px"></a-input>
+                  <a-input addon-before="http://" addon-after="/jsonrpc" v-model="settings.form.aria2_url" style="width: 300px"></a-input>
                 </a-form-model-item>
                 <a-form-model-item label="Token">
                   <a-input v-model="settings.form.aria2_token" style="width: 300px"></a-input>

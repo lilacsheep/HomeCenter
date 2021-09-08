@@ -2,6 +2,7 @@ package aria2
 
 import (
 	"context"
+	"fmt"
 	"homeproxy/app/models"
 	"time"
 
@@ -22,7 +23,8 @@ func InitClient() error {
 		return err
 	}
 	if settings.Aria2Url != "" {
-		server, err = rpc.New(context.Background(), settings.Aria2Url, settings.Aria2Token, time.Second, CustomNotify{})
+		address := fmt.Sprintf("http://%s/jsonrpc", settings.Aria2Url)
+		server, err = rpc.New(context.Background(), address, settings.Aria2Token, time.Second, CustomNotify{})
 		if err != nil {
 			return err
 		}
