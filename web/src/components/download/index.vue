@@ -175,7 +175,7 @@ export default {
           columns: [
             {title: '文件名', dataIndex: 'path', key: 'path', scopedSlots: { customRender: 'path' }},
             {title: '进度', dataIndex: 'completedLength', key: 'completedLength', scopedSlots: { customRender: 'completedLength' }},
-            {title: '大小', dataIndex: 'length', key: 'length', scopedSlots: { customRender: 'length' }},
+            {title: '大小', dataIndex: 'length', key: 'length', scopedSlots: { customRender: 'length'}, sorter: (a, b) => a.length - b.length,},
           ]
         }
       },
