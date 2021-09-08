@@ -90,7 +90,7 @@
             </a-card>
           </a-tab-pane>
           <a-tab-pane key="3" tab="Aria2配置">
-            <a-table :columns="aria2.columns"  :data-source="aria2.options" size="small">
+            <a-table :columns="aria2.columns"  :data-source="aria2.options" size="small" style="background: #FFFFFF">
             </a-table>
           </a-tab-pane>
         </a-tabs>
