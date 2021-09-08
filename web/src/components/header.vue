@@ -115,7 +115,6 @@ export default {
 
 #components-layout-demo-custom-trigger .logo {
   height: 48px;
-  margin: 5px 25px;
 }
 
 .ant-table-thead > tr >th{
