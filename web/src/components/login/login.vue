@@ -31,7 +31,7 @@ export default {
   data() {
     return {
       imgUrl:require("../../assets/login.png"),
-      backgroundImage: require("../../assets/beijing.png"),
+      backgroundImage: require("../../assets/beijing.jpg"),
       formInline: {
         username: '',
         password: '',
