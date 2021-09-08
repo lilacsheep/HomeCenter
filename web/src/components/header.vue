@@ -23,14 +23,12 @@
         </a-menu-item>
         <a-sub-menu key="4">
           <span slot="title"><a-icon type="solution" /><span>Docker</span></span>
-          <a-menu-item-group key="40">
             <a-menu-item key="41">
               <router-link :to="{path:'/containers'}">
                 <a-icon type="team" />
                 <span>容器管理</span>
               </router-link>
             </a-menu-item>
-          </a-menu-item-group>
         </a-sub-menu>
         <a-sub-menu key="5">
           <span slot="title"><a-icon type="solution" /><span>权限管理</span></span>
