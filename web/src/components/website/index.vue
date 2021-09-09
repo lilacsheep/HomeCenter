@@ -132,10 +132,10 @@ export default {
     },
     percent_color(s) {
       let p = this.GetPercent((s.total - s.free), s.total)
-      if (s < 60) {
+      if (p < 60) {
         return "#99FF66"
       } else {
-        if (s < 80) {
+        if (p < 80) {
           return "#CCFF66"
         } else {
           return "#FF3366"
