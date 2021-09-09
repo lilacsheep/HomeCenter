@@ -116,7 +116,7 @@ export default {
       let v = true
       let l = ["cgroup", "tmpfs", "binfmt_misc", "squashfs", "mqueue", "cgroupfs", "devpts"]
       l.forEach(function(item) {
-        if (s.type == item) {
+        if (s.fstype == item) {
           v = false
         }
       })
