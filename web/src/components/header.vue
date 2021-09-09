@@ -18,7 +18,7 @@
         <a-menu-item key="3">
           <router-link :to="{path:'/download'}">
             <a-icon type="download" />
-            <span>文件下载</span>
+            <span>离线下载</span>
           </router-link>
         </a-menu-item>
         <a-sub-menu key="4">
