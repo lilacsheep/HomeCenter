@@ -232,15 +232,15 @@ export default {
     container_detail (id) {
       this.visible = true
       let that = this
-      this.$data.drawerLoading = true
+      this.drawerLoading = true
       this.$api.docker_container_info(id).then(function (response) {
-        that.$data.container = response.data
-        that.$data.drawerLoading = false
+        that.container = response.detail
+        that.drawerLoading = false
       })
     },
     afterVisibleChange (val) {
       if (!val) {
-        Object.assign(this.$data.container, this.$options.data().container)
+        Object.assign(this.container, this.$options.data().container)
       }
     },
     onClose () {
