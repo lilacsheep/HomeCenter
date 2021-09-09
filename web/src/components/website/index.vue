@@ -27,8 +27,8 @@
         <a-card :loading="system.loading" style="margin-top: 5px">
           <h3>磁盘信息</h3>
           <template v-for="(info, i) in system.info.disk">
-            <span v-if="info.total != 0" :key="i">{{`${info.path} 可用: ${humanSize(info.free)} 共计: ${humanSize(info.total)}`}}</span>
-            <a-progress v-if="info.total != 0" :key="i" :percent="((info.total - info.free)/info.total*100).toFixed(1)" :stroke-color="(info.total - info.free)/info.total*100 < 60 ? '#99FF66' : (info.free - info.total)/info.total*100 < 80 ? '#CCFF66' : '#FF3366'"/>
+            <span v-if="filter_fs(info)" :key="i">{{`${info.path} 可用: ${humanSize(info.free)} 共计: ${humanSize(info.total)}`}}</span>
+            <a-progress v-if="filter_fs(info)" :key="i" :percent="((info.total - info.free)/info.total*100).toFixed(1)" :stroke-color="(info.total - info.free)/info.total*100 < 60 ? '#99FF66' : (info.total - info.free)/info.total*100 < 80 ? '#CCFF66' : '#FF3366'"/>
           </template>
         </a-card>
       </a-col>
@@ -108,6 +108,15 @@ export default {
       } else {
         return (num / Math.pow(k, i)).toFixed(2) + " " +sizeStr[i]
       }
+    },
+    filter_fs(s) {
+      let l = ["cgroup", "tmpfs", "binfmt_misc", "squashfs", "mqueue", "cgroupfs", "devpts"]
+      l.forEach(function(item) {
+        if ((s.type == item) && (s.total != 0)) {
+          return false
+        }
+      })
+      return true
     },
     GetPercent(num, total) {
       /// <summary>
