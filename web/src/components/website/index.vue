@@ -113,13 +113,14 @@ export default {
       if (s.total == 0) {
         return false
       }
+      let v = true
       let l = ["cgroup", "tmpfs", "binfmt_misc", "squashfs", "mqueue", "cgroupfs", "devpts"]
       l.forEach(function(item) {
         if (s.type == item) {
-          return false
+          v = false
         }
       })
-      return true
+      return v
     },
     GetPercent(num, total) {
       num = parseFloat(num);
