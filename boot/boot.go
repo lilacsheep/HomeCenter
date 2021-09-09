@@ -45,6 +45,6 @@ func Setup() error {
 	server.Setup()
 	tasks.InitDDnsTask()
 	tasks.SetupMonitor()
-
+	tasks.SetupMonitor()
 	return nil
 }
