@@ -20,7 +20,7 @@
         <a-card :loading="system.loading" style="margin-top: 5px">
           <h3>性能指标</h3>
           <span>CPU使用率</span>
-          <a-progress :percent="90" />
+          <a-progress :percent="system.info.cpu_percent" />
           <span>内存使用率</span>
           <a-progress :percent="system.info.memory.usedPercent.toFixed(2)"  status="active" />
         </a-card>
@@ -54,6 +54,7 @@ export default {
           },
           disk: [],
           cpu_info: [{cores: 0, hmz: 0,}],
+          cpu_percent: 0,
           memory:{
             usedPercent: 0
           }
