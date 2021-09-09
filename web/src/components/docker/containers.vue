@@ -210,7 +210,7 @@ export default {
     },
     container_start (row) {
       let that = this
-      this.$api.post('/containers/start', {id: row.Id}).then(function (response) {
+      this.$api.docker_container_start({id: row.Id}).then(function (response) {
         that.$message.success('启动成功')
         that.container_refush()
       }).catch(function (response) {
@@ -219,7 +219,7 @@ export default {
     },
     container_stop (row) {
       let that = this
-      this.$api.post('/containers/stop', {id: row.Id}).then(function (response) {
+      this.$api.docker_container_stop({id: row.Id}).then(function (response) {
         that.$message.success('停止成功')
         that.container_refush()
       }).catch(function (response) {
@@ -227,13 +227,13 @@ export default {
       })
     },
     container_stats (row) {
-      this.$router.push({path: '/container/' + row.Id})
+      this.$router.push({path: '/docker/container/' + row.Id})
     },
     container_detail (id) {
       this.visible = true
       let that = this
       this.$data.drawerLoading = true
-      this.$api.post('/container/info', {id: id}).then(function (response) {
+      this.$api.docker_container_info({id: id}).then(function (response) {
         that.$data.container = response.data
         that.$data.drawerLoading = false
       })
