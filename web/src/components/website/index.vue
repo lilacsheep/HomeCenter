@@ -112,7 +112,7 @@ export default {
     filter_fs(s) {
       let l = ["cgroup", "tmpfs", "binfmt_misc", "squashfs", "mqueue", "cgroupfs", "devpts"]
       l.forEach(function(item) {
-        if ((s.type == item) && (s.total == 0)) {
+        if ((s.type == item) || (s.total == 0)) {
           return false
         }
       })
