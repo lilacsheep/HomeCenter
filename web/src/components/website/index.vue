@@ -28,7 +28,7 @@
           <h3>磁盘信息</h3>
           <template v-for="(info, i) in system.info.disk">
             <span v-if="filter_fs(info)" :key="i">{{`${info.path} 可用: ${humanSize(info.free)} 共计: ${humanSize(info.total)}`}}</span>
-            <a-progress v-if="filter_fs(info)" :key="i" :percent="((info.total - info.free)/info.total*100).toFixed(1)" :stroke-color="(info.total - info.free)/info.total*100 < 60 ? '#99FF66' : (info.total - info.free)/info.total*100 < 80 ? '#CCFF66' : '#FF3366'"/>
+            <a-progress v-if="filter_fs(info)" :key="i" :percent="GetPercent((info.total - info.free), info.total)" :stroke-color="percent_color(info)"/>
           </template>
         </a-card>
       </a-col>
@@ -119,17 +119,24 @@ export default {
       return true
     },
     GetPercent(num, total) {
-      /// <summary>
-      /// 求百分比
-      /// </summary>
-      /// <param name="num">当前数</param>
-      /// <param name="total">总数</param>
       num = parseFloat(num);
       total = parseFloat(total);
       if (isNaN(num) || isNaN(total)) {
           return "-";
       }
-      return total <= 0 ? "0%" : (Math.round(num / total * 10000) / 100.00)+"%";
+      return total <= 0 ? 0 : (Math.round(num / total * 10000) / 100.00);
+    },
+    percent_color(s) {
+      let p = this.GetPercent((s.total - s.free), s.total)
+      if (s < 60) {
+        return "#99FF66"
+      } else {
+        if (s < 80) {
+          return "#CCFF66"
+        } else {
+          return "#FF3366"
+        }
+      }
     }
   },
 };
