@@ -233,7 +233,7 @@ export default {
       this.visible = true
       let that = this
       this.$data.drawerLoading = true
-      this.$api.post('/containers/info', {id: id}).then(function (response) {
+      this.$api.post('/container/info', {id: id}).then(function (response) {
         that.$data.container = response.data
         that.$data.drawerLoading = false
       })
