@@ -88,7 +88,7 @@
                   {{ container.NetworkSettings.MacAddress}}
                 </a-descriptions-item>
                 <a-descriptions-item label="端口" :span="3">
-                  <span v-for="(port, index) in container.NetworkSettings.Ports" :key="index">{{port.length > 0 ? `${port[0].HostIp}:${port[0].HostPort}` : '无'}} -> {{index}}</span>
+                  <!-- <span v-for="(port, index) in container.NetworkSettings.Ports" :key="index">{{port.length > 0 ? `${port[0].HostIp}:${port[0].HostPort}` : '无'}} -> {{index}}</span> -->
                 </a-descriptions-item>
                 <a-descriptions-item label="卷组" :span="3">
                   <li v-for="(volume, index) in container.Mounts" :key="index">
