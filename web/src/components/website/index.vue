@@ -144,7 +144,7 @@ export default {
     },
     fs_percent_color(s) {
       let p = this.GetPercent((s.total - s.free), s.total)
-      return percent_color(p)
+      return this.percent_color(p)
     }
   },
 };
