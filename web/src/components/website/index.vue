@@ -20,7 +20,7 @@
         <a-card :loading="system.loading" style="margin-top: 5px">
           <h3>性能指标</h3>
           <span>CPU使用率</span>
-          <a-progress :percent="system.info.cpu_percent" />
+          <a-progress :percent="system.info.cpu_percent.toFixed(2)" :stroke-color="percent_color(system.info.cpu_percent)"/>
           <span>内存使用率</span>
           <a-progress :percent="system.info.memory.usedPercent.toFixed(2)"  status="active" />
         </a-card>
@@ -28,7 +28,7 @@
           <h3>磁盘信息</h3>
           <template v-for="(info, i) in system.info.disk">
             <span v-if="filter_fs(info)" :key="i">{{`${info.path} 可用: ${humanSize(info.free)} 共计: ${humanSize(info.total)}`}}</span>
-            <a-progress v-if="filter_fs(info)" :key="i" :percent="GetPercent((info.total - info.free), info.total)" :stroke-color="percent_color(info)"/>
+            <a-progress v-if="filter_fs(info)" :key="i" :percent="GetPercent((info.total - info.free), info.total)" :stroke-color="fs_percent_color(info)"/>
           </template>
         </a-card>
       </a-col>
@@ -131,17 +131,20 @@ export default {
       }
       return total <= 0 ? 0 : (Math.round(num / total * 10000) / 100.00);
     },
-    percent_color(s) {
-      let p = this.GetPercent((s.total - s.free), s.total)
-      if (p < 60) {
+    percent_color(num) {
+      if (num < 60) {
         return "#99FF66"
       } else {
-        if (p < 80) {
+        if (num < 80) {
           return "#CCFF66"
         } else {
           return "#FF3366"
         }
       }
+    },
+    fs_percent_color(s) {
+      let p = this.GetPercent((s.total - s.free), s.total)
+      return percent_color(p)
     }
   },
 };
