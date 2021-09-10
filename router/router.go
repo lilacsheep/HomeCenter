@@ -28,16 +28,17 @@ func init() {
 		r.Response.WriteTpl("index.html")
 	})
 	s.SetRewriteMap(map[string]string{
-		"/dashboard": "/",
-		"/roles":     "/",
-		"/monitor":   "/",
-		"/download":  "/",
-		"/other":     "/",
-		"/login":     "/",
-		"/users":     "/",
-		"/ddns":      "/",
-		"/containers":      "/",
+		"/dashboard":  "/",
+		"/roles":      "/",
+		"/monitor":    "/",
+		"/download":   "/",
+		"/other":      "/",
+		"/login":      "/",
+		"/users":      "/",
+		"/ddns":       "/",
+		"/containers": "/",
 	})
+	s.Use(MiddlewareCORS)
 	proxyInstanceApi := &api.ProxyInstanceApi{}
 	proxyServerApi := &api.ProxyServerApi{}
 	proxyRoleApi := &api.ProxyRoleApi{}
@@ -48,7 +49,7 @@ func init() {
 	s.BindHandler("POST:/api/login", auth.LoginUser)
 	s.BindHandler("Get:/download/:vkey", downloadApi.Download)
 	s.Group("/api", func(group *ghttp.RouterGroup) {
-		group.Middleware(MiddlewareCORS, AuthMiddleware)
+		// group.Middleware(AuthMiddleware)
 		// user auth
 		group.POST("/auth/self", auth.Self)
 		group.GET("/auth/logout", auth.Logout)
@@ -108,6 +109,7 @@ func init() {
 		systemMonApi := new(api.SystemApi)
 		group.GET("/system/info", systemMonApi.Info)
 		group.GET("/system/processes", systemMonApi.Processes)
+		group.ALL("/system/webssh", systemMonApi.Webssh)
 
 		// common api
 		group.GET("/common/countrys", common.Countrys)
