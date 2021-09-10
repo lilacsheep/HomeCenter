@@ -1,6 +1,6 @@
 import axios from "axios"
 
-let apiUrl = "/api"
+let apiUrl = "http://127.0.0.1:8081/api"
 
 
 const httpService = axios.create({

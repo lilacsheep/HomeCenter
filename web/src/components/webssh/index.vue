@@ -7,7 +7,22 @@
         </a-breadcrumb-item>
       </a-breadcrumb>
     <a-row :gutter="20">
-      <a-col :span="24">
+      <a-col :span="6">
+        <a-list size="small" bordered :data-source="hosts" style="background: #FFFFFF">
+          <a-list-item slot="renderItem" slot-scope="item">
+            {{ item }}
+          </a-list-item>
+          <div slot="header">
+            Header
+          </div>
+        </a-list>
+      </a-col>
+      <a-col :span="16">
+        <a-tabs v-model="activeKey" hide-add type="editable-card" @edit="onEdit">
+          <a-tab-pane v-for="pane in panes" :key="pane.key" :tab="pane.title" :closable="pane.closable">
+            {{ pane.content }}
+          </a-tab-pane>
+        </a-tabs>
         <div id="terminal" class="xterm" />
       </a-col>
     </a-row>
@@ -25,19 +40,34 @@ Terminal.applyAddon(fit)
 
 export default {
   data() {
+    const panes = [
+        { title: 'Tab 1', content: 'Content of Tab 1', key: '1' },
+        { title: 'Tab 2', content: 'Content of Tab 2', key: '2' },
+    ]
     return {
-    term: null,
-      endpoint: null,
-      connection: null,
-      content: '',
-      protocol: null,
-      option: {
-        operate: 'connect',
-        host: '192.168.*.*',//你要连接的终端的ip
-        port: '22',
-        username: '*',//你要连接的终端的用户名和密码
-        password: '*'
-      }
+      hosts: [
+        '127.0.0.1',
+        '127.0.0.1',
+        '127.0.0.1',
+        '127.0.0.1',
+        '127.0.0.1',
+      ],
+      activeKey: panes[0].key,
+      panes,
+      newTabIndex: 0,
+
+      term: null,
+        endpoint: null,
+        connection: null,
+        content: '',
+        protocol: null,
+        option: {
+          operate: 'connect',
+          host: '192.168.*.*',//你要连接的终端的ip
+          port: '22',
+          username: '*',//你要连接的终端的用户名和密码
+          password: '*'
+        }
     }
   },
   methods: {
@@ -61,7 +91,43 @@ export default {
       // 收到数据时回调
       this.term.write(data)
       console.log(data)
-    }
+    },
+    callback(key) {
+      console.log(key);
+    },
+    onEdit(targetKey, action) {
+      this[action](targetKey);
+    },
+    add() {
+      const panes = this.panes;
+      const activeKey = `newTab${this.newTabIndex++}`;
+      panes.push({
+        title: `New Tab ${activeKey}`,
+        content: `Content of new Tab ${activeKey}`,
+        key: activeKey,
+      });
+      this.panes = panes;
+      this.activeKey = activeKey;
+    },
+    remove(targetKey) {
+      let activeKey = this.activeKey;
+      let lastIndex;
+      this.panes.forEach((pane, i) => {
+        if (pane.key === targetKey) {
+          lastIndex = i - 1;
+        }
+      });
+      const panes = this.panes.filter(pane => pane.key !== targetKey);
+      if (panes.length && activeKey === targetKey) {
+        if (lastIndex >= 0) {
+          activeKey = panes[lastIndex].key;
+        } else {
+          activeKey = panes[0].key;
+        }
+      }
+      this.panes = panes;
+      this.activeKey = activeKey;
+    },
   },
   created: function () {},
   beforeDestroy() {
