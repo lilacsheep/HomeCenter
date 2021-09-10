@@ -54,7 +54,7 @@ func (s *SystemInfo) Sync() {
 	s.NetCards = system.IOCounters(true)
 	s.Disk = system.DiskAllUsage()
 	s.Datetime = time.Now()
-	s.CpuPercent = system.CpuPercent(t2[0], s.CpuTimes[0])
+	s.CpuPercent = system.CpuPercent(s.CpuTimes[0], t2[0])
 	s.CpuTimes = t2
 }
 
