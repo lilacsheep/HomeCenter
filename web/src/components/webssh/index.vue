@@ -74,7 +74,8 @@ export default {
     } else {
       this.protocol = 'ws://'
     }
-    this.endpoint = this.protocol + '127.0.0.1:8081/api/system/webssh'
+    let port = window.location.port == "" ? "" : ":"+window.location.port
+    this.endpoint = `${this.protocol}:${port}/api/system/webssh`
     const terminalContainer = document.getElementById('terminal')
     this.term = new Terminal({
       // 光标闪烁
