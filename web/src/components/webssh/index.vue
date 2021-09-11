@@ -8,22 +8,22 @@
       </a-breadcrumb>
     <a-row :gutter="20">
       <a-col :span="6">
-        <a-list size="small" bordered :data-source="hosts" style="background: #FFFFFF">
-          <a-list-item slot="renderItem" slot-scope="item">
-            {{ item }}
-          </a-list-item>
-          <div slot="header">
-            Header
-          </div>
-        </a-list>
+        <a-tree :tree-data="treeData" show-icon default-expand-all :default-selected-keys="['0-0-0']" style="background: #FFFFFF">
+          <a-icon slot="switcherIcon" type="down" />
+          <a-icon slot="smile" type="smile-o" />
+          <a-icon slot="meh" type="smile-o" />
+          <template slot="custom" slot-scope="{ selected }">
+            <a-icon :type="selected ? 'frown' : 'frown-o'" />
+          </template>
+        </a-tree>
       </a-col>
       <a-col :span="16">
         <a-tabs v-model="activeKey" hide-add type="editable-card" @edit="onEdit">
           <a-tab-pane v-for="pane in panes" :key="pane.key" :tab="pane.title" :closable="pane.closable">
-            {{ pane.content }}
+            <div id="terminal" class="xterm" />
           </a-tab-pane>
         </a-tabs>
-        <div id="terminal" class="xterm" />
+        
       </a-col>
     </a-row>
   </a-layout-content>
@@ -40,22 +40,23 @@ Terminal.applyAddon(fit)
 
 export default {
   data() {
-    const panes = [
-        { title: 'Tab 1', content: 'Content of Tab 1', key: '1' },
-        { title: 'Tab 2', content: 'Content of Tab 2', key: '2' },
-    ]
+    const panes = []
     return {
-      hosts: [
-        '127.0.0.1',
-        '127.0.0.1',
-        '127.0.0.1',
-        '127.0.0.1',
-        '127.0.0.1',
+      treeData: [
+        {
+          title: 'parent 1',
+          key: '0-0',
+          slots: {
+            icon: 'smile',
+          },
+          children: [
+            { title: 'leaf', key: '0-0-0', slots: { icon: 'meh' } },
+            { title: 'leaf', key: '0-0-1', scopedSlots: { icon: 'custom' } },
+          ],
+        },
       ],
-      activeKey: panes[0].key,
       panes,
       newTabIndex: 0,
-
       term: null,
         endpoint: null,
         connection: null,
