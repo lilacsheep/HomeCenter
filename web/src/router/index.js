@@ -1,6 +1,6 @@
 import Router from 'vue-router'
 import Herader from '../components/header.vue'
-import Dashboard from '../components/website/index.vue'
+import Dashboard from '../components/dashboard/index.vue'
 import Login from '../components/login/login.vue'
 import Download from '../components/download/index.vue'
 import Users from '../components/user/index.vue'

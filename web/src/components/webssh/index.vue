@@ -8,10 +8,10 @@
       </a-breadcrumb>
     <a-row :gutter="20">
       <a-col :span="6">
-        <a-tree :tree-data="treeData" show-icon default-expand-all :default-selected-keys="['0-0-0']" style="background: #FFFFFF">
+        <a-tree :tree-data="servergroup" show-icon :default-selected-keys="['0-0-0']" style="background: #FFFFFF">
           <a-icon slot="switcherIcon" type="down" />
           <a-icon slot="smile" type="smile-o" />
-          <a-icon slot="meh" type="smile-o" />
+          <a-icon slot="folder" type="folder" />
           <template slot="custom" slot-scope="{ selected }">
             <a-icon :type="selected ? 'frown' : 'frown-o'" />
           </template>
@@ -40,35 +40,16 @@ Terminal.applyAddon(fit)
 
 export default {
   data() {
-    const panes = []
     return {
-      treeData: [
-        {
-          title: 'parent 1',
-          key: '0-0',
-          slots: {
-            icon: 'smile',
-          },
-          children: [
-            { title: 'leaf', key: '0-0-0', slots: { icon: 'meh' } },
-            { title: 'leaf', key: '0-0-1', scopedSlots: { icon: 'custom' } },
-          ],
-        },
-      ],
-      panes,
+      servergroup: [],
+      connections: {},
+      panes: [],
       newTabIndex: 0,
       term: null,
-        endpoint: null,
-        connection: null,
-        content: '',
-        protocol: null,
-        option: {
-          operate: 'connect',
-          host: '192.168.*.*',//你要连接的终端的ip
-          port: '22',
-          username: '*',//你要连接的终端的用户名和密码
-          password: '*'
-        }
+      endpoint: null,
+      connection: null,
+      content: '',
+      protocol: null,
     }
   },
   methods: {
@@ -129,8 +110,21 @@ export default {
       this.panes = panes;
       this.activeKey = activeKey;
     },
+    refresh_tree: function() {
+      let data = [], that = this;
+      this.$webssh.group.list(9999).then(function(response) {
+        response.detail.forEach(function(item) {
+          data.push({title: item.name,key: item.id,slots: {icon: 'folder'}})
+        })
+        that.servergroup = data
+      }).catch(function(response) {
+        that.$message.error(response.message)
+      })
+    }
   },
-  created: function () {},
+  created: function () {
+    this.refresh_tree()
+  },
   beforeDestroy() {
     this.connection.close()
     this.term.destroy()
@@ -144,13 +138,8 @@ export default {
     this.endpoint = `${this.protocol}${window.location.host}/api/system/webssh`
     const terminalContainer = document.getElementById('terminal')
     this.term = new Terminal({
-      // 光标闪烁
       cursorBlink: true
     })
-    // this.term.on('data', (data) => {
-    //   // 键盘输入时的回调函数
-    //   this.connection.send(data)
-    // })
     this.term.open(terminalContainer, true)
     this.term.write('Connecting...')
     if (window.WebSocket) {

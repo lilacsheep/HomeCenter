@@ -47,7 +47,7 @@ func (self *ServerListRequest) Exec(r *ghttp.Request) (response MessageResponse)
 	}
 	var hosts []models.Server
 	c, _ := query.Count()
-	err := query.Limit(self.OffsetLimit()...).Struct(&hosts)
+	err := query.Limit(self.OffsetLimit()...).Structs(&hosts)
 	if err != nil {
 		return *response.SystemError(err)
 	}
@@ -143,8 +143,8 @@ type ServerGroupListRequest struct {
 func (self *ServerGroupListRequest) Exec(r *ghttp.Request) (response MessageResponse) {
 	query := g.DB().Model(&models.ServerGroup{})
 	var groups []models.ServerGroup
-	c, _ := query.Count()
-	err := query.Limit(self.OffsetLimit()...).Struct(&groups)
+	c, _ := query.Clone().Count()
+	err := query.Clone().Limit(self.OffsetLimit()...).Structs(&groups)
 	if err != nil {
 		return *response.SystemError(err)
 	}
