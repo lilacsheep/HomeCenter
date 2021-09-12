@@ -201,7 +201,7 @@ export default {
     container_refush () {
       let that = this
       this.$data.tableloading = true
-      this.$api.docker_container_list({all: true}).then(function (response) {
+      this.$api.docker.container.list({all: true}).then(function (response) {
         that.$data.data = response.detail
         that.$data.tableloading = false
       }).catch(function(response) {
@@ -210,7 +210,7 @@ export default {
     },
     container_start (row) {
       let that = this
-      this.$api.docker_container_start(row.Id).then(function (response) {
+      this.$api.docker.container.start(row.Id).then(function (response) {
         that.$message.success('启动成功')
         that.container_refush()
       }).catch(function (response) {
@@ -219,7 +219,7 @@ export default {
     },
     container_stop (row) {
       let that = this
-      this.$api.docker_container_stop(row.Id).then(function (response) {
+      this.$api.docker.container.stop(row.Id).then(function (response) {
         that.$message.success('停止成功')
         that.container_refush()
       }).catch(function (response) {
@@ -233,7 +233,7 @@ export default {
       this.visible = true
       let that = this
       this.drawerLoading = true
-      this.$api.docker_container_info(id).then(function (response) {
+      this.$api.docker.container.info(id).then(function (response) {
         that.container = response.detail
         that.drawerLoading = false
       })

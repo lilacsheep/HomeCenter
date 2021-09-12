@@ -221,8 +221,7 @@ export default {
     taskInfoOpen(info) {
       let that = this
       this.task.info.filename = this.getTaskName(info)
-
-      this.$api.aria2_task_status(info.gid).then(function (response) {
+      this.$api.aria2.task.status(info.gid).then(function (response) {
         that.task.info.status = response.detail
         that.task.visible = true
       }).catch(function(response) {
@@ -231,26 +230,26 @@ export default {
     },
     submit_create_task () {
       let that = this
-      this.$api.aria2_add_uri(this.download.create.form.url).then(function (response) {
+      this.$api.aria2.task.add_uri(this.download.create.form.url).then(function (response) {
         that.download.create.visit = false
         that.refresh_tasks()
       })
     },
     remove_task (item) {
-      this.$api.aria2_remove_task(item.gid)
+      this.$api.aria2.task.remove(item.gid)
     },
     cancel_task (item) {
-      this.$api.aria2_task_pause(item.gid)
+      this.$api.aria2.task.pause(item.gid)
     },
     start_task (item) {
-      this.$api.aria2_task_unpause(item.gid)
+      this.$api.aria2.task.unpause(item.gid)
     },
     refresh_tasks () {
       if (this.settings.form.aria2_url == "") {
         return
       }
       let that = this, tasks = []
-      this.$api.aria2_tasks().then(function (response) {
+      this.$api.aria2.task.list().then(function (response) {
         if (that.task.query.status === "全部") {
           response.detail.forEach(function (item) {
             if ((item.status != "error") && (!item.followedBy)){
@@ -283,14 +282,14 @@ export default {
       }).catch(function (response) {
         that.$message.error("刷新任务列表失败: "+response.message)
       })
-      this.$api.aria2_global_stats().then(function (response) {
+      this.$api.aria2.global.stats().then(function (response) {
         that.global.upload = response.detail.uploadSpeed
         that.global.download = response.detail.downloadSpeed
       })
     },
     refresh_settings () {
       let that = this
-      this.$api.aria2_refresh_settings().then(function (response) {
+      this.$api.aria2.settings.info().then(function (response) {
         that.settings.form = response.detail
         that.download.create.form.thread_num = response.detail.thread_num
         that.download.create.form.path = response.detail.path
@@ -298,7 +297,7 @@ export default {
     },
     submit_update_settings () {
       let that = this
-      this.$api.aria2_settings_update(this.settings.form).then(function (response) {
+      this.$api.aria2.settings.update(this.settings.form).then(function (response) {
         that.$message.success('更新成功')
       }).catch(function (resp) {
         that.$message.error('更新失败')
@@ -306,7 +305,7 @@ export default {
     },
     refresh_global_options() {
       let that = this, options = []
-      this.$api.aria2_global_options().then(function (response) {
+      this.$api.aria2.global.options().then(function (response) {
         that.aria2.options = response.detail
       }).catch(function (response) {
         that.$message.error('获取全局配置失败:' + response.message)
@@ -384,14 +383,14 @@ export default {
   },
   created: function () {
     let that = this
-    this.$api.aria2_refresh_settings().then(function (response) {
+    this.$api.aria2.settings.info().then(function (response) {
       that.settings.form = response.detail
       that.download.create.form.thread_num = response.detail.thread_num
       that.download.create.form.path = response.detail.path
     }).catch(function(response) {
       that.$message.error("加载配置失败: "+response.message)
     })
-    this.$api.aria2_tasks().then(function (response) {
+    this.$api.aria2.task.list().then(function (response) {
       that.refresh_tasks()
       that.timer = setInterval(that.refresh_tasks, 1000)
     }).catch(function(response) {

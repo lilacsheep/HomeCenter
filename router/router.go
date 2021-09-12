@@ -148,5 +148,16 @@ func init() {
 			group.POST("/create", dockerVolumeApi.Create)
 			group.POST("/remove", dockerVolumeApi.Remove)
 		})
+
+		serverApi := new(api.ServerApi)
+		group.Group("/server", func(group *ghttp.RouterGroup) {
+			group.POST("/list", serverApi.ServerList)
+			group.POST("/create", serverApi.ServerCreate)
+			group.POST("/update", serverApi.ServerUpdate)
+			group.POST("/remove", serverApi.ServerDelete)
+			group.POST("/group/list", serverApi.GroupList)
+			group.POST("/group/remove", serverApi.GroupRemove)
+			group.POST("/group/create", serverApi.GroupCreate)
+		})
 	})
 }

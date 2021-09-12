@@ -4,6 +4,7 @@ import axios from 'axios'
 import router from './router'
 import moment from 'moment'
 import api from "./api/api"
+import webssh from "./api/server"
 import VueClipboard from 'vue-clipboard2'
 import Antd from 'ant-design-vue';
 import 'ant-design-vue/dist/antd.css';
@@ -15,6 +16,7 @@ axios.defaults.withCredentials = true;
 Vue.prototype.$axios = axios;
 Vue.prototype.$moment = moment;
 Vue.prototype.$api = api;
+Vue.prototype.$webssh = webssh
 Vue.use(VueClipboard)
 Vue.use(Antd)
 Vue.use(VCharts)

@@ -80,7 +80,7 @@ export default {
   methods: {
     refreshSystem() {
       let that = this;
-      this.$api.systemInfo().then(function (response) {
+      this.$api.system.info().then(function (response) {
         that.system.info = response.detail
         that.system.loading = false
       }).then(function (response) {
@@ -89,7 +89,7 @@ export default {
     },
     refreshProcesses() {
       let that = this;
-      this.$api.systemProcesses().then(function (response) {
+      this.$api.system.processes().then(function (response) {
         that.system.processes = response.detail
       })
     },
