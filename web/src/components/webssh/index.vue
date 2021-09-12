@@ -8,13 +8,9 @@
       </a-breadcrumb>
     <a-row :gutter="20">
       <a-col :span="6">
-        <a-tree :tree-data="servergroup" show-icon :default-selected-keys="['0-0-0']" style="background: #FFFFFF">
-          <a-icon slot="switcherIcon" type="down" />
-          <a-icon slot="smile" type="smile-o" />
+        <a-tree :tree-data="servergroup" :load-data="load_server" show-icon style="background: #FFFFFF">
+          <a-icon slot="desktop" type="desktop" />
           <a-icon slot="folder" type="folder" />
-          <template slot="custom" slot-scope="{ selected }">
-            <a-icon :type="selected ? 'frown' : 'frown-o'" />
-          </template>
         </a-tree>
       </a-col>
       <a-col :span="16">
@@ -50,6 +46,7 @@ export default {
       connection: null,
       content: '',
       protocol: null,
+      activeKey: 1
     }
   },
   methods: {
@@ -114,11 +111,21 @@ export default {
       let data = [], that = this;
       this.$webssh.group.list(9999).then(function(response) {
         response.detail.forEach(function(item) {
-          data.push({title: item.name,key: item.id,slots: {icon: 'folder'}})
+          data.push({title: item.name,key: item.id,slots: {icon: 'folder'}, children: []})
         })
         that.servergroup = data
       }).catch(function(response) {
         that.$message.error(response.message)
+      })
+    },
+    load_server: function(treeNode) {
+      this.$webssh.server.list(treeNode.dataRef.key).then(function(response) {
+        treeNode.dataRef.children = []
+        response.detail.forEach(function(item) {
+          treeNode.dataRef.children.push({ title: item.name, key: `host-${item.id}`, slots: {icon: 'desktop'}, isLeaf: true})
+        })
+      }).catch(function(response) {
+        that.$message.error("获取服务器信息失败："+response.message)
       })
     }
   },

@@ -83,7 +83,7 @@ export default {
     }
   },
   created: function() {
-    var params = {"/dashboard": "1", "/ddns":"2", "/download":"3", "/users":"51"}
+    var params = {"/dashboard": "1", "/ddns":"2", "/download":"3", "/users":"51", "/webssh": "WebSSH"}
     let key = params[this.$route.path]
     if (key !== "") {
       this.selectedKeys = [key]
