@@ -6,24 +6,20 @@
           用户管理
         </a-breadcrumb-item>
       </a-breadcrumb>
-    <a-row :gutter="20">
-      <a-col :span="6">
-        <a-tree :tree-data="servergroup" :load-data="load_server" show-icon style="background: #FFFFFF">
+    <a-row :gutter="20" >
+      <a-col :span="6" style="background: #FFFFFF;height: 100%;">
+        <a-tree :tree-data="servergroup" :load-data="load_server" @select="server_select" show-icon>
           <a-icon slot="desktop" type="desktop" />
           <a-icon slot="folder" type="folder" />
         </a-tree>
       </a-col>
-      <a-col :span="16">
-        <a-tabs v-model="activeKey" hide-add type="editable-card" @edit="onEdit">
-          <a-tab-pane v-for="pane in panes" :key="pane.key" :tab="pane.title" :closable="pane.closable">
-            <div id="terminal" class="xterm" />
-          </a-tab-pane>
-        </a-tabs>
-        
+      <a-col :span="18" style="height: 100%;">
+        <a-card title="Card title" style="height: 100%;">
+           <div id="xterm"></div>
+        </a-card>
       </a-col>
     </a-row>
   </a-layout-content>
-  
 </template>
 
 <script>
@@ -38,75 +34,15 @@ export default {
   data() {
     return {
       servergroup: [],
-      connections: {},
-      panes: [],
-      newTabIndex: 0,
       term: null,
       endpoint: null,
       connection: null,
       content: '',
       protocol: null,
-      activeKey: 1
+      host: 1
     }
   },
   methods: {
-    send(data) {
-      this.connection.send(JSON.stringify(data))
-    },
-    onError(error) {
-      // 连接失败回调
-      this.term.write('Error: ' + error + '\r\n')
-      console.log('Error: ' + error + '\r\n')
-    },
-    onConnect() {
-    //   this.connection.send(JSON.stringify(this.option))
-    },
-    onClose() {
-      // 连接关闭回调
-      this.term.write('\rconnection closed')
-      console.log('\rconnection closed')
-    },
-    onData(data) {
-      // 收到数据时回调
-      this.term.write(data)
-      console.log(data)
-    },
-    callback(key) {
-      console.log(key);
-    },
-    onEdit(targetKey, action) {
-      this[action](targetKey);
-    },
-    add() {
-      const panes = this.panes;
-      const activeKey = `newTab${this.newTabIndex++}`;
-      panes.push({
-        title: `New Tab ${activeKey}`,
-        content: `Content of new Tab ${activeKey}`,
-        key: activeKey,
-      });
-      this.panes = panes;
-      this.activeKey = activeKey;
-    },
-    remove(targetKey) {
-      let activeKey = this.activeKey;
-      let lastIndex;
-      this.panes.forEach((pane, i) => {
-        if (pane.key === targetKey) {
-          lastIndex = i - 1;
-        }
-      });
-      const panes = this.panes.filter(pane => pane.key !== targetKey);
-      if (panes.length && activeKey === targetKey) {
-        if (lastIndex >= 0) {
-          activeKey = panes[lastIndex].key;
-        } else {
-          activeKey = panes[0].key;
-        }
-      }
-      this.panes = panes;
-      this.activeKey = activeKey;
-    },
     refresh_tree: function() {
       let data = [], that = this;
       this.$webssh.group.list(9999).then(function(response) {
@@ -119,61 +55,79 @@ export default {
       })
     },
     load_server: function(treeNode) {
-      this.$webssh.server.list(treeNode.dataRef.key).then(function(response) {
-        treeNode.dataRef.children = []
-        response.detail.forEach(function(item) {
-          treeNode.dataRef.children.push({ title: item.name, key: `host-${item.id}`, slots: {icon: 'desktop'}, isLeaf: true})
+      return new Promise(resolve => {
+        this.$webssh.server.list(treeNode.dataRef.key).then(function(response) {
+          treeNode.dataRef.children = []
+          response.detail.forEach(function(item) {
+            treeNode.dataRef.children.push({ title: item.name, key: `host-${item.id}`, slots: {icon: 'desktop'}, isLeaf: true})
+          })
+        }).catch(function(response) {
+            that.$message.error("获取服务器信息失败："+response.message)
         })
-      }).catch(function(response) {
-        that.$message.error("获取服务器信息失败："+response.message)
-      })
+        resolve();
+      });
+    },
+    server_select(selectedKeys, event) {
+      if ((selectedKeys.length != 0) && (selectedKeys[0].startsWith("host"))) {
+        let data = event.selectedNodes[0]
+        this.host = data.key
+        this.init_term()
+      }
+    },
+    onOpen() {
+      this.connection.send(JSON.stringify({type: "connect", cols: this.term.cols, rows: this.term.rows, host: this.host}))
+    },
+    init_term() {
+        if (window.location.protocol === 'https:') {
+            this.protocol = 'wss://'
+        } else {
+            this.protocol = 'ws://'
+        }
+        this.endpoint = `${this.protocol}127.0.0.1:8081/api/system/webssh`
+        // obj.endpoint = `${obj.protocol}${window.location.host}/api/system/webssh`
+
+        const terminalContainer = document.getElementById("xterm")
+        this.term = new Terminal({
+            cursorBlink: true,
+        })
+        this.term.open(terminalContainer, true)
+        this.term.write('Connecting...')
+        if (window.WebSocket) {
+            // 如果支持websocket
+            let ws = new WebSocket(this.endpoint)//后端接口位置
+            this.connection = ws
+            } else {
+            // 否则报错
+            console.log('WebSocket Not Supported' + this.endpoint)
+        }
+
+        this.connection.onopen = this.onOpen
+        this.connection.onclose = function() {
+          console.log('close: ' + this.endpoint)
+        }
+        this.connection.onerror = function(error) {
+          console.log('error: ' + error)
+        }
+        this.term.attach(this.connection)
     }
   },
   created: function () {
     this.refresh_tree()
   },
   beforeDestroy() {
-    this.connection.close()
-    this.term.destroy()
-  },
-  mounted: function () {
-    if (window.location.protocol === 'https:') {
-      this.protocol = 'wss://'
-    } else {
-      this.protocol = 'ws://'
-    }
-    this.endpoint = `${this.protocol}${window.location.host}/api/system/webssh`
-    const terminalContainer = document.getElementById('terminal')
-    this.term = new Terminal({
-      cursorBlink: true
+    this.connections.forEach(function(obj) {
+      obj.connection.close()
+      obj.term.destroy()
     })
-    this.term.open(terminalContainer, true)
-    this.term.write('Connecting...')
-    if (window.WebSocket) {
-      // 如果支持websocket
-      console.log(this.endpoint)
-      this.connection = new WebSocket(this.endpoint)//后端接口位置
-    } else {
-      // 否则报错
-      this.onError('WebSocket Not Supported')
-    }
-    this.connection.onopen = this.onConnect
-    this.connection.onclose = this.onClose
-    this.connection.onerror = this.onError
-    this.term.attach(this.connection)
-  }
+  },
+  mounted: function () {}
 };
 </script>
 
 <style>
-.a-card__header {
-  padding: 5px;
+.ant-tabs-bar {
+  margin: 0 0 5px 0;
 }
-
-.a-card__body {
-  padding: 20px;
-}
-
 .a-dialog__header {
   padding: 10px 10px 5px;
   border-bottom: 1px solid whitesmoke;
@@ -194,23 +148,5 @@ export default {
   padding: 10px;
 }
 
-.descriptions  {
-  width: 100%;
-  margin-bottom: 10px;
-}
 
-.descriptions .title {
-  background: #fafafa;
-  border: 1px solid #e8e8e8;
-  padding: 5px;
-  font-size: 14px;
-  font-weight: 400;
-  line-height: 1.5;
-  text-align: left;
-}
-
-.descriptions .details {
-  border: 1px solid #e8e8e8;
-  padding: 5px;
-}
 </style>

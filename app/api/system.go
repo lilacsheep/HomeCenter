@@ -3,9 +3,13 @@ package api
 import (
 	"bytes"
 	"fmt"
+	"homeproxy/app/models"
 	"homeproxy/app/services/requests"
+	"strings"
 	"time"
 
+	"github.com/gogf/gf/encoding/gjson"
+	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/ghttp"
 	"github.com/gogf/gf/os/glog"
 	"golang.org/x/crypto/ssh"
@@ -33,12 +37,33 @@ func (a *SystemApi) Webssh(r *ghttp.Request) {
 	}
 	defer ws.Close()
 
-	cols := 120
-	rows := 32
-
-	client, err := NewSshClient()
-
+	_, m, err := ws.ReadMessage()
 	if err != nil {
+		glog.Error(err)
+		ws.WriteMessage(-1, []byte(err.Error()))
+		return
+	}
+	d := gjson.New(m)
+	cols := d.GetInt("cols", 120)
+	rows := d.GetInt("rows", 32)
+	hostId := d.GetString("host")
+	if hostId == "" {
+		glog.Error(hostId)
+		ws.WriteMessage(-1, []byte("为获取到主机id"))
+		return
+	}
+	t := strings.Split(hostId, "-")
+	host := models.Server{}
+
+	err = g.DB().Model(&models.Server{}).Where("`id` = ?", t[1]).Struct(&host)
+	if err != nil {
+		glog.Error(err)
+		ws.WriteMessage(-1, []byte(err.Error()))
+		return
+	}
+	client, err := NewSshClient(host.Address, host.Port)
+	if err != nil {
+		glog.Error(err)
 		ws.WriteMessage(-1, []byte(err.Error()))
 		return
 	}
@@ -50,6 +75,7 @@ func (a *SystemApi) Webssh(r *ghttp.Request) {
 	}
 	defer ssConn.Close()
 
+	glog.Info(cols, rows)
 	quitChan := make(chan bool, 3)
 
 	var logBuff = new(bytes.Buffer)
@@ -62,7 +88,7 @@ func (a *SystemApi) Webssh(r *ghttp.Request) {
 
 }
 
-func NewSshClient() (*ssh.Client, error) {
+func NewSshClient(host string, port int) (*ssh.Client, error) {
 	config := &ssh.ClientConfig{
 		Timeout:         time.Second * 5,
 		User:            "root",
@@ -73,7 +99,7 @@ func NewSshClient() (*ssh.Client, error) {
 	//} else {
 	//	config.Auth = []ssh.AuthMethod{publicKeyAuthFunc(h.Key)}
 	//}
-	addr := fmt.Sprintf("%s:%d", "192.168.2.22", 22)
+	addr := fmt.Sprintf("%s:%d", host, port)
 	c, err := ssh.Dial("tcp", addr, config)
 	if err != nil {
 		return nil, err
