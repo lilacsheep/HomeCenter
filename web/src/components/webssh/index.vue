@@ -7,14 +7,18 @@
         </a-breadcrumb-item>
       </a-breadcrumb>
     <a-row :gutter="20" >
-      <a-col :span="6" style="background: #FFFFFF;height: 100%;">
-        <a-tree :tree-data="servergroup" :load-data="load_server" @select="server_select" show-icon>
+      <a-col :span="6">
+        <a-button-group size="small">
+          <a-button>新增组</a-button>
+          <a-button>新增主机</a-button>
+        </a-button-group>
+        <a-tree  style="background: #FFFFFF;height: 100%;margin: 5px;" :tree-data="servergroup" :load-data="load_server" @select="server_select" show-icon>
           <a-icon slot="desktop" type="desktop" />
           <a-icon slot="folder" type="folder" />
         </a-tree>
       </a-col>
       <a-col :span="18" style="height: 100%;">
-        <a-card title="Card title" style="height: 100%;">
+        <a-card :title="title" size="small" style="height: 100%;" :bodyStyle="{padding: 0}">
            <div id="xterm"></div>
         </a-card>
       </a-col>
@@ -39,7 +43,8 @@ export default {
       connection: null,
       content: '',
       protocol: null,
-      host: 1
+      host: 1,
+      title: "默认",
     }
   },
   methods: {
@@ -69,13 +74,45 @@ export default {
     },
     server_select(selectedKeys, event) {
       if ((selectedKeys.length != 0) && (selectedKeys[0].startsWith("host"))) {
-        let data = event.selectedNodes[0]
-        this.host = data.key
-        this.init_term()
+        if ((this.term) && (this.connection)) {
+          let that = this
+          
+          this.$confirm({
+            content: '检测到当前已经存在连接是否继续',
+            onOk() {
+              return new Promise((resolve, reject) => {
+                let node = event.selectedNodes[0]
+                console.log(node)
+                that.connection.close()
+                that.term.destroy()
+                that.host = node.key
+                that.title = node.data.props.title
+                that.init_term()
+                resolve()
+              }).catch(() => console.log('Oops errors!'));
+            },
+            cancelText: '取消',
+            onCancel() {
+              that.$destroyAll()
+              return
+            },
+          });
+        } else {
+          let node = event.selectedNodes[0]
+          this.host = node.key
+          this.title = node.data.props.title
+          this.init_term()
+        }
       }
     },
     onOpen() {
       this.connection.send(JSON.stringify({type: "connect", cols: this.term.cols, rows: this.term.rows, host: this.host}))
+    },
+    onclose() {
+      this.$message.error("连接中断")
+    },
+    onerror(error) {
+       this.$message.error("连接中断: "+error)
     },
     init_term() {
         if (window.location.protocol === 'https:') {
@@ -102,12 +139,8 @@ export default {
         }
 
         this.connection.onopen = this.onOpen
-        this.connection.onclose = function() {
-          console.log('close: ' + this.endpoint)
-        }
-        this.connection.onerror = function(error) {
-          console.log('error: ' + error)
-        }
+        this.connection.onclose = this.onclose
+        this.connection.onerror = this.onerror
         this.term.attach(this.connection)
     }
   },
@@ -115,10 +148,8 @@ export default {
     this.refresh_tree()
   },
   beforeDestroy() {
-    this.connections.forEach(function(obj) {
-      obj.connection.close()
-      obj.term.destroy()
-    })
+    this.connection.close()
+    this.term.destroy()
   },
   mounted: function () {}
 };
@@ -128,25 +159,5 @@ export default {
 .ant-tabs-bar {
   margin: 0 0 5px 0;
 }
-.a-dialog__header {
-  padding: 10px 10px 5px;
-  border-bottom: 1px solid whitesmoke;
-}
-
-.a-dialog__headerbtn {
-  top: 12px;
-}
-.a-dialog__body {
-  padding: 15px 10px;
-}
-.a-dialog__footer {
-  border-top: 1px solid whitesmoke;
-  padding: 5px 10px 10px;
-}
-
-.a-drawer__body {
-  padding: 10px;
-}
-
 
 </style>

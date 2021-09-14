@@ -170,18 +170,6 @@ export default {
   padding: 5px;
 }
 
-.ant-timeline-item {
-  padding: 0;
-}
-
-.ant-card-head {
-  background-color: #ddf3f5;
-}
-
-.ant-timeline-item-last > .ant-timeline-item-content {
-  min-height: 0;
-}
-
 .ant-descriptions-bordered .ant-descriptions-item-content, .ant-descriptions-bordered .ant-descriptions-item-label {
   padding: 5px;
 }
