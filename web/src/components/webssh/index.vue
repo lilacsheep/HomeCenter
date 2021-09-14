@@ -8,11 +8,22 @@
       </a-breadcrumb>
     <a-row :gutter="20" >
       <a-col :span="6">
-        <a-button-group size="small">
-          <a-button>新增组</a-button>
-          <a-button>新增主机</a-button>
-        </a-button-group>
-        <a-tree  style="background: #FFFFFF;height: 100%;margin: 5px;" :tree-data="servergroup" :load-data="load_server" @select="server_select" show-icon>
+        <a-button type="primary" @click="form.group.add.visible=true" block>新增组</a-button>
+        <a-tree style="background: #FFFFFF;height: 100%;margin: 0;" :tree-data="servergroup" :load-data="load_server" @select="server_select" :expandedKeys.sync="expandedKeys" show-icon>
+          <template #title="{ key: treeKey, title }" >
+            <a-dropdown :trigger="['contextmenu']">
+              <span>{{ title }}</span>
+              <template #overlay>
+                <a-menu @click="({ key: menuKey }) => onContextMenuClick(treeKey, menuKey)">
+                  <a-menu-item key="add_host" v-if="check_key(treeKey)"><a-icon type="edit" />新增主机</a-menu-item>
+                  <a-menu-item key="edit_host" v-if="!check_key(treeKey)"><a-icon type="edit" />编辑</a-menu-item>
+                  <a-menu-item key="delete_host" v-if="!check_key(treeKey)"><a-icon type="delete" />删除</a-menu-item>
+                  <a-menu-item key="delete_node" v-if="check_key(treeKey)"><a-icon type="delete" />删除</a-menu-item>
+                  <a-menu-item key="edit_node" v-if="check_key(treeKey)"><a-icon type="edit" />编辑</a-menu-item>
+                </a-menu>
+              </template>
+            </a-dropdown>
+          </template>
           <a-icon slot="desktop" type="desktop" />
           <a-icon slot="folder" type="folder" />
         </a-tree>
@@ -22,6 +33,63 @@
            <div id="xterm"></div>
         </a-card>
       </a-col>
+      <a-modal title="新增主机" :visible="form.server.add.visible" @cancel="form.server.add.visible=false" @ok="add_server">
+        <a-form-model :model="form.server.add.data" :label-col="labelCol" :wrapper-col="wrapperCol">
+          <a-form-model-item label="名称">
+            <a-input v-model="form.server.add.data.name" />
+          </a-form-model-item>
+          <a-form-model-item label="分组">
+            <a-select v-model="form.server.add.data.group" placeholder="please select your zone">
+              <a-select-option :key="item.id" v-for="item in groups" :value="item.id">{{item.name}}</a-select-option>
+            </a-select>
+          </a-form-model-item>
+          <a-form-model-item label="地址">
+            <a-input-group compact>
+              <a-input v-model="form.server.add.data.address" style="width: 200px" />
+              <a-input style="width: 30px; pointer-events: none; backgroundColor: #fff" placeholder=":" disabled/>
+              <a-input type="number" style="width: 100px; text-align: center;" v-model="form.server.add.data.port"/>
+            </a-input-group>
+          </a-form-model-item>
+          <a-form-model-item label="用户">
+            <a-input v-model="form.server.add.data.username" />
+          </a-form-model-item>
+          <a-form-model-item label="认证">
+            <a-switch checked-children="密码" un-checked-children="密钥" @change="auth_switch"/>
+          </a-form-model-item>
+          <a-form-model-item :style="form.server.add.password_style" label="密码">
+            <a-input v-model="form.server.add.data.password" />
+          </a-form-model-item>
+          <a-form-model-item :style="form.server.add.private_key_style" label="密钥">
+            <a-input v-model="form.server.add.data.private_key" type="textarea" />
+          </a-form-model-item>
+          <a-form-model-item label="备注">
+            <a-input v-model="form.server.add.data.remark" type="textarea" />
+          </a-form-model-item>
+        </a-form-model>
+      </a-modal>
+      <a-modal title="edit server" :visible="form.server.edit.visible" @cancel="form.server.edit.visible=false">
+        
+      </a-modal>
+      <a-modal title="编辑组" :visible="form.group.edit.visible" @cancel="form.group.edit.visible=false">
+        <a-form-model :model="form.group.edit.data" :label-col="labelCol" :wrapper-col="wrapperCol">
+          <a-form-model-item label="组名">
+            <a-input v-model="form.group.edit.data.name" />
+          </a-form-model-item>
+          <a-form-model-item label="备注">
+            <a-input v-model="form.group.edit.data.remark" type="textarea" />
+          </a-form-model-item>
+        </a-form-model>
+      </a-modal>
+      <a-modal title="新增组" :visible="form.group.add.visible" @cancel="form.group.add.visible=false" @ok="add_group">
+        <a-form-model :model="form.group.add.data" :label-col="labelCol" :wrapper-col="wrapperCol">
+          <a-form-model-item label="组名">
+            <a-input v-model="form.group.add.data.name" />
+          </a-form-model-item>
+          <a-form-model-item label="备注">
+            <a-input v-model="form.group.add.data.remark" type="textarea" />
+          </a-form-model-item>
+        </a-form-model>
+      </a-modal>
     </a-row>
   </a-layout-content>
 </template>
@@ -45,12 +113,66 @@ export default {
       protocol: null,
       host: 1,
       title: "默认",
+      expandedKeys: [],
+      labelCol: { span: 4 },
+      wrapperCol: { span: 20 },
+      groups: [],
+      form: {
+        server: {
+            add: {
+              visible: false,
+              password_style: "display: none",
+              private_key_style: "",
+              data: {
+                name: "New",
+                address: "",
+                port: 22,
+                group: 1,
+                username: "",
+                password: "",
+                private_key: "",
+                remark: ""
+              }
+            },
+            edit: {
+              visible: false,
+              data: {
+                name: "",
+                address: "",
+                port: 22,
+                group: 1,
+                username: "",
+                password: "",
+                private_key: "",
+                remark: ""
+              }
+            }
+        },
+        group: {
+          add: {
+            visible: false,
+            data: {name: "", remark: ""}
+          },
+          edit: {
+            visible: false,
+            data: {name: "", remark: ""}
+          },
+        }
+      }
     }
   },
   methods: {
+    check_key(key) {
+      let t = typeof key
+      if (t === 'string') {
+        return false
+      }
+      return true
+    },
     refresh_tree: function() {
       let data = [], that = this;
       this.$webssh.group.list(9999).then(function(response) {
+        that.groups = response.detail
         response.detail.forEach(function(item) {
           data.push({title: item.name,key: item.id,slots: {icon: 'folder'}, children: []})
         })
@@ -73,35 +195,37 @@ export default {
       });
     },
     server_select(selectedKeys, event) {
-      if ((selectedKeys.length != 0) && (selectedKeys[0].startsWith("host"))) {
-        if ((this.term) && (this.connection)) {
-          let that = this
-          
-          this.$confirm({
-            content: '检测到当前已经存在连接是否继续',
-            onOk() {
-              return new Promise((resolve, reject) => {
-                let node = event.selectedNodes[0]
-                console.log(node)
-                that.connection.close()
-                that.term.destroy()
-                that.host = node.key
-                that.title = node.data.props.title
-                that.init_term()
-                resolve()
-              }).catch(() => console.log('Oops errors!'));
-            },
-            cancelText: '取消',
-            onCancel() {
-              that.$destroyAll()
-              return
-            },
-          });
-        } else {
-          let node = event.selectedNodes[0]
-          this.host = node.key
-          this.title = node.data.props.title
-          this.init_term()
+      if (selectedKeys.length != 0) {
+        let key = selectedKeys[0]
+        if (typeof key == 'string') {
+          if ((this.term) && (this.connection)) {
+            let that = this   
+            this.$confirm({
+              content: '检测到当前已经存在连接是否继续',
+              onOk() {
+                return new Promise((resolve, reject) => {
+                  let node = event.selectedNodes[0]
+                  console.log(node)
+                  that.connection.close()
+                  that.term.destroy()
+                  that.host = node.key
+                  that.title = node.data.props.title
+                  that.init_term()
+                  resolve()
+                }).catch(() => console.log('Oops errors!'));
+              },
+              cancelText: '取消',
+              onCancel() {
+                that.$destroyAll()
+                return
+              },
+            });
+          } else {
+            let node = event.selectedNodes[0]
+            this.host = node.key
+            this.title = node.data.props.title
+            this.init_term()
+          }
         }
       }
     },
@@ -130,18 +254,111 @@ export default {
         this.term.open(terminalContainer, true)
         this.term.write('Connecting...')
         if (window.WebSocket) {
-            // 如果支持websocket
-            let ws = new WebSocket(this.endpoint)//后端接口位置
-            this.connection = ws
-            } else {
-            // 否则报错
-            console.log('WebSocket Not Supported' + this.endpoint)
+          // 如果支持websocket
+          let ws = new WebSocket(this.endpoint)//后端接口位置
+          this.connection = ws
+          this.connection.onopen = this.onOpen
+          this.connection.onclose = this.onclose
+          this.connection.onerror = this.onerror
+          this.term.attach(this.connection)
+        } else {
+          // 否则报错
+          console.log('WebSocket Not Supported' + this.endpoint)
         }
-
-        this.connection.onopen = this.onOpen
-        this.connection.onclose = this.onclose
-        this.connection.onerror = this.onerror
-        this.term.attach(this.connection)
+    },
+    onContextMenuClick(treeKey, menuKey) {
+      switch (menuKey) {
+        case "add_host":
+          this.open_add_server(treeKey)
+          return
+        case "edit_host":
+          this.form.server.edit.visible = true
+          return
+        case "delete_host":
+          return
+        case "edit_node":
+          this.open_edit_group(treeKey)
+          return
+        case "delete_node":
+          let this_ = this
+          this.$confirm({
+            title: '确认',
+            content: '是否删除节点',
+            okText: '确认',
+            cancelText: '取消',
+            onOk() {
+              this_.$webssh.group.remove(treeKey).then(function(response) {
+                this_.form.group.edit.visible = false
+                this_.$message.success("删除成功")
+                this_.refresh_tree()
+              }).catch(function(response) {
+                this_.$message.error("删除失败："+response.message)
+                this_.form.group.edit.visible = false
+              })
+            }
+          });
+          return
+      }
+    },
+    add_group() {
+      let this_ = this
+      this.$webssh.group.create(this.form.group.add.data).then(function(response) {
+        this_.form.group.add.visible = false
+        this_.$message.success("新增成功")
+        this_.refresh_tree()
+      }).catch(function(response) {
+        this_.$message.error("添加失败："+response.message)
+        this_.form.group.add.visible = false
+      })
+    },
+    open_edit_group(key) {
+      let this_ = this
+      this.groups.forEach(function(item) {
+        if (item.id == key) {
+          this_.form.group.edit.data = item
+          this_.form.group.edit.visible = true
+        }
+      })
+    },
+    edit_group() {
+      let this_ = this
+      this.$webssh.group.update(this.form.group.edit.data).then(function(response) {
+        this_.form.group.edit.visible = false
+        this_.$message.success("修改成功")
+        this_.refresh_tree()
+      }).catch(function(response) {
+        this_.$message.error("修改失败："+response.message)
+        this_.form.group.edit.visible = false
+      })
+    },
+    add_server() {
+      let this_ = this
+      this.$webssh.server.create(this.form.server.add.data).then(function(response) {
+        this_.form.server.add.visible = false
+        this_.$message.success("添加成功")
+        this_.refresh_tree()
+      }).catch(function(response) {
+        this_.$message.error("添加失败："+response.message)
+        this_.form.server.add.visible = false
+      })
+    },
+    open_add_server(key) {
+      let this_ = this
+      this.groups.forEach(function(item) {
+        if (item.id == key) {
+          this_.form.server.add.data.group = item.id
+        }
+      })
+      this.form.server.add.visible = true
+    },
+    auth_switch(checked, event) {
+      if (checked) {
+        this.form.server.add.password_style = ""
+        this.form.server.add.private_key_style = "display: none"
+      } else {
+        this.form.server.add.password_style = "display: none"
+        this.form.server.add.private_key_style = ""
+      }
     }
   },
   created: function () {

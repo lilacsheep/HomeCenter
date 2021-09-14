@@ -8,7 +8,7 @@
     "build": "rimraf dist && webpack -p --progress --hide-modules"
   },
   "dependencies": {
-    "ant-design-vue": "^1.6.5",
+    "ant-design-vue": "^1.7.8",
     "axios": "^0.19.2",
     "deepmerge": "^4.2.2",
     "echarts": "^4.9.0",

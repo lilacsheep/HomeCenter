@@ -126,7 +126,7 @@ type RemoveServerGroupRequest struct {
 
 func (self *RemoveServerGroupRequest) Exec(r *ghttp.Request) (response MessageResponse) {
 	query := g.DB().Model(&models.ServerGroup{}).Where("`id` = ?", self.Id)
-	if c, _ := query.Clone().Count(); c != 0 {
+	if c, _ := query.Clone().Count(); c == 0 {
 		return *response.ErrorWithMessage(http.StatusInternalServerError, "数据不存在")
 	}
 	_, err := query.Delete()
