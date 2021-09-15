@@ -67,8 +67,39 @@
           </a-form-model-item>
         </a-form-model>
       </a-modal>
-      <a-modal title="edit server" :visible="form.server.edit.visible" @cancel="form.server.edit.visible=false">
-        
+      <a-modal title="编辑主机" :visible="form.server.edit.visible" @cancel="form.server.edit.visible=false" @ok="edit_server">
+        <a-form-model :model="form.server.edit.data" :label-col="labelCol" :wrapper-col="wrapperCol">
+          <a-form-model-item label="名称">
+            <a-input v-model="form.server.edit.data.name" />
+          </a-form-model-item>
+          <a-form-model-item label="分组">
+            <a-select v-model="form.server.edit.data.group" placeholder="please select your zone">
+              <a-select-option :key="item.id" v-for="item in groups" :value="item.id">{{item.name}}</a-select-option>
+            </a-select>
+          </a-form-model-item>
+          <a-form-model-item label="地址">
+            <a-input-group compact>
+              <a-input v-model="form.server.edit.data.address" style="width: 200px" />
+              <a-input style="width: 30px; pointer-events: none; backgroundColor: #fff" placeholder=":" disabled/>
+              <a-input type="number" style="width: 100px; text-align: center;" v-model="form.server.edit.data.port"/>
+            </a-input-group>
+          </a-form-model-item>
+          <a-form-model-item label="用户">
+            <a-input v-model="form.server.edit.data.username" />
+          </a-form-model-item>
+          <a-form-model-item label="认证">
+            <a-switch v-model="form.server.edit.data.auth_mode" checked-children="密码" un-checked-children="密钥" @change="edit_auth_switch"/>
+          </a-form-model-item>
+          <a-form-model-item :style="form.server.edit.password_style" label="密码">
+            <a-input v-model="form.server.edit.data.password" />
+          </a-form-model-item>
+          <a-form-model-item :style="form.server.edit.private_key_style" label="密钥">
+            <a-input v-model="form.server.edit.data.private_key" type="textarea" />
+          </a-form-model-item>
+          <a-form-model-item label="备注">
+            <a-input v-model="form.server.edit.data.remark" type="textarea" />
+          </a-form-model-item>
+        </a-form-model>
       </a-modal>
       <a-modal title="编辑组" :visible="form.group.edit.visible" @cancel="form.group.edit.visible=false">
         <a-form-model :model="form.group.edit.data" :label-col="labelCol" :wrapper-col="wrapperCol">
@@ -117,6 +148,7 @@ export default {
       labelCol: { span: 4 },
       wrapperCol: { span: 20 },
       groups: [],
+      servers: {},
       form: {
         server: {
             add: {
@@ -136,7 +168,10 @@ export default {
             },
             edit: {
               visible: false,
+              password_style: "display: none",
+              private_key_style: "display: none",
               data: {
+                id: 0,
                 name: "",
                 address: "",
                 port: 22,
@@ -144,7 +179,8 @@ export default {
                 username: "",
                 password: "",
                 private_key: "",
-                remark: ""
+                remark: "",
+                auth_mode: true
               }
             }
         },
@@ -183,13 +219,15 @@ export default {
     },
     load_server: function(treeNode) {
       return new Promise(resolve => {
+        let this_ = this
         this.$webssh.server.list(treeNode.dataRef.key).then(function(response) {
           treeNode.dataRef.children = []
           response.detail.forEach(function(item) {
             treeNode.dataRef.children.push({ title: item.name, key: `host-${item.id}`, slots: {icon: 'desktop'}, isLeaf: true})
           })
+          this_.servers.set(treeNode.dataRef.key, response.detail)
         }).catch(function(response) {
-            that.$message.error("获取服务器信息失败："+response.message)
+            this_.$message.error("获取服务器信息失败："+response.message)
         })
         resolve();
       });
@@ -272,7 +310,7 @@ export default {
           this.open_add_server(treeKey)
           return
         case "edit_host":
-          this.form.server.edit.visible = true
+          this.form.server.edit.visible = this.open_edit_server(treeKey)
           return
         case "delete_host":
           return
@@ -359,10 +397,46 @@ export default {
         this.form.server.add.password_style = "display: none"
         this.form.server.add.private_key_style = ""
       }
+    },
+    edit_auth_switch(checked, event) {
+      if (checked) {
+        this.form.server.edit.password_style = ""
+        this.form.server.edit.private_key_style = "display: none"
+      } else {
+        this.form.server.edit.password_style = "display: none"
+        this.form.server.edit.private_key_style = ""
+      }
+    },
+    open_edit_server(key) {
+      let id = key.split("host-", -1)[1]
+      let exist = false
+      let this_ = this
+      this.servers.forEach(function(v, k) {
+        v.forEach(function(server) {
+          if (server.id == id) {
+            this_.form.server.edit.data = server
+            exist = true
+            if (this_.form.server.edit.data.password != "") {
+              this_.form.server.edit.password_style = ""
+              this_.form.server.edit.data.auth_mode = true
+            }
+            if (this_.form.server.edit.data.private_key != "") {
+              this_.form.server.edit.data.auth_mode = false
+              this_.form.server.edit.private_key_style = ""
+            }
+          }
+        })
+      })
+      return exist
+    },
+    edit_server() {
+      Object.assign(this.form.server.edit.data, this.$options.data().form.server.edit.data)
+      this.form.server.edit.visible = false
     }
   },
   created: function () {
     this.refresh_tree()
+    this.servers = new Map()
   },
   beforeDestroy() {
     this.connection.close()
