@@ -287,8 +287,8 @@ export default {
         } else {
             this.protocol = 'ws://'
         }
-        this.endpoint = `${this.protocol}127.0.0.1:8081/api/system/webssh`
-        // obj.endpoint = `${obj.protocol}${window.location.host}/api/system/webssh`
+        // this.endpoint = `${this.protocol}127.0.0.1:8081/api/system/webssh`
+        this.endpoint = `${obj.protocol}${window.location.host}/api/system/webssh`
 
         let initPtySize = this.termSize();
         let cols = initPtySize.cols;
