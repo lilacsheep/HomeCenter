@@ -142,7 +142,7 @@
           {{record.length | diskSize}}
         </span>
         <span slot="action" slot-scope="text, record">
-          <a-button style="color: red" type="link" icon="download" @click="window.open(`/api/download/file?file_index=${record.index}&gid=${task.info.status.gid}`, '_blank')"></a-button>
+          <a-button style="color: red" type="link" icon="download" @click="download_file(record)"></a-button>
         </span>
       </a-table>
     </a-drawer>
@@ -383,6 +383,9 @@ export default {
       }
 
       return fileName;
+    },
+    download_file(row) {
+      window.open(`/api/download/file?file_index=${row.index}&gid=${this.task.info.status.gid}`, '_blank')
     }
   },
   created: function () {
