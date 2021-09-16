@@ -276,6 +276,11 @@ export default {
     onerror(error) {
        this.$message.error("连接中断: "+error)
     },
+    onresize(e) {
+      const msg = { type: "resize", ...e };
+      console.log(msg)
+      this.term.fit()
+    },
     init_term() {
         if (window.location.protocol === 'https:') {
             this.protocol = 'wss://'
@@ -298,6 +303,7 @@ export default {
           this.connection.onopen = this.onOpen
           this.connection.onclose = this.onclose
           this.connection.onerror = this.onerror
+          this.term.on("resize", this.onresize);
           this.term.attach(this.connection)
         } else {
           // 否则报错
@@ -442,7 +448,13 @@ export default {
     this.connection.close()
     this.term.destroy()
   },
-  mounted: function () {}
+  mounted: function () {
+    window.addEventListener("resize", function() {
+      if (this.term) {
+        this.term.fit()
+      }
+    });
+  }
 };
 </script>
 
