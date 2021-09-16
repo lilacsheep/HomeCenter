@@ -68,6 +68,7 @@ func (a *SystemApi) Webssh(r *ghttp.Request) {
 		return
 	}
 
+	
 	ssConn, err := NewSshConn(cols, rows, client)
 	if err != nil {
 		ws.WriteMessage(-1, []byte(err.Error()))

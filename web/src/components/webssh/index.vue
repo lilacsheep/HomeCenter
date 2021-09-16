@@ -268,6 +268,7 @@ export default {
       }
     },
     onOpen() {
+      this.term.fit()
       this.connection.send(JSON.stringify({type: "connect", cols: this.term.cols, rows: this.term.rows, host: this.host}))
     },
     onclose() {
@@ -278,7 +279,6 @@ export default {
     },
     onresize(e) {
       const msg = { type: "resize", ...e };
-      console.log(msg)
       this.term.fit()
     },
     init_term() {
@@ -290,9 +290,14 @@ export default {
         this.endpoint = `${this.protocol}127.0.0.1:8081/api/system/webssh`
         // obj.endpoint = `${obj.protocol}${window.location.host}/api/system/webssh`
 
+        let initPtySize = this.termSize();
+        let cols = initPtySize.cols;
+        let rows = initPtySize.rows;
         const terminalContainer = document.getElementById("xterm")
         this.term = new Terminal({
             cursorBlink: true,
+            cols: cols,
+            rows: rows
         })
         this.term.open(terminalContainer, true)
         this.term.write('Connecting...')
@@ -436,8 +441,26 @@ export default {
       return exist
     },
     edit_server() {
-      Object.assign(this.form.server.edit.data, this.$options.data().form.server.edit.data)
-      this.form.server.edit.visible = false
+      let this_ = that
+      this.$webssh.server.update(this.form.server.edit.data).then(function (response) {
+        Object.assign(this_.form.server.edit.data, this_.$options.data().form.server.edit.data)
+        this_.form.server.edit.visible = false
+        this_.$message.success("更新成功")
+      }).catch(function(response) {
+        this_.$message.error("更新失败："+response.message)
+      }) 
+    },
+    termSize() {
+        const init_width = 9;
+        const init_height = 18;
+
+        let windows_width = window.innerWidth;
+        let windows_height = window.innerHeight - 200;
+
+        return {
+            cols: Math.floor(windows_width / init_width),
+            rows: Math.floor(windows_height / init_height),
+        }
     }
   },
   created: function () {
@@ -449,11 +472,7 @@ export default {
     this.term.destroy()
   },
   mounted: function () {
-    window.addEventListener("resize", function() {
-      if (this.term) {
-        this.term.fit()
-      }
-    });
+    window.addEventListener("resize", this.onresize);
   }
 };
 </script>

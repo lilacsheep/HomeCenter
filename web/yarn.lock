@@ -123,10 +123,10 @@ ansi-styles@^3.1.0:
   dependencies:
     color-convert "^1.9.0"
 
-ant-design-vue@^1.6.5:
-  version "1.6.5"
-  resolved "https://registry.npm.taobao.org/ant-design-vue/download/ant-design-vue-1.6.5.tgz?cache=0&sync_timestamp=1599549052777&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Fant-design-vue%2Fdownload%2Fant-design-vue-1.6.5.tgz#82f69846d921c220d04bb9ef9a6c40605e146e6c"
-  integrity sha1-gvaYRtkhwiDQS7nvmmxAYF4Ubmw=
+ant-design-vue@^1.7.8:
+  version "1.7.8"
+  resolved "https://registry.yarnpkg.com/ant-design-vue/-/ant-design-vue-1.7.8.tgz#1abbf86b68a4f5b1000bea0487b8031dc0001661"
+  integrity sha512-F1hmiS9vwbyfuFvlamdW5l9bHKqRlj9wHaGDIE41NZMWXyWy8qL0UFa/+I0Wl8gQWZCqODW5pN6Yfoyn85At3A==
   dependencies:
     "@ant-design/icons" "^2.1.1"
     "@ant-design/icons-vue" "^2.0.0"

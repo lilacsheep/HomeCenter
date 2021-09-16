@@ -34,12 +34,12 @@ export const server = {
             });
         });
     },
-    update: function(id, params = {}) {
+    update: function(params = {}) {
         return new Promise((resolve, reject) => {
             httpService({
                 url: '/server/update',
                 method: 'post',
-                data: {id: id, ...params},
+                data: params,
                 headers: {
                     'Content-type': 'application/json;charset=UTF-8'
                 },
