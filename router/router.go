@@ -48,7 +48,7 @@ func init() {
 	downloadApi := &api.ProxyDownloadApi{}
 
 	s.BindHandler("POST:/api/login", auth.LoginUser)
-	s.BindHandler("Get:/download/:vkey", downloadApi.Download)
+	
 	s.Group("/api", func(group *ghttp.RouterGroup) {
 		group.Middleware(AuthMiddleware)
 
@@ -89,6 +89,7 @@ func init() {
 			group.GET("/global/stat", downloadApi.GlobalStatInfo)
 			group.GET("/global/options", downloadApi.Options)
 			group.POST("/make/download", downloadApi.MakeDownloadUrl)
+			group.GET("/file", downloadApi.Download)
 		})
 
 		// download settings api

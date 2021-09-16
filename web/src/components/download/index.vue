@@ -141,6 +141,9 @@
         <span slot="length" slot-scope="text, record">
           {{record.length | diskSize}}
         </span>
+        <span slot="action" slot-scope="text, record">
+          <a-button style="color: red" type="link" icon="download" @click="window.open(`/api/download/file?file_index=${record.index}&gid=${task.info.status.gid}`, '_blank')"></a-button>
+        </span>
       </a-table>
     </a-drawer>
   </a-layout-content>
@@ -176,6 +179,7 @@ export default {
             {title: '文件名', dataIndex: 'path', key: 'path', scopedSlots: { customRender: 'path' }},
             {title: '进度', dataIndex: 'completedLength', key: 'completedLength', scopedSlots: { customRender: 'completedLength' }},
             {title: '大小', dataIndex: 'length', key: 'length', scopedSlots: { customRender: 'length'}, sorter: (a, b) => a.length - b.length,},
+            {title: '操作', key: 'action',scopedSlots: { customRender: 'action' }},
           ]
         }
       },

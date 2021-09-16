@@ -1,9 +1,12 @@
 package api
 
 import (
+	"homeproxy/app/server/aria2"
 	"homeproxy/app/services/requests"
+	"net/http"
 
 	"github.com/gogf/gf/net/ghttp"
+	"github.com/gogf/gf/util/gvalid"
 )
 
 type ProxyDownloadApi struct {
@@ -71,21 +74,34 @@ func (self *ProxyDownloadApi) MakeDownloadUrl(r *ghttp.Request) {
 }
 
 func (self *ProxyDownloadApi) Download(r *ghttp.Request) {
-	// vkey := r.GetString("vkey", "")
-	// if vkey == "" {
-	// 	r.Response.WriteStatus(http.StatusNotFound)
-	// } else {
+	type Aria2FileDownloadRequest struct {
+		GID       string `json:"gid" v:"required"`
+		FileIndex string `json:"file_index" v:"required"`
+	}
+	request := &Aria2FileDownloadRequest{}
+	response := requests.MessageResponse{}
 
-	// 	info := models.DownloadFileList{}
-	// 	err := filedb2.DB.One("Vkey", vkey, &info)
-	// 	if err != nil {
-	// 		if err == storm.ErrNotFound {
-	// 			r.Response.WriteStatus(http.StatusNotFound)
-	// 		} else {
-	// 			r.Response.WriteStatus(http.StatusInternalServerError)
-	// 		}
-	// 	} else {
-	// 		r.Response.ServeFileDownload(info.Path)
-	// 	}
-	// }
+	if err := r.Parse(request); err != nil {
+		response.ErrorWithMessage(requests.ParamsErrorCode, err.(gvalid.Error).Maps())
+		r.Response.WriteJsonExit(response)
+	}
+
+	task, err := aria2.Manager.TaskStatus(request.GID)
+	if err != nil {
+		response.SystemError(err)
+		r.Response.WriteJsonExit(response)
+	}
+	var path string
+	for _, i := range task.Files {
+		if i.Index == request.FileIndex {
+			path = i.Path
+		}
+	}
+	
+	if path == "" {
+		response.ErrorWithMessage(http.StatusNotFound, "文件不存在")
+		r.Response.WriteJsonExit(request)
+	}
+
+	r.Response.ServeFileDownload(path)
 }
