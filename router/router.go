@@ -37,6 +37,7 @@ func init() {
 		"/users":      "/",
 		"/ddns":       "/",
 		"/containers": "/",
+		"/webssh": "/",
 	})
 	s.Use(MiddlewareCORS)
 	proxyInstanceApi := &api.ProxyInstanceApi{}
