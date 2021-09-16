@@ -1,6 +1,6 @@
 import axios from "axios"
 
-let apiUrl = "http://127.0.0.1:8081/api"
+let apiUrl = "/api"
 
 export const httpService = axios.create({
     baseURL: apiUrl, // 需自定义

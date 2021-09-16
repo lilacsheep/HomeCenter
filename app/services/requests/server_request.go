@@ -150,3 +150,29 @@ func (self *ServerGroupListRequest) Exec(r *ghttp.Request) (response MessageResp
 	}
 	return *response.DataTable(groups, c)
 }
+
+
+type ServerGroupUpdateRequest struct {
+	Id     int    `json:"id"`
+	Name   string `json:"name"`
+	Remark string `json:"remark"`
+}
+
+func (self *ServerGroupUpdateRequest) Exec(r *ghttp.Request) (response MessageResponse) {
+	query := g.DB().Model(&models.ServerGroup{}).Where("`id` = ?", self.Id)
+	var server models.ServerGroup
+	err := query.Clone().Struct(&server)
+	if err != nil {
+		return *response.SystemError(err)
+	}
+	data := gjson.New(self)
+	err = data.Remove("id")
+	if err != nil {
+		return *response.SystemError(err)
+	}
+	_, err = query.Clone().Data(data.Map()).Update()
+	if err != nil {
+		return *response.SystemError(err)
+	}
+	return *response.Success()
+}

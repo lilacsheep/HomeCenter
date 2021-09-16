@@ -44,3 +44,8 @@ func (api *ServerApi) GroupRemove(r *ghttp.Request) {
 	request := requests.RemoveServerGroupRequest{}
 	api.DoRequestValid(&request, r)
 }
+
+func (api *ServerApi) GroupUpdate(r *ghttp.Request) {
+	request := requests.ServerGroupUpdateRequest{}
+	api.DoRequestValid(&request, r)
+}

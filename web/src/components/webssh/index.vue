@@ -101,7 +101,7 @@
           </a-form-model-item>
         </a-form-model>
       </a-modal>
-      <a-modal title="编辑组" :visible="form.group.edit.visible" @cancel="form.group.edit.visible=false">
+      <a-modal title="编辑组" :visible="form.group.edit.visible" @cancel="form.group.edit.visible=false" @ok="edit_group">
         <a-form-model :model="form.group.edit.data" :label-col="labelCol" :wrapper-col="wrapperCol">
           <a-form-model-item label="组名">
             <a-input v-model="form.group.edit.data.name" />
@@ -441,11 +441,12 @@ export default {
       return exist
     },
     edit_server() {
-      let this_ = that
+      let this_ = this
       this.$webssh.server.update(this.form.server.edit.data).then(function (response) {
         Object.assign(this_.form.server.edit.data, this_.$options.data().form.server.edit.data)
         this_.form.server.edit.visible = false
         this_.$message.success("更新成功")
+        this_.refresh_tree()
       }).catch(function(response) {
         this_.$message.error("更新失败："+response.message)
       }) 

@@ -49,7 +49,7 @@ func init() {
 	s.BindHandler("POST:/api/login", auth.LoginUser)
 	s.BindHandler("Get:/download/:vkey", downloadApi.Download)
 	s.Group("/api", func(group *ghttp.RouterGroup) {
-		// group.Middleware(AuthMiddleware)
+		group.Middleware(AuthMiddleware)
 
 		// user auth
 		group.POST("/auth/self", auth.Self)
@@ -158,6 +158,7 @@ func init() {
 			group.POST("/group/list", serverApi.GroupList)
 			group.POST("/group/remove", serverApi.GroupRemove)
 			group.POST("/group/create", serverApi.GroupCreate)
+			group.POST("/group/update", serverApi.GroupUpdate)
 		})
 	})
 }

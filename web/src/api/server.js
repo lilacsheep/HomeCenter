@@ -116,6 +116,22 @@ export const group = {
                 reject(error);
             });
         });
+    },
+    update: function(params = {}) {
+        return new Promise((resolve, reject) => {
+            httpService({
+                url: '/server/group/update',
+                method: 'post',
+                data: params,
+                headers: {
+                    'Content-type': 'application/json;charset=UTF-8'
+                },
+            }).then(response => {
+                resolve(response);
+            }).catch(error => {
+                reject(error);
+            });
+        });
     }
 }
 export default {
