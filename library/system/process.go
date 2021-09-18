@@ -32,3 +32,26 @@ func Processes() []Process {
 func GetProcess(pid int32) (*process.Process, error) {
 	return process.NewProcess(pid)
 }
+
+
+func ProcessInfo(pid int32) {
+	p, err := GetProcess(pid)
+	if err != nil {
+		return
+	}
+
+	p.CPUAffinity()
+	p.CPUPercent()
+	p.Username()
+	p.Status()
+	p.Connections()
+	p.Cmdline()
+	p.CreateTime()
+	p.Times()
+	p.OpenFiles()
+	p.IOCounters()
+	p.MemoryInfo()
+	p.MemoryPercent()
+	p.Cwd()
+	p.Environ()
+}
