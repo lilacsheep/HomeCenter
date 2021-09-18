@@ -96,6 +96,19 @@ export const system = {
             });
         });
     },
+    process: function(pid) {
+        return new Promise((resolve, reject) => {
+            httpService({
+                url: '/system/process',
+                method: 'post',
+                params: {pid: pid}
+            }).then(response => {
+                resolve(response);
+            }).catch(error => {
+                reject(error);
+            });
+        });
+    },
     processes: function() {
         return new Promise((resolve, reject) => {
             httpService({

@@ -34,11 +34,53 @@
       </a-col>
       <a-col span="16">
         <a-table size="small" :columns="system.process.columns" :row-key="record => record.pid" :data-source="system.processes" style="background: #FFFFFF;">
+          <span slot="pid" slot-scope="text">
+            <a-button type="link" @click="open_process_info(text)">{{text}}</a-button>
+          </span>
           <span slot="cpu" slot-scope="text">{{text.toFixed(1)}}%</span>
           <span slot="mem" slot-scope="text">{{text.toFixed(1)}}%</span>
         </a-table>
       </a-col>
     </a-row>
+    <a-drawer :visible="system.process.visiable" :title="system.process.title" @close="close_process_info" width="60%">
+      <a-spin :spinning="system.process.spinning">
+        <a-descriptions size="small" bordered>
+          <a-descriptions-item label="名称" :span="3">
+            {{system.process.info.name}}
+          </a-descriptions-item>
+          <a-descriptions-item label="状态" :span="3">
+            <a-tag v-if="system.process.info.status == ''">未知</a-tag>
+            <a-badge v-else-if="system.process.info.status == 'R'" status="processing" text="运行" />
+            <a-tag v-else-if="system.process.info.status == 'S'">休眠</a-tag>
+            <a-tag v-else-if="system.process.info.status == 'T'">停止</a-tag>
+            <a-tag v-else-if="system.process.info.status == 'I'">空闲</a-tag>
+            <a-tag v-else-if="system.process.info.status == 'Z'">僵死</a-tag>
+            <a-tag v-else-if="system.process.info.status == 'W'">等待</a-tag>
+            <a-tag v-else-if="system.process.info.status == 'L'">锁</a-tag>
+          </a-descriptions-item>
+          <a-descriptions-item label="内存信息" :span="3">
+            {{system.process.info.mem_percent ? system.process.info.mem_percent.toFixed(1): 0}}%
+          </a-descriptions-item>
+          <a-descriptions-item label="Order time">
+            2018-04-24 18:00:00
+          </a-descriptions-item>
+          <a-descriptions-item label="Usage Time" :span="2">
+            2019-04-24 18:00:00
+          </a-descriptions-item>
+          <a-descriptions-item label="Status" :span="3">
+            <a-badge status="processing" text="Running" />
+          </a-descriptions-item>
+          <a-descriptions-item label="网络连接" :span="3">
+            <span v-for="e, index in system.process.info.connections" :key="index">{{e}}<br /></span>
+          </a-descriptions-item>
+          <a-descriptions-item label="环境变量" :span="3">
+            <span v-for="e, index in system.process.info.env" :key="index">{{e}}<br /></span>
+          </a-descriptions-item>
+        </a-descriptions>
+      
+
+      </a-spin>
+    </a-drawer>
   </a-layout-content>
 </template>
 
@@ -62,12 +104,16 @@ export default {
         processes: [],
         process: {
           columns: [
-            {title: 'PID', dataIndex: 'pid',},
+            {title: 'PID', dataIndex: 'pid', scopedSlots: { customRender: 'pid' }},
             {title: 'Name', dataIndex: 'name',},
             {title: '状态', dataIndex: 'status',},
             {title: 'CPU', sorter: (a, b) => a.cpu_percent - b.cpu_percent , dataIndex: 'cpu_percent', scopedSlots: { customRender: 'cpu' },},
             {title: '内存', sorter: (a, b) => a.mem_percent - b.mem_percent, dataIndex: 'mem_percent', scopedSlots: { customRender: 'mem' },},
-          ]
+          ],
+          visiable: false,
+          title: "",
+          info: {},
+          spinning: true
         },
         loading: true,
       }
@@ -145,6 +191,19 @@ export default {
     fs_percent_color(s) {
       let p = this.GetPercent((s.total - s.free), s.total)
       return this.percent_color(p)
+    },
+    open_process_info(pid) {
+      let this_ = this
+      this.$api.system.process(pid).then(function(response) {
+        this_.system.process.spinning = false
+        this_.system.process.visiable = true
+        this_.system.process.info = response.detail
+      }).catch(function(response) {
+        this_.$message.error("获取进程信息错误: "+response.message)
+      })
+    },
+    close_process_info() {
+      this.system.process.visiable = false
     }
   },
 };

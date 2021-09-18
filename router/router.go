@@ -37,7 +37,7 @@ func init() {
 		"/users":      "/",
 		"/ddns":       "/",
 		"/containers": "/",
-		"/webssh": "/",
+		"/webssh":     "/",
 	})
 	s.Use(MiddlewareCORS)
 	proxyInstanceApi := &api.ProxyInstanceApi{}
@@ -48,7 +48,7 @@ func init() {
 	downloadApi := &api.ProxyDownloadApi{}
 
 	s.BindHandler("POST:/api/login", auth.LoginUser)
-	
+
 	s.Group("/api", func(group *ghttp.RouterGroup) {
 		group.Middleware(AuthMiddleware)
 
@@ -112,6 +112,7 @@ func init() {
 		systemMonApi := new(api.SystemApi)
 		group.GET("/system/info", systemMonApi.Info)
 		group.GET("/system/processes", systemMonApi.Processes)
+		group.POST("/system/process", systemMonApi.Process)
 		group.ALL("/system/webssh", systemMonApi.Webssh)
 
 		// common api

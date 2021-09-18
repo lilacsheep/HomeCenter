@@ -29,6 +29,11 @@ func (a *SystemApi) Processes(r *ghttp.Request) {
 	a.DoRequest(request, r)
 }
 
+func (a *SystemApi) Process(r *ghttp.Request) {
+	request := &requests.ProcessInfoRequest{}
+	a.DoRequestValid(request, r)
+}
+
 func (a *SystemApi) Webssh(r *ghttp.Request) {
 	ws, err := r.WebSocket()
 	if err != nil {
