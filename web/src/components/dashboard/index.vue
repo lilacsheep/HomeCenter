@@ -7,15 +7,15 @@
       </a-breadcrumb-item>
     </a-breadcrumb>
     <a-row :gutter="16" style="height: 100%">
-      <a-col span="8">
+      <a-col :span="8">
         <a-descriptions bordered :loading="system.loading" style="background: #FFFFFF;">
-          <a-descriptions-item label="主机名" span="3">{{system.info.host.hostname}}</a-descriptions-item>
-          <a-descriptions-item label="运行时间" span="3">{{system.info.host.uptime|formatSeconds}}</a-descriptions-item>
-          <a-descriptions-item label="核心数" span="3">{{system.info.cpu_info[0].cores}}</a-descriptions-item>
-          <a-descriptions-item label="主频率" span="3">{{(system.info.cpu_info[0].mhz / 1000).toFixed(2)}} GHz</a-descriptions-item>
-          <a-descriptions-item label="总内存" span="3">{{humanSize(system.info.memory.total)}}</a-descriptions-item>
-          <a-descriptions-item label="操作系统" span="3">{{system.info.host.platform}}</a-descriptions-item>
-          <a-descriptions-item label="系统架构" span="3">{{`${system.info.host.os} ${system.info.host.kernelArch}`}}</a-descriptions-item>
+          <a-descriptions-item label="主机名" :span="3">{{system.info.host.hostname}}</a-descriptions-item>
+          <a-descriptions-item label="运行时间" :span="3">{{system.info.host.uptime|formatSeconds}}</a-descriptions-item>
+          <a-descriptions-item label="核心数" :span="3">{{cpu_core_num(system)}}</a-descriptions-item>
+          <a-descriptions-item label="主频率" :span="3">{{(system.info.cpu_info[0].mhz / 1000).toFixed(2)}} GHz</a-descriptions-item>
+          <a-descriptions-item label="总内存" :span="3">{{humanSize(system.info.memory.total)}}</a-descriptions-item>
+          <a-descriptions-item label="操作系统" :span="3">{{system.info.host.platform}}</a-descriptions-item>
+          <a-descriptions-item label="系统架构" :span="3">{{`${system.info.host.os} ${system.info.host.kernelArch}`}}</a-descriptions-item>
         </a-descriptions>
         <a-card :loading="system.loading" style="margin-top: 5px">
           <h3>性能指标</h3>
@@ -32,7 +32,7 @@
           </template>
         </a-card>
       </a-col>
-      <a-col span="16">
+      <a-col :span="16">
         <a-table size="small" :columns="system.process.columns" :row-key="record => record.pid" :data-source="system.processes" style="background: #FFFFFF;">
           <span slot="pid" slot-scope="text">
             <a-button type="link" @click="open_process_info(text)">{{text}}</a-button>
@@ -61,12 +61,6 @@
           <a-descriptions-item label="内存信息" :span="3">
             {{system.process.info.mem_percent ? system.process.info.mem_percent.toFixed(1): 0}}%
           </a-descriptions-item>
-          <a-descriptions-item label="Order time">
-            2018-04-24 18:00:00
-          </a-descriptions-item>
-          <a-descriptions-item label="Usage Time" :span="2">
-            2019-04-24 18:00:00
-          </a-descriptions-item>
           <a-descriptions-item label="Status" :span="3">
             <a-badge status="processing" text="Running" />
           </a-descriptions-item>
@@ -77,8 +71,6 @@
             <span v-for="e, index in system.process.info.env" :key="index">{{e}}<br /></span>
           </a-descriptions-item>
         </a-descriptions>
-      
-
       </a-spin>
     </a-drawer>
   </a-layout-content>
@@ -92,14 +84,16 @@ export default {
         info: {
           host: {
             hostname: "",
-            uptime: 0
+            uptime: 0,
+            os: ''
           },
           disk: [],
           cpu_info: [{cores: 0, hmz: 0,}],
           cpu_percent: 0,
           memory:{
-            usedPercent: 0
-          }
+            usedPercent: 0,
+            total: 0
+          },
         },
         processes: [],
         process: {
@@ -157,6 +151,9 @@ export default {
       }
     },
     filter_fs(s) {
+      if (s == null) {
+        return false
+      }
       if (s.total == 0) {
         return false
       }
@@ -204,6 +201,13 @@ export default {
     },
     close_process_info() {
       this.system.process.visiable = false
+    },
+    cpu_core_num(row) {
+      if (row.info.host.os == 'linux') {
+        return row.info.cpu_info.length
+      } else {
+        return row.info.cpu_info[0].cores
+      }
     }
   },
 };

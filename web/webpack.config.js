@@ -55,8 +55,9 @@ module.exports = (options = {}) => ({
     extensions: ['.js', '.vue', '.json', '.css']
   },
   devServer: {
-    host: '127.0.0.1',
+    host: '0.0.0.0',
     port: 8080,
+    disableHostCheck: true,
     proxy: {
       '/api/': {
         target: 'http://127.0.0.1:8080',

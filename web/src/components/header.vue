@@ -29,6 +29,12 @@
                 <span>容器管理</span>
               </router-link>
             </a-menu-item>
+            <a-menu-item key="42">
+              <router-link :to="{path:'/container/template'}">
+                <a-icon type="profile" />
+                <span>容器模板</span>
+              </router-link>
+            </a-menu-item>
         </a-sub-menu>
         <a-menu-item key="WebSSH">
           <router-link :to="{path:'/webssh'}">
@@ -83,7 +89,7 @@ export default {
     }
   },
   created: function() {
-    var params = {"/dashboard": "1", "/ddns":"2", "/download":"3", "/users":"51", "/webssh": "WebSSH"}
+    var params = {"/dashboard": "1", "/ddns":"2", "/download":"3", "/users":"51", "/webssh": "WebSSH", "/container/template": "42"}
     let key = params[this.$route.path]
     if (key !== "") {
       this.selectedKeys = [key]
