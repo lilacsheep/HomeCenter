@@ -2,3 +2,6 @@
     [[database.default]]
         type = "mysql"
         link = "root:asdf3.14@tcp(192.168.2.22:3306)/onem"
+
+[auth]
+    enable = false

@@ -13,9 +13,11 @@ import (
 )
 
 func Setup() error {
-	sqlFile := []string{"dbsql/objects.sql", "dbsql/global_config.sql",
-		"dbsql/instances.sql", "dbsql/auth_users.sql", "dbsql/object_bucket.sql", "dbsql/object_token.sql",
-		"dbsql/proxy_role.sql", "dbsql/ddns_operation_settings.sql", "dbsql/host.sql", "dbsql/host_group.sql",
+	sqlFile := []string{
+		"dbsql/objects.sql", "dbsql/global_config.sql","dbsql/instances.sql", "dbsql/auth_users.sql",
+		"dbsql/object_bucket.sql", "dbsql/object_token.sql", "dbsql/proxy_role.sql",
+		"dbsql/ddns_operation_settings.sql", "dbsql/host.sql", "dbsql/host_group.sql",
+		"dbsql/container_template.sql",
 	}
 	if gfile.Exists("dbsql") {
 		for _, f := range sqlFile {

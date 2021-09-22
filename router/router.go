@@ -16,7 +16,11 @@ func MiddlewareCORS(r *ghttp.Request) {
 
 func AuthMiddleware(r *ghttp.Request) {
 	if user := r.Session.Get("user"); user == nil {
-		r.Response.WriteStatus(http.StatusUnauthorized)
+		if g.Config().GetBool("auth.enable", true) {
+			r.Response.WriteStatus(http.StatusUnauthorized)
+		} else {
+			r.Middleware.Next()
+		}
 	} else {
 		r.Middleware.Next()
 	}
