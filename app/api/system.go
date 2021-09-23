@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"homeproxy/app/models"
 	"homeproxy/app/services/requests"
@@ -12,6 +13,7 @@ import (
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/ghttp"
 	"github.com/gogf/gf/os/glog"
+	"github.com/gogf/gf/util/gconv"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -66,14 +68,13 @@ func (a *SystemApi) Webssh(r *ghttp.Request) {
 		ws.WriteMessage(-1, []byte(err.Error()))
 		return
 	}
-	client, err := NewSshClient(host.Address, host.Port)
+	client, err := NewSshClient(host)
 	if err != nil {
 		glog.Error(err)
 		ws.WriteMessage(-1, []byte(err.Error()))
 		return
 	}
 
-	
 	ssConn, err := NewSshConn(cols, rows, client)
 	if err != nil {
 		ws.WriteMessage(-1, []byte(err.Error()))
@@ -94,18 +95,27 @@ func (a *SystemApi) Webssh(r *ghttp.Request) {
 
 }
 
-func NewSshClient(host string, port int) (*ssh.Client, error) {
+func NewSshClient(host models.Server) (*ssh.Client, error) {
 	config := &ssh.ClientConfig{
 		Timeout:         time.Second * 5,
-		User:            "root",
+		User:            host.Username,
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
-	//if h.Type == "password" {
-	config.Auth = []ssh.AuthMethod{ssh.Password("asdf3.14")}
-	//} else {
-	//	config.Auth = []ssh.AuthMethod{publicKeyAuthFunc(h.Key)}
-	//}
-	addr := fmt.Sprintf("%s:%d", host, port)
+	var auth []ssh.AuthMethod
+
+	if host.Password == "" && host.PrivateKey == "" {
+		return nil, errors.New("password and privatekey is empty")
+	}
+	if host.PrivateKey != "" {
+		signer, err := ssh.ParsePrivateKey(gconv.Bytes(host.PrivateKey))
+		if err != nil {
+			return nil, err
+		}
+		auth = append(auth, ssh.PublicKeys(signer))
+	} else {
+		auth = append(auth, ssh.Password(host.Password))
+	}
+	addr := fmt.Sprintf("%s:%d", host.Address, host.Port)
 	c, err := ssh.Dial("tcp", addr, config)
 	if err != nil {
 		return nil, err
