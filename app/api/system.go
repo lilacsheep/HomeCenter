@@ -115,6 +115,7 @@ func NewSshClient(host models.Server) (*ssh.Client, error) {
 	} else {
 		auth = append(auth, ssh.Password(host.Password))
 	}
+	config.Auth = auth
 	addr := fmt.Sprintf("%s:%d", host.Address, host.Port)
 	c, err := ssh.Dial("tcp", addr, config)
 	if err != nil {

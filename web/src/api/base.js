@@ -1,6 +1,7 @@
 import axios from "axios"
 
-let apiUrl = "/api"
+export const  apiHost = "127.0.0.1:8081"
+let apiUrl = apiHost === ""? "/api" : `http://${apiHost}/api`
 
 export const httpService = axios.create({
     baseURL: apiUrl, // 需自定义
@@ -96,5 +97,6 @@ httpService.interceptors.response.use(
 )
 
 export default {
-    httpService
+    httpService,
+    apiHost
 }
