@@ -110,9 +110,6 @@
               <a-form-model-item v-bind="create.formItemLayout" label="镜像">
                 <a-input v-model="create.form.name" />
               </a-form-model-item>
-              <a-form-model-item v-bind="create.formItemLayout" label="端口随机">
-                <a-switch v-model="create.form.delivery" />
-              </a-form-model-item>
               <a-form-model-item v-bind="create.formItemLayout" label="重启策略">
                 <a-radio-group v-model="create.form.restart_policy" size="small" button-style="solid">
                   <a-radio-button value="Unless stopped">
@@ -129,23 +126,6 @@
                   </a-radio-button>
                 </a-radio-group>
               </a-form-model-item>
-              <a-form-model-item v-bind="create.formItemLayout" label="高级选项">
-                <a-checkbox-group v-model="create.form.type">
-                  <a-checkbox value="1" name="type">
-                    本地网络
-                  </a-checkbox>
-                </a-checkbox-group>
-              </a-form-model-item>
-              <a-form-model-item v-bind="create.formItemLayout" label="Resources">
-                <a-radio-group v-model="create.form.resource">
-                  <a-radio value="1">
-                    Sponsor
-                  </a-radio>
-                  <a-radio value="2">
-                    Venue
-                  </a-radio>
-                </a-radio-group>
-              </a-form-model-item>
               <a-tabs type="card">
                 <a-tab-pane key="1" tab="环境变量">
                   <a-form-model-item v-for="(env, index) in create.form.environment" :key="env.index" v-bind="index === 0 ? create.formItemLayout : {}"
@@ -160,24 +140,70 @@
                   </a-form-model-item>
                   <a-form-model-item v-bind="create.formItemLayoutWithOutLabel">
                     <a-button type="dashed" style="width: 60%" @click="addDomain">
-                      <a-icon type="plus" /> Add field
+                      <a-icon type="plus" /> 新增变量
                     </a-button>
                   </a-form-model-item>
                 </a-tab-pane>
                 <a-tab-pane key="2" tab="磁盘卷组">
-                  <p>Content of Tab Pane 2</p>
-                  <p>Content of Tab Pane 2</p>
-                  <p>Content of Tab Pane 2</p>
+                  <a-form-model-item v-for="(b, index) in create.form.bind" :key="b.index" v-bind="index === 0 ? create.formItemLayout : {}"
+                    :label="index === 0 ? '环境变量' : ''"
+                    :prop="'bind.' + index + '.value'">
+                    <a-input-group compact>
+                      <a-input style=" width: 200px;" placeholder="KEY" />
+                      <a-input v-model="b.key" style=" width: 30px; pointer-events: none; backgroundColor: #fff" placeholder="=" disabled/>
+                      <a-input v-model="b.value" style="width: 200px;" placeholder="VALUE" />
+                      <a-icon v-if="create.form.bind.length > 1" class="dynamic-delete-button" type="minus-circle-o"  :disabled="create.form.bind.length === 1" @click="removeDomain(env)" style="margin-left: 5px;margin-top: 7px"/>
+                    </a-input-group>
+                  </a-form-model-item>
+                  <a-form-model-item v-bind="create.formItemLayoutWithOutLabel">
+                    <a-button type="dashed" style="width: 60%" @click="addBind">
+                      <a-icon type="plus" /> 新增卷组
+                    </a-button>
+                  </a-form-model-item>
                 </a-tab-pane>
                 <a-tab-pane key="3" tab="网络配置">
-                  <p>Content of Tab Pane 3</p>
-                  <p>Content of Tab Pane 3</p>
-                  <p>Content of Tab Pane 3</p>
+                  <a-form-model-item v-bind="create.formItemLayout" label="端口随机">
+                    <a-switch v-model="create.form.delivery" />
+                  </a-form-model-item>
+                  <a-form-model-item v-bind="create.formItemLayout" label="网络模式">
+                    <a-radio-group v-model="create.form.network.mode" size="small" button-style="solid" @change="network_change">
+                      <a-radio-button value="host">
+                        本地网络
+                      </a-radio-button>
+                      <a-radio-button value="bridge">
+                        桥接模式
+                      </a-radio-button>
+                      <a-radio-button value="none">
+                        None
+                      </a-radio-button>
+                    </a-radio-group>
+                  </a-form-model-item>
+                  <a-form-model-item :style="create.network_style" v-for="(port, index) in create.form.network.ports" :key="port.index" v-bind="index === 0 ? create.formItemLayout : {}"
+                    :label="index === 0 ? '环境变量' : ''"
+                    :prop="'ports.' + index + '.value'">
+                    <a-input-group compact>
+                      <a-input style=" width: 200px;" placeholder="KEY" />
+                      <a-input v-model="port.key" style=" width: 30px; pointer-events: none; backgroundColor: #fff" placeholder="=" disabled/>
+                      <a-input v-model="port.value" style="width: 200px;" placeholder="VALUE" />
+                      <a-icon v-if="create.form.network.ports.length > 1" class="dynamic-delete-button" type="minus-circle-o"  :disabled="create.form.network.ports.length === 1" @click="removePort(env)" style="margin-left: 5px;margin-top: 7px"/>
+                    </a-input-group>
+                  </a-form-model-item>
+                  <a-form-model-item v-bind="create.formItemLayoutWithOutLabel" :style="create.network_style">
+                    <a-button type="dashed" style="width: 60%" @click="addPort">
+                      <a-icon type="plus" /> 添加端口
+                    </a-button>
+                  </a-form-model-item>
                 </a-tab-pane>
                 <a-tab-pane key="4" tab="资源限制">
-                  <p>Content of Tab Pane 3</p>
-                  <p>Content of Tab Pane 3</p>
-                  <p>Content of Tab Pane 3</p>
+                  <a-form-model-item v-bind="create.formItemLayout" label="内存限制">
+                    <a-input type="number" addon-after="MB" default-value="0" style="width: 200px;"/>
+                  </a-form-model-item>
+                  <a-form-model-item v-bind="create.formItemLayout" label="swap限制">
+                    <a-input type="number" addon-after="MB" default-value="-1" style="width: 200px;"/>
+                  </a-form-model-item>
+                  <a-form-model-item v-bind="create.formItemLayout" label="CPU限制">
+                    <a-input-number :max="20" :min="0" default-value="0" style="width: 200px;" :formatte="value => `${value}个`"/>
+                  </a-form-model-item>
                 </a-tab-pane>
               </a-tabs>
               
@@ -250,8 +276,7 @@ export default {
       tableloading: false,
       drawerLoading: false,
       visible: false,
-      data: [],
-      
+      data: [], 
       container: {
         Name: '',
         Env: [],
@@ -287,11 +312,18 @@ export default {
           name: '',
           region: undefined,
           environment: [],
+          bind: [],
           delivery: false,
           type: [],
           resource: '',
           desc: '',
           restart_policy: '',
+          network: {
+            mode: 'bridge',
+            ports: [
+              {key: '', value: '', index: 0},
+            ]
+          },
         },
         template: '',
         formItemLayoutWithOutLabel: {
@@ -310,7 +342,8 @@ export default {
             sm: { span: 16 },
           },
         },
-        visible: false
+        visible: false,
+        network_style: ""
       }
     }
   },
@@ -375,9 +408,31 @@ export default {
         this.create.form.environment.splice(index, 1)
       }
     },
+    removePort (item) {
+      let index = this.create.form.network.ports.indexOf(item)
+      if (index !== -1) {
+        this.create.form.network.ports.splice(index, 1)
+      }
+    },
     addDomain () {
       let index = this.create.form.environment.length
       this.create.form.environment.push({
+        value: '',
+        index: index++,
+        key: ''
+      })
+    },
+    addBind() {
+      let index = this.create.form.bind.length
+      this.create.form.bind.push({
+        value: '',
+        index: index++,
+        key: ''
+      })
+    },
+    addPort() {
+      let index = this.create.form.network.ports.length
+      this.create.form.network.ports.push({
         value: '',
         index: index++,
         key: ''
@@ -388,6 +443,13 @@ export default {
     },
     createClose() {
       this.create.visible = false
+    },
+    network_change(event) {
+      if (this.create.form.network.mode == "bridge") {
+        this.create.network_style = ""
+      } else {
+        this.create.network_style = "display: none"
+      }
     }
   }
 }

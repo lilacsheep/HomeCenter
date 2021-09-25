@@ -30,6 +30,11 @@
       </a-col>
       <a-col :span="18" style="height: 100%;">
         <a-card :title="title" size="small" style="height: 100%;" :bodyStyle="{padding: 0}">
+          <a-button-group slot="extra" href="#">
+            <a-button icon="sync" @click="on_reconnect">重连</a-button>
+            <a-button icon="thunderbolt" @click="on_clean">清屏</a-button>
+            <a-button icon="api" @click="on_connection_close">断开</a-button>
+          </a-button-group>
            <div id="xterm"></div>
         </a-card>
       </a-col>
@@ -205,6 +210,22 @@ export default {
       }
       return true
     },
+    on_clean() {
+      this.term.clear()
+    },
+    on_connection_close() {
+      this.connection.close()
+    },
+    on_reconnect() {
+      this.connection.close()
+      let ws = new WebSocket(this.endpoint)
+      this.connection = ws
+      this.connection.onopen = this.onOpen
+      this.connection.onclose = this.onclose
+      this.connection.onerror = this.onerror
+      this.term.attach(ws)
+      this.term.clear()
+    },
     refresh_tree: function() {
       let data = [], that = this;
       this.$webssh.group.list(9999).then(function(response) {
@@ -243,7 +264,6 @@ export default {
               onOk() {
                 return new Promise((resolve, reject) => {
                   let node = event.selectedNodes[0]
-                  console.log(node)
                   that.connection.close()
                   that.term.destroy()
                   that.host = node.key

@@ -1,6 +1,6 @@
 import axios from "axios"
 
-// export const  apiHost = "127.0.0.1:8081"
+// export const  apiHost = "172.24.119.139:8081"
 export const  apiHost = ""
 let apiUrl = apiHost === ""? "/api" : `http://${apiHost}/api`
 
