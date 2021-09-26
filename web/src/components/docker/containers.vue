@@ -163,9 +163,9 @@
                 </a-tab-pane>
                 <a-tab-pane key="3" tab="网络配置">
                   <a-form-model-item v-bind="create.formItemLayout" label="端口随机">
-                    <a-switch v-model="create.form.delivery" />
+                    <a-switch v-model="create.form.delivery" @change="publish_all_ports_change"/>
                   </a-form-model-item>
-                  <a-form-model-item v-bind="create.formItemLayout" label="网络模式">
+                  <a-form-model-item :style="create.network_mode_style" v-bind="create.formItemLayout" label="网络模式">
                     <a-radio-group v-model="create.form.network.mode" size="small" button-style="solid" @change="network_change">
                       <a-radio-button value="host">
                         本地网络
@@ -343,7 +343,8 @@ export default {
           },
         },
         visible: false,
-        network_style: ""
+        network_style: "",
+        network_mode_style: ""
       }
     }
   },
@@ -450,7 +451,16 @@ export default {
       } else {
         this.create.network_style = "display: none"
       }
-    }
+    },
+    publish_all_ports_change(checked, event) {
+      if (checked) {
+        this.create.network_mode_style = "display: none"
+        this.create.network_style = "display: none"
+      } else {
+        this.create.network_mode_style = ""
+        this.network_change()
+      }
+    },
   }
 }
 </script>
