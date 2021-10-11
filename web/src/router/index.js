@@ -6,6 +6,7 @@ import Download from '../components/download/index.vue'
 import Users from '../components/user/index.vue'
 import DDNS from '../components/ddns/index.vue'
 import Containers from '../components/docker/containers.vue'
+import Images from '../components/docker/images.vue'
 import ContainerTemplate from '../components/docker/container_template.vue'
 import Webssh from '../components/webssh/index.vue'
 import Vue from 'vue'
@@ -51,6 +52,12 @@ const router = new Router({
             path: '/containers',
             name: 'containers',
             component: Containers,
+            props: true
+          },
+          {
+            path: '/docker/images',
+            name: 'images',
+            component: Images,
             props: true
           },
           {

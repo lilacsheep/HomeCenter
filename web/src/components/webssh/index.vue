@@ -67,6 +67,20 @@
           <a-form-model-item :style="form.server.add.private_key_style" label="密钥">
             <a-input v-model="form.server.add.data.private_key" type="textarea" />
           </a-form-model-item>
+          <a-form-model-item label="代理">
+            <a-input-group>
+              <a-row :gutter="8">
+                <a-col :span="3">
+                  <a-switch checked-children="开" un-checked-children="关" v-model="form.server.add.data.use_proxy" />
+                </a-col>
+                <a-col :span="5">
+                  <a-select v-model="form.server.add.data.proxy_id" :disabled="!form.server.add.data.use_proxy" style="width: 200px">
+                    <a-select-option :key="item.id" v-for="item in all_servers" :value="item.id">{{item.name}}</a-select-option>
+                  </a-select>
+                </a-col>
+              </a-row>
+            </a-input-group>
+          </a-form-model-item>
           <a-form-model-item label="备注">
             <a-input v-model="form.server.add.data.remark" type="textarea" />
           </a-form-model-item>
@@ -100,6 +114,20 @@
           </a-form-model-item>
           <a-form-model-item :style="form.server.edit.private_key_style" label="密钥">
             <a-input v-model="form.server.edit.data.private_key" type="textarea" />
+          </a-form-model-item>
+          <a-form-model-item label="代理">
+            <a-input-group>
+              <a-row :gutter="8">
+                <a-col :span="3">
+                  <a-switch checked-children="开" un-checked-children="关" v-model="form.server.edit.data.use_proxy" />
+                </a-col>
+                <a-col :span="5">
+                  <a-select v-model="form.server.edit.data.proxy_id" :disabled="!form.server.edit.data.use_proxy" style="width: 200px">
+                    <a-select-option :key="item.id" v-for="item in all_servers" :value="item.id">{{item.name}}</a-select-option>
+                  </a-select>
+                </a-col>
+              </a-row>
+            </a-input-group>
           </a-form-model-item>
           <a-form-model-item label="备注">
             <a-input v-model="form.server.edit.data.remark" type="textarea" />
@@ -154,6 +182,7 @@ export default {
       wrapperCol: { span: 20 },
       groups: [],
       servers: {},
+      all_servers: [],
       form: {
         server: {
             add: {
@@ -168,7 +197,9 @@ export default {
                 username: "",
                 password: "",
                 private_key: "",
-                remark: ""
+                remark: "",
+                use_proxy: false,
+                proxy_id: undefined
               }
             },
             edit: {
@@ -218,13 +249,8 @@ export default {
     },
     on_reconnect() {
       this.connection.close()
-      let ws = new WebSocket(this.endpoint)
-      this.connection = ws
-      this.connection.onopen = this.onOpen
-      this.connection.onclose = this.onclose
-      this.connection.onerror = this.onerror
-      this.term.attach(ws)
-      this.term.clear()
+      this.term.destroy()
+      this.init_term()
     },
     refresh_tree: function() {
       let data = [], that = this;
@@ -248,7 +274,7 @@ export default {
           })
           this_.servers.set(treeNode.dataRef.key, response.detail)
         }).catch(function(response) {
-            this_.$message.error("获取服务器信息失败："+response.message)
+          this_.$message.error("获取服务器信息失败："+response.message)
         })
         resolve();
       });
@@ -302,38 +328,38 @@ export default {
       this.term.fit()
     },
     init_term() {
-        if (window.location.protocol === 'https:') {
-            this.protocol = 'wss://'
-        } else {
-            this.protocol = 'ws://'
-        }
-        let host = this.$apihost == ""? window.location.host: this.$apihost
-        this.endpoint = `${this.protocol}${host}/api/system/webssh`
+      if (window.location.protocol === 'https:') {
+          this.protocol = 'wss://'
+      } else {
+          this.protocol = 'ws://'
+      }
+      let host = this.$apihost == ""? window.location.host: this.$apihost
+      this.endpoint = `${this.protocol}${host}/api/system/webssh`
 
-        let initPtySize = this.termSize();
-        let cols = initPtySize.cols;
-        let rows = initPtySize.rows;
-        const terminalContainer = document.getElementById("xterm")
-        this.term = new Terminal({
-            cursorBlink: true,
-            cols: cols,
-            rows: rows
-        })
-        this.term.open(terminalContainer, true)
-        this.term.write('Connecting...')
-        if (window.WebSocket) {
-          // 如果支持websocket
-          let ws = new WebSocket(this.endpoint)//后端接口位置
-          this.connection = ws
-          this.connection.onopen = this.onOpen
-          this.connection.onclose = this.onclose
-          this.connection.onerror = this.onerror
-          this.term.on("resize", this.onresize);
-          this.term.attach(this.connection)
-        } else {
-          // 否则报错
-          console.log('WebSocket Not Supported' + this.endpoint)
-        }
+      let initPtySize = this.termSize();
+      let cols = initPtySize.cols;
+      let rows = initPtySize.rows;
+      const terminalContainer = document.getElementById("xterm")
+      this.term = new Terminal({
+          cursorBlink: true,
+          cols: cols,
+          rows: rows
+      })
+      this.term.open(terminalContainer, true)
+      this.term.write('Connecting...')
+      if (window.WebSocket) {
+        // 如果支持websocket
+        let ws = new WebSocket(this.endpoint)//后端接口位置
+        this.connection = ws
+        this.connection.onopen = this.onOpen
+        this.connection.onclose = this.onclose
+        this.connection.onerror = this.onerror
+        this.term.on("resize", this.onresize);
+        this.term.attach(this.connection)
+      } else {
+        // 否则报错
+        console.log('WebSocket Not Supported' + this.endpoint)
+      }
     },
     onContextMenuClick(treeKey, menuKey) {
       switch (menuKey) {
@@ -482,10 +508,19 @@ export default {
             cols: Math.floor(windows_width / init_width),
             rows: Math.floor(windows_height / init_height),
         }
+    },
+    all_server() {
+      let this_ = this
+      this.$webssh.server.list().then(function (response) {
+        this_.all_servers = response.detail
+      }).catch(function(response) {
+        this_.$message.error("获取服务器信息失败："+response.message)
+      })
     }
   },
   created: function () {
     this.refresh_tree()
+    this.all_server()
     this.servers = new Map()
   },
   beforeDestroy() {

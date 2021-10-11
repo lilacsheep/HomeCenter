@@ -2,7 +2,7 @@ const base = require("./base")
 const httpService = base.httpService 
 
 export const server = {
-    list: function (group) {
+    list: function (group=0) {
         return new Promise((resolve, reject) => {
             httpService({
                 url: '/server/list',

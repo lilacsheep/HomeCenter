@@ -11,21 +11,65 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
-	"github.com/docker/docker/api/types/network"
+	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/volume"
+	"github.com/docker/go-connections/nat"
+	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/net/ghttp"
+	"github.com/gogf/gf/os/gfile"
 )
 
 // CreateContainerRequest 容器创建请求
 type CreateContainerRequest struct {
-	Name          string
-	Config        container.Config         `json:"config"`
-	HostConfig    container.HostConfig     `json:"host_config"`
-	NetworkConfig network.NetworkingConfig `json:"network_config"`
+	Name   string
+	Config struct {
+		Env   []string
+		Cmd   []string
+		Image string `v:"required"`
+	} `json:"config"`
+	HostConfig struct {
+		RestartPolicy   container.RestartPolicy
+		Mounts          []mount.Mount
+		PublishAllPorts bool
+		PortBindings    map[string]interface{}
+		Resource        container.Resources
+	} `json:"host_config"`
 }
 
 func (req *CreateContainerRequest) Exec(r *ghttp.Request) (response MessageResponse) {
-	body, err := docker.Docker.ContainerCreate(context.Background(), &req.Config, &req.HostConfig, &req.NetworkConfig, nil, req.Name)
+	var (
+		config     = container.Config{}
+		hostConfig = container.HostConfig{PublishAllPorts: req.HostConfig.PublishAllPorts}
+	)
+	config.Image = req.Config.Image
+	if len(req.Config.Env) != 0 {
+		config.Env = req.Config.Env
+	}
+	hostConfig.RestartPolicy = req.HostConfig.RestartPolicy
+	if len(req.HostConfig.Mounts) != 0 {
+		for _, m := range req.HostConfig.Mounts {
+			if !gfile.Exists(m.Source) {
+				gfile.Mkdir(m.Source)
+			}
+		}
+		hostConfig.Mounts = req.HostConfig.Mounts
+	}
+	if len(req.Config.Cmd) != 0 {
+		config.Cmd = req.Config.Cmd
+	}
+	if len(req.HostConfig.PortBindings) != 0 {
+		hostConfig.PortBindings = make(nat.PortMap, len(req.HostConfig.PortBindings))
+		for k, v := range req.HostConfig.PortBindings {
+			bind := nat.PortBinding{}
+			err := gvar.New(v).Scan(&bind)
+			if err != nil {
+				return *response.SystemError(err)
+			}
+			p := nat.Port(k)
+			hostConfig.PortBindings[p] = append(hostConfig.PortBindings[p], bind)
+		}
+	}
+	body, err := docker.Docker.ContainerCreate(context.Background(), &config, &hostConfig, nil, nil, req.Name)
 	if err != nil {
 		return *response.SystemError(err)
 	}
@@ -166,9 +210,9 @@ func (req ContainerStatsRequest) Exec(r *ghttp.Request) MessageResponse {
 	} else {
 		buf := new(bytes.Buffer)
 		_, _ = buf.ReadFrom(info.Body)
-		var r map[string]interface{}
-		_ = json.Unmarshal(buf.Bytes(), &r)
-		return *response.SuccessWithDetail(r)
+		var s map[string]interface{}
+		_ = json.Unmarshal(buf.Bytes(), &s)
+		return *response.SuccessWithDetail(s)
 	}
 }
 
@@ -230,6 +274,15 @@ type DeleteImageRequest struct {
 	types.ImageRemoveOptions
 }
 
+func (req DeleteImageRequest) Exec(r *ghttp.Request) MessageResponse {
+	response := MessageResponse{}
+	_, err := docker.Docker.ImageRemove(context.Background(), req.ImageId, req.ImageRemoveOptions)
+	if err != nil {
+		return *response.SystemError(err)
+	}
+	return *response.Success()
+}
+
 type PullImageRequest struct {
 	Ref      string `json:"ref"`
 	Username string `json:"username"`
@@ -251,16 +304,6 @@ func (req PullImageRequest) Exec(r *ghttp.Request) MessageResponse {
 	}
 	m, _ := ioutil.ReadAll(resp)
 	return *response.SuccessWithDetail(m)
-}
-
-
-func (req DeleteImageRequest) Exec(r *ghttp.Request) MessageResponse {
-	response := MessageResponse{}
-	_, err := docker.Docker.ImageRemove(context.Background(), req.ImageId, req.ImageRemoveOptions)
-	if err != nil {
-		return *response.SystemError(err)
-	}
-	return *response.Success()
 }
 
 type VolumeListRequest struct {

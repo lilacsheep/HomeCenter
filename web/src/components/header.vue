@@ -2,7 +2,7 @@
   <a-layout id="components-layout-demo-custom-trigger">
     <a-layout-sider v-model="collapsed" :trigger="null" collapsible>
       <img :src="imgUrl" class="logo" :style="logo_style"/>
-      <a-menu theme="dark" mode="inline" :default-selected-keys="['1']" :selectedKeys="selectedKeys" @select="select">
+      <a-menu theme="dark" :open-keys="openKeys" mode="inline" :default-selected-keys="['1']" :selectedKeys="selectedKeys" @select="select" @openChange="onChange">
         <a-menu-item key="1">
           <router-link :to="{path:'/dashboard'}">
             <a-icon type="dashboard" />
@@ -33,6 +33,12 @@
               <router-link :to="{path:'/container/template'}">
                 <a-icon type="profile" />
                 <span>容器模板</span>
+              </router-link>
+            </a-menu-item>
+            <a-menu-item key="43">
+              <router-link :to="{path:'/docker/images'}">
+                <a-icon type="profile" />
+                <span>镜像管理</span>
               </router-link>
             </a-menu-item>
         </a-sub-menu>
@@ -75,7 +81,9 @@ export default {
       collapsed: false,
       imgUrl:require("../assets/logo.png"),
       logo_style: "",
-      selectedKeys: ["1"]
+      selectedKeys: ["1"],
+      rootSubmenuKeys: ['4', '5'],
+      openKeys: []
     };
   },
   methods: {
@@ -86,13 +94,41 @@ export default {
     },
     select: function(item) {
       this.selectedKeys = item.selectedKeys
+    },
+    onChange(openKeys) {
+      const latestOpenKey = openKeys.find(key => this.openKeys.indexOf(key) === -1);
+      if (this.rootSubmenuKeys.indexOf(latestOpenKey) === -1) {
+        this.openKeys = openKeys;
+      } else {
+        this.openKeys = latestOpenKey ? [latestOpenKey] : [];
+      }
     }
   },
   created: function() {
-    var params = {"/dashboard": "1", "/ddns":"2", "/download":"3", "/users":"51", "/webssh": "WebSSH", "/container/template": "42"}
+    var params = {
+      "/dashboard": "1", "/ddns":"2", 
+      "/download":"3", "/users":"51", 
+      "/webssh": "WebSSH", 
+      "/containers": "41",
+      "/container/template": "42",
+      "/docker/images": "43",
+      "/users": "51"
+    }
+    
     let key = params[this.$route.path]
     if (key !== "") {
       this.selectedKeys = [key]
+      if (this.selectedKeys == "41") {
+        this.openKeys = ["4"]
+      } else if (this.selectedKeys == "42") {
+        this.openKeys = ["4"]
+      } else if (this.selectedKeys == "43") {
+        this.openKeys = ["4"]
+      } else if (this.selectedKeys == "51"){
+        this.openKeys = ["5"]
+      } else {
+        this.openKeys = []
+      }
     }
   },
 };

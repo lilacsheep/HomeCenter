@@ -501,6 +501,60 @@ export const docker = {
                     reject(error);
                 });
             });
+        },
+        create: function(params={}) {
+            return new Promise((resolve, reject) => {
+                httpService({
+                    url: '/docker/container/create',
+                    method: 'post',
+                    data: params,
+                }).then(response => {
+                    resolve(response);
+                }).catch(error => {
+                    reject(error);
+                });
+            });
+        }
+    },
+    images: {
+        list: function(params={}) {
+            return new Promise((resolve, reject) => {
+                httpService({
+                    url: '/docker/image/list',
+                    method: 'post',
+                    data: params,
+                }).then(response => {
+                    resolve(response);
+                }).catch(error => {
+                    reject(error);
+                });
+            });
+        },
+        pull: function(params={}) {
+            return new Promise((resolve, reject) => {
+                httpService({
+                    url: '/docker/image/pull',
+                    method: 'post',
+                    data: params,
+                }).then(response => {
+                    resolve(response);
+                }).catch(error => {
+                    reject(error);
+                });
+            });
+        },
+        remove: function(id) {
+            return new Promise((resolve, reject) => {
+                httpService({
+                    url: '/docker/image/remove',
+                    method: 'post',
+                    data: {id: id},
+                }).then(response => {
+                    resolve(response);
+                }).catch(error => {
+                    reject(error);
+                });
+            });
         }
     }
 }

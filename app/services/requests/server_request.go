@@ -64,6 +64,8 @@ type ServerUpdateRequest struct {
 	Password   string `json:"password"`
 	PrivateKey string `json:"private_key"`
 	Remark     string `json:"remark"`
+	UseProxy   bool   `json:"use_proxy"`
+	ProxyID    bool   `json:"proxy_id"`
 }
 
 func (self *ServerUpdateRequest) Exec(r *ghttp.Request) (response MessageResponse) {
@@ -150,7 +152,6 @@ func (self *ServerGroupListRequest) Exec(r *ghttp.Request) (response MessageResp
 	}
 	return *response.DataTable(groups, c)
 }
-
 
 type ServerGroupUpdateRequest struct {
 	Id     int    `json:"id"`

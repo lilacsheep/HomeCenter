@@ -13,8 +13,7 @@
               </a-button-group>
             </a-col>
             <a-col :span="6">
-              <!--  @search="onSearch" -->
-                <a-input-search style="width: 200px;float: right;" placeholder="input search text" enter-button />
+              <a-input-search style="width: 200px;float: right;" placeholder="input search text" enter-button />
             </a-col>
             <a-col class="table" :span="24">
               <a-table :columns="columns" :data-source="data" :loading="tableloading" size="small">
@@ -25,7 +24,7 @@
                   <a>Invite</a>
                   <a-divider type="vertical" />
                   <a-popconfirm v-if="data.length" title="确认删除镜像么" @confirm="() => onDelete(record)">
-                    <a href="javascript:;">Delete</a>
+                    <a href="javascript:;"><a-icon type="delete" />删除</a>
                   </a-popconfirm>
                 </span>
               </a-table>
@@ -102,16 +101,21 @@ export default {
     showModal () {
       this.visible = true
     },
+    get_images: function() {
+      let that = this
+      this.$api.docker.images.list().then(function (response) {
+        that.$data.data = response.detail
+        that.$data.tableloading = false
+      })
+    },
     handleOk (e) {
       this.visible = false
       let that = this
       this.$data.tableloading = true
-      this.$api.post('/images/pull', that.$data.form).then(function (response) {
+      this.$api.docker.images.pull(that.$data.form).then(function (response) {
         that.$message.info('ok')
         that.$data.tableloading = false
-        that.$api.post('/images/list').then(function (response) {
-          that.$data.data = response.data
-        })
+        that.get_images()
       }).catch(function (resp) {
         that.$message.info(resp.message)
       })
@@ -119,23 +123,17 @@ export default {
     onDelete (row) {
       let that = this
       that.$data.tableloading = true
-      this.$api.post('/images/remove', {'id': row.Id}).then(function (response) {
+      this.$api.docker.images.remove(row.Id).then(function (response) {
         that.$message.info('删除成功')
         that.$data.tableloading = false
-        that.$api.post('/images/list').then(function (response) {
-          that.$data.data = response.data
-        })
+        that.get_images()
       }).catch(function (resp) {
         that.$message.error(resp.message)
       })
     }
   },
   created: function () {
-    let that = this
-    this.$api.post('/images/list').then(function (response) {
-      that.$data.data = response.data
-      that.$data.tableloading = false
-    })
+    this.get_images()
   }
 }
 </script>

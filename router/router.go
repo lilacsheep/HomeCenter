@@ -136,6 +136,7 @@ func init() {
 			group.POST("/info", dockerContainerApi.Info)
 			group.POST("/stats", dockerContainerApi.Stats)
 			group.POST("/rename", dockerContainerApi.Rename)
+			group.POST("/create", dockerContainerApi.Create)
 		})
 
 		dockerImageApi := new(api.ImageController)

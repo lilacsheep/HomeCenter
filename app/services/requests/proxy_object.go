@@ -159,3 +159,6 @@ func (self *DeleteObjectRequest) Exec(r *ghttp.Request) (response MessageRespons
 
 	return *response.Success()
 }
+
+
+

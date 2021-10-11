@@ -59,3 +59,8 @@ func (c *ContainersController) Rename(r *ghttp.Request) {
 	request := requests.ContainerRenameRequest{}
 	c.DoRequestValid(&request, r)
 }
+
+func (c *ContainersController) Create(r *ghttp.Request) {
+	request := requests.CreateContainerRequest{}
+	c.DoRequestValid(&request, r)
+}
