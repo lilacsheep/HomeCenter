@@ -65,7 +65,7 @@ type ServerUpdateRequest struct {
 	PrivateKey string `json:"private_key"`
 	Remark     string `json:"remark"`
 	UseProxy   bool   `json:"use_proxy"`
-	ProxyID    bool   `json:"proxy_id"`
+	ProxyID    int    `json:"proxy_id"`
 }
 
 func (self *ServerUpdateRequest) Exec(r *ghttp.Request) (response MessageResponse) {

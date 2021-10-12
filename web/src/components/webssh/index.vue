@@ -9,7 +9,7 @@
     <a-row :gutter="20" >
       <a-col :span="6">
         <a-button type="primary" @click="form.group.add.visible=true" block>新增组</a-button>
-        <a-tree style="background: #FFFFFF;height: 100%;margin: 0;" :tree-data="servergroup" :load-data="load_server" @select="server_select" :expandedKeys.sync="expandedKeys" show-icon>
+        <a-tree style="background: #FFFFFF;height: 100%;margin: 0;" :tree-data="servergroup" @select="server_select" :expandedKeys.sync="expandedKeys" show-icon>
           <template #title="{ key: treeKey, title }" >
             <a-dropdown :trigger="['contextmenu']">
               <span>{{ title }}</span>
@@ -254,10 +254,18 @@ export default {
     },
     refresh_tree: function() {
       let data = [], that = this;
+      this.all_server()
+
       this.$webssh.group.list(9999).then(function(response) {
         that.groups = response.detail
         response.detail.forEach(function(item) {
-          data.push({title: item.name,key: item.id,slots: {icon: 'folder'}, children: []})
+          let children = []
+          that.all_servers.forEach(function (server) {
+            if (server.group == item.id) {
+              children.push({ title: server.name, key: `host-${server.id}`, slots: {icon: 'desktop'}, isLeaf: true})
+            }
+          })
+          data.push({title: item.name,key: item.id,slots: {icon: 'folder'}, children: children})
         })
         that.servergroup = data
       }).catch(function(response) {
@@ -265,6 +273,7 @@ export default {
       })
     },
     load_server: function(treeNode) {
+      // 弃用
       return new Promise(resolve => {
         let this_ = this
         this.$webssh.server.list(treeNode.dataRef.key).then(function(response) {
@@ -468,21 +477,19 @@ export default {
       let id = key.split("host-", -1)[1]
       let exist = false
       let this_ = this
-      this.servers.forEach(function(v, k) {
-        v.forEach(function(server) {
-          if (server.id == id) {
-            this_.form.server.edit.data = server
-            exist = true
-            if (this_.form.server.edit.data.password != "") {
-              this_.form.server.edit.password_style = ""
-              this_.form.server.edit.data.auth_mode = true
-            }
-            if (this_.form.server.edit.data.private_key != "") {
-              this_.form.server.edit.data.auth_mode = false
-              this_.form.server.edit.private_key_style = ""
-            }
+      this.all_servers.forEach(function(server) {
+        if (server.id == id) {
+          this_.form.server.edit.data = server
+          exist = true
+          if (this_.form.server.edit.data.password != "") {
+            this_.form.server.edit.password_style = ""
+            this_.form.server.edit.data.auth_mode = true
           }
-        })
+          if (this_.form.server.edit.data.private_key != "") {
+            this_.form.server.edit.data.auth_mode = false
+            this_.form.server.edit.private_key_style = ""
+          }
+        }
       })
       return exist
     },
@@ -520,7 +527,6 @@ export default {
   },
   created: function () {
     this.refresh_tree()
-    this.all_server()
     this.servers = new Map()
   },
   beforeDestroy() {
