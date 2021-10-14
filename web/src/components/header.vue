@@ -48,6 +48,12 @@
             <span>网页SSH</span>
           </router-link>
         </a-menu-item>
+        <a-menu-item key="minio">
+          <router-link :to="{path:'/minio'}">
+            <a-icon type="file" />
+            <span>对象存储</span>
+          </router-link>
+        </a-menu-item>
         <a-sub-menu key="5">
           <span slot="title"><a-icon type="solution" /><span>权限管理</span></span>
           <a-menu-item-group key="50">
@@ -112,7 +118,8 @@ export default {
       "/containers": "41",
       "/container/template": "42",
       "/docker/images": "43",
-      "/users": "51"
+      "/users": "51",
+      "/minio": "minio"
     }
     
     let key = params[this.$route.path]

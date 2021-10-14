@@ -7,6 +7,7 @@ import Users from '../components/user/index.vue'
 import DDNS from '../components/ddns/index.vue'
 import Containers from '../components/docker/containers.vue'
 import Images from '../components/docker/images.vue'
+import MinioIndex from '../components/minio/index.vue'
 import ContainerTemplate from '../components/docker/container_template.vue'
 import Webssh from '../components/webssh/index.vue'
 import Vue from 'vue'
@@ -70,6 +71,12 @@ const router = new Router({
             path: '/webssh',
             name: 'webssh',
             component: Webssh,
+            props: true
+          },
+          {
+            path: '/minio',
+            name: 'minio',
+            component: MinioIndex,
             props: true
           },
         ],

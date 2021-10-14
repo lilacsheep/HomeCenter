@@ -35,7 +35,10 @@
             <a-button icon="thunderbolt" @click="on_clean">清屏</a-button>
             <a-button icon="api" @click="on_connection_close">断开</a-button>
           </a-button-group>
-           <div id="xterm"></div>
+          <a-spin tip="连接中" :spinning="spinning" :delay="500">
+              <div id="xterm"></div>
+          </a-spin>
+           
         </a-card>
       </a-col>
       <a-modal title="新增主机" :visible="form.server.add.visible" @cancel="form.server.add.visible=false" @ok="add_server">
@@ -183,6 +186,7 @@ export default {
       groups: [],
       servers: {},
       all_servers: [],
+      spinning: false,
       form: {
         server: {
             add: {
@@ -242,7 +246,7 @@ export default {
       return true
     },
     on_clean() {
-      this.term.clear()
+      this.connection.send("clear\r")
     },
     on_connection_close() {
       this.connection.close()
@@ -254,22 +258,22 @@ export default {
     },
     refresh_tree: function() {
       let data = [], that = this;
-      this.all_server()
-
-      this.$webssh.group.list(9999).then(function(response) {
-        that.groups = response.detail
-        response.detail.forEach(function(item) {
-          let children = []
-          that.all_servers.forEach(function (server) {
-            if (server.group == item.id) {
-              children.push({ title: server.name, key: `host-${server.id}`, slots: {icon: 'desktop'}, isLeaf: true})
-            }
+      this.all_server(function () {
+        that.$webssh.group.list(9999).then(function(response) {
+          that.groups = response.detail
+          response.detail.forEach(function(item) {
+            let children = []
+            that.all_servers.forEach(function (server) {
+              if (server.group == item.id) {
+                children.push({ title: server.name, key: `host-${server.id}`, slots: {icon: 'desktop'}, isLeaf: true})
+              }
+            })
+            data.push({title: item.name,key: item.id,slots: {icon: 'folder'}, children: children})
           })
-          data.push({title: item.name,key: item.id,slots: {icon: 'folder'}, children: children})
+          that.servergroup = data
+        }).catch(function(response) {
+          that.$message.error(response.message)
         })
-        that.servergroup = data
-      }).catch(function(response) {
-        that.$message.error(response.message)
       })
     },
     load_server: function(treeNode) {
@@ -325,12 +329,13 @@ export default {
     onOpen() {
       this.term.fit()
       this.connection.send(JSON.stringify({type: "connect", cols: this.term.cols, rows: this.term.rows, host: this.host}))
+      this.spinning = false
     },
     onclose() {
       this.$message.error("连接中断")
     },
     onerror(error) {
-       this.$message.error("连接中断: "+error)
+       this.$message.error("连接中断: " + error)
     },
     onresize(e) {
       const msg = { type: "resize", ...e };
@@ -355,15 +360,18 @@ export default {
           rows: rows
       })
       this.term.open(terminalContainer, true)
-      this.term.write('Connecting...')
       if (window.WebSocket) {
         // 如果支持websocket
+        this.spinning = true
         let ws = new WebSocket(this.endpoint)//后端接口位置
         this.connection = ws
         this.connection.onopen = this.onOpen
         this.connection.onclose = this.onclose
         this.connection.onerror = this.onerror
         this.term.on("resize", this.onresize);
+        // this.term.onData(e => {
+        //   console.log(e)
+        // });
         this.term.attach(this.connection)
       } else {
         // 否则报错
@@ -516,10 +524,13 @@ export default {
             rows: Math.floor(windows_height / init_height),
         }
     },
-    all_server() {
+    all_server(fn = function() {}) {
       let this_ = this
       this.$webssh.server.list().then(function (response) {
         this_.all_servers = response.detail
+        if (fn) {
+          fn()
+        }
       }).catch(function(response) {
         this_.$message.error("获取服务器信息失败："+response.message)
       })
@@ -531,7 +542,7 @@ export default {
   },
   beforeDestroy() {
     this.connection.close()
-    this.term.destroy()
+    this.term.dispose()
   },
   mounted: function () {
     window.addEventListener("resize", this.onresize);

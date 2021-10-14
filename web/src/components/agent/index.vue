@@ -37,46 +37,5 @@ export default {
 </script>
 
 <style>
-.ant-list-bordered .ant-list-header {
-  padding-left: 0;
-}
-.ant-list-header, .ant-list-footer {
-  padding: 0;
-}
 
-.ant-list-item {
-  padding: 5px;
-}
-.card-container {
-  background: #fbfbfb;
-  overflow: hidden;
-  /* padding: 24px; */
-}
-.card-container > .ant-tabs-card > .ant-tabs-content {
-  margin-top: -16px;
-}
-
-.card-container > .ant-tabs-card > .ant-tabs-content > .ant-tabs-tabpane {
-  background: #fff;
-  padding: 0;
-}
-
-.card-container > .ant-tabs-card > .ant-tabs-bar {
-  border-color: #fff;
-}
-
-.card-container > .ant-tabs-card > .ant-tabs-bar .ant-tabs-tab {
-  border-color: transparent;
-  background: transparent;
-}
-
-.card-container > .ant-tabs-card > .ant-tabs-bar .ant-tabs-tab-active {
-  /* border-color: #fff; */
-  background: #fff;
-}
-
-.ant-collapse > .ant-collapse-item > .ant-collapse-header {
-  padding: 4px 8px;
-  padding-left: 40px;
-}
 </style>
