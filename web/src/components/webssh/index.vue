@@ -334,6 +334,9 @@ export default {
     },
     onerror(error) {
        this.$message.error("连接中断: " + error)
+       if (this.spinning) {
+         this.spinning = false
+       }
     },
     onresize(e) {
       const msg = { type: "resize", ...e };
@@ -345,6 +348,7 @@ export default {
       switch (data.type) {
         case "error":
           this.$message.error("连接错误: "+data.message)
+          this.spinning = false
         case "success":
           this.term.attach(this.connection)
           this.connection.onmessage = function(evt) {}
