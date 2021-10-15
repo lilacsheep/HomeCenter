@@ -547,6 +547,16 @@ export default {
   created: function () {
     this.refresh_tree()
     this.servers = new Map()
+    let initPtySize = this.termSize();
+    let cols = initPtySize.cols;
+    let rows = initPtySize.rows;
+    const terminalContainer = document.getElementById("xterm")
+    this.term = new Terminal({
+        cursorBlink: true,
+        cols: cols,
+        rows: rows
+    })
+    this.term.open(terminalContainer, true)
   },
   beforeDestroy() {
     this.connection.close()
