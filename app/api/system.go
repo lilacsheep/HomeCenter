@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"errors"
 	"homeproxy/app/models"
 	"homeproxy/app/services/requests"
 	"strings"
@@ -33,56 +34,59 @@ func (a *SystemApi) Process(r *ghttp.Request) {
 }
 
 func (a *SystemApi) Webssh(r *ghttp.Request) {
+	type Message struct {
+		Type string
+		Data string
+	}
+
+	connInit := func(ws *ghttp.WebSocket) (*ssh.Client, int, int, error) {
+		_, m, err := ws.ReadMessage()
+		if err != nil {
+			return nil, 0, 0, err
+		}
+		d := gjson.New(m)
+		cols := d.GetInt("cols", 120)
+		rows := d.GetInt("rows", 32)
+		hostId := d.GetString("host")
+		if hostId == "" {
+			return nil, 0, 0, errors.New("未获取到主机id")
+		}
+		t := strings.Split(hostId, "-")
+		host := models.Server{}
+		err = g.DB().Model(&models.Server{}).Where("`id` = ?", t[1]).Struct(&host)
+		if err != nil {
+			return nil, 0, 0, err
+		}
+		cli, err := host.GetSshClient()
+		if err != nil {
+			return nil, 0, 0, err
+		}
+		return cli, cols, rows, nil
+	}
+
 	ws, err := r.WebSocket()
 	if err != nil {
 		glog.Error(err)
 		r.Exit()
 	}
 	defer ws.Close()
-
-	_, m, err := ws.ReadMessage()
+	client, cols, rows, err := connInit(ws)
 	if err != nil {
-		glog.Error(err)
-		ws.WriteMessage(-1, []byte(err.Error()))
-		return
-	}
-	d := gjson.New(m)
-	cols := d.GetInt("cols", 120)
-	rows := d.GetInt("rows", 32)
-	hostId := d.GetString("host")
-	if hostId == "" {
-		glog.Error(hostId)
-		ws.WriteMessage(-1, []byte("为获取到主机id"))
-		return
-	}
-	t := strings.Split(hostId, "-")
-	host := models.Server{}
-
-	err = g.DB().Model(&models.Server{}).Where("`id` = ?", t[1]).Struct(&host)
-	if err != nil {
-		glog.Error(err)
-		ws.WriteMessage(-1, []byte(err.Error()))
-		return
-	}
-	var (
-		client *ssh.Client
-	)
-	client, err = host.GetSshClient()
-	
-	if err != nil {
-		glog.Error(err)
-		ws.WriteMessage(-1, []byte(err.Error()))
+		msg := gjson.New(g.Map{"type": "error", "message": err.Error()})
+		ws.WriteMessage(1, msg.MustToJson())
 		return
 	}
 
 	ssConn, err := NewSshConn(cols, rows, client)
 	if err != nil {
-		ws.WriteMessage(-1, []byte(err.Error()))
+		msg := gjson.New(g.Map{"type": "error", "message": err.Error()})
+		ws.WriteMessage(1, msg.MustToJson())
 		return
 	}
 	defer ssConn.Close()
+	msg := gjson.New(g.Map{"type": "success", "message": ""})
 
-	glog.Info(cols, rows)
+	ws.WriteMessage(1, msg.MustToJson())
 	quitChan := make(chan bool, 3)
 
 	var logBuff = new(bytes.Buffer)
@@ -94,5 +98,3 @@ func (a *SystemApi) Webssh(r *ghttp.Request) {
 	<-quitChan
 
 }
-
-

@@ -254,7 +254,7 @@ export default {
     on_reconnect() {
       this.connection.close()
       this.term.destroy()
-      this.init_term()
+      this.host_connect()
     },
     refresh_tree: function() {
       let data = [], that = this;
@@ -307,7 +307,7 @@ export default {
                   that.term.destroy()
                   that.host = node.key
                   that.title = node.data.props.title
-                  that.init_term()
+                  that.host_connect()
                   resolve()
                 }).catch(() => console.log('Oops errors!'));
               },
@@ -321,15 +321,13 @@ export default {
             let node = event.selectedNodes[0]
             this.host = node.key
             this.title = node.data.props.title
-            this.init_term()
+            this.host_connect()
           }
         }
       }
     },
     onOpen() {
-      this.term.fit()
       this.connection.send(JSON.stringify({type: "connect", cols: this.term.cols, rows: this.term.rows, host: this.host}))
-      this.spinning = false
     },
     onclose() {
       this.$message.error("连接中断")
@@ -339,9 +337,23 @@ export default {
     },
     onresize(e) {
       const msg = { type: "resize", ...e };
+      this.connection.send(msg)
       this.term.fit()
     },
-    init_term() {
+    onmessage(evt) {
+      let data = JSON.parse(evt.data)
+      switch (data.type) {
+        case "error":
+          this.$message.error("连接错误: "+data.message)
+        case "success":
+          this.term.attach(this.connection)
+          this.connection.onmessage = function(evt) {}
+          this.spinning = false
+          this.term.fit()
+      }
+    },
+    host_connect() {
+      this.spinning = true
       if (window.location.protocol === 'https:') {
           this.protocol = 'wss://'
       } else {
@@ -349,7 +361,6 @@ export default {
       }
       let host = this.$apihost == ""? window.location.host: this.$apihost
       this.endpoint = `${this.protocol}${host}/api/system/webssh`
-
       let initPtySize = this.termSize();
       let cols = initPtySize.cols;
       let rows = initPtySize.rows;
@@ -360,23 +371,16 @@ export default {
           rows: rows
       })
       this.term.open(terminalContainer, true)
-      if (window.WebSocket) {
-        // 如果支持websocket
-        this.spinning = true
-        let ws = new WebSocket(this.endpoint)//后端接口位置
-        this.connection = ws
-        this.connection.onopen = this.onOpen
-        this.connection.onclose = this.onclose
-        this.connection.onerror = this.onerror
-        this.term.on("resize", this.onresize);
-        // this.term.onData(e => {
-        //   console.log(e)
-        // });
-        this.term.attach(this.connection)
-      } else {
-        // 否则报错
+      if (!window.WebSocket) {
         console.log('WebSocket Not Supported' + this.endpoint)
+        return
       }
+      let ws = new WebSocket(this.endpoint)//后端接口位置
+      this.connection = ws
+      this.connection.onopen = this.onOpen
+      this.connection.onclose = this.onclose
+      this.connection.onerror = this.onerror
+      this.connection.onmessage = this.onmessage
     },
     onContextMenuClick(treeKey, menuKey) {
       switch (menuKey) {
