@@ -1,7 +1,6 @@
 import axios from "axios"
 
-// export const  apiHost = "192.168.2.101:8081"
-export const apiHost = ""
+export const apiHost = process.env.NODE_ENV === 'dev' ? "192.168.2.101:8081" : ""
 let apiUrl = apiHost === "" ? "/api" : `http://${apiHost}/api`
 
 export const httpService = axios.create({

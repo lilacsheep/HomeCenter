@@ -4,9 +4,10 @@
   "author": "dukeshi@vip.qq.com",
   "private": true,
   "scripts": {
-    "dev": "webpack-dev-server --inline --hot --env.dev",
+    "dev": "export NODE_ENV=dev && webpack-dev-server --inline --hot --env.dev",
     "build": "rimraf dist && webpack -p --progress --hide-modules"
   },
+  
   "dependencies": {
     "ant-design-vue": "^1.7.8",
     "axios": "^0.19.2",
@@ -45,3 +46,4 @@
     "webpack-dev-server": "^2.4.2"
   }
 }
+
