@@ -29,17 +29,18 @@
         </a-tree>
       </a-col>
       <a-col :span="18" style="height: 100%;">
-        <a-card :title="title" size="small" style="height: 100%;" :bodyStyle="{padding: 0}">
-          <a-button-group slot="extra" href="#">
+        <a-tabs v-model="tab_connection.activeKey" hide-add type="editable-card" @change="tabChange" >
+          <a-button-group slot="tabBarExtraContent">
             <a-button icon="sync" @click="on_reconnect">重连</a-button>
             <a-button icon="thunderbolt" @click="on_clean">清屏</a-button>
             <a-button icon="api" @click="on_connection_close">断开</a-button>
           </a-button-group>
-          <a-spin tip="连接中" :spinning="spinning" :delay="500">
-              <div id="xterm"></div>
-          </a-spin>
-           
-        </a-card>
+          <a-tab-pane v-for="pane in tab_connection.panes" :key="pane.key" :tab="pane.title" :closable="pane.closable">
+            <a-spin tip="连接中" :spinning="pane.spinning" :delay="500">
+              <div :id="`xterm-${pane.id}`"></div>
+            </a-spin>
+          </a-tab-pane>
+        </a-tabs>
       </a-col>
       <a-modal title="新增主机" :visible="form.server.add.visible" @cancel="form.server.add.visible=false" @ok="add_server">
         <a-form-model :model="form.server.add.data" :label-col="labelCol" :wrapper-col="wrapperCol">
@@ -168,10 +169,26 @@ import * as attach from 'xterm/lib/addons/attach/attach'
 import 'xterm/dist/xterm.css'
 Terminal.applyAddon(attach)
 Terminal.applyAddon(fit)
-
 export default {
   data() {
     return {
+      tab_connection: {
+        activeKey: 0,
+        panes : [
+          {
+            id: 1,
+            key: 0, 
+            title: "默认连接", 
+            spinning: false, 
+            connection: undefined, 
+            term: undefined,
+            cols: 0,
+            rows: 0,
+            host: "",
+            closable: false
+          }
+        ]
+      },
       servergroup: [],
       term: null,
       endpoint: null,
@@ -186,7 +203,6 @@ export default {
       groups: [],
       servers: {},
       all_servers: [],
-      spinning: false,
       form: {
         server: {
             add: {
@@ -276,115 +292,139 @@ export default {
         })
       })
     },
-    load_server: function(treeNode) {
-      // 弃用
-      return new Promise(resolve => {
-        let this_ = this
-        this.$webssh.server.list(treeNode.dataRef.key).then(function(response) {
-          treeNode.dataRef.children = []
-          response.detail.forEach(function(item) {
-            treeNode.dataRef.children.push({ title: item.name, key: `host-${item.id}`, slots: {icon: 'desktop'}, isLeaf: true})
-          })
-          this_.servers.set(treeNode.dataRef.key, response.detail)
-        }).catch(function(response) {
-          this_.$message.error("获取服务器信息失败："+response.message)
-        })
-        resolve();
-      });
-    },
     server_select(selectedKeys, event) {
       if (selectedKeys.length != 0) {
         let key = selectedKeys[0]
         if (typeof key == 'string') {
-          if ((this.term) && (this.connection)) {
-            let that = this   
-            this.$confirm({
-              content: '检测到当前已经存在连接是否继续',
-              onOk() {
-                return new Promise((resolve, reject) => {
-                  let node = event.selectedNodes[0]
-                  that.connection.close()
-                  that.term.destroy()
-                  that.host = node.key
-                  that.title = node.data.props.title
-                  that.host_connect()
-                  resolve()
-                }).catch(() => console.log('Oops errors!'));
-              },
-              cancelText: '取消',
-              onCancel() {
-                that.$destroyAll()
-                return
-              },
-            });
+          let node = event.selectedNodes[0]
+          this.host = node.key
+          this.title = node.data.props.title
+          let index = this.tab_connection.panes.length
+
+          if ((index == 1) && (this.tab_connection.panes[0].title == "默认连接")) {
+            this.tab_connection.panes[0].title = node.key
+            this.tab_connection.panes[0].spinning = true
+            this.tab_connection.panes[0].host = node.key
+            this.tab_connection.panes[0].term.setOption('cursorBlink', true)
+            this.openTab(index)
           } else {
-            let node = event.selectedNodes[0]
-            this.host = node.key
-            this.title = node.data.props.title
-            this.host_connect()
+            const panes = this.tab_connection.panes;
+            const activeKey = index;
+            let params = {
+              key: index, 
+              title: node.key, 
+              id: index+1, 
+              spinning: true, 
+              term: undefined,
+              connection: undefined,
+              cols: 0,
+              rows: 0,
+              host: node.key,
+            }
+            panes.push(params)
+            this.panes = panes;
+            this.tab_connection.activeKey = activeKey;
+            this.openTab(index+1)
           }
         }
       }
     },
-    onOpen() {
-      this.connection.send(JSON.stringify({type: "connect", cols: this.term.cols, rows: this.term.rows, host: this.host}))
+    openTab(index=0) {
+      if (!window.WebSocket) {
+        this.$message.error("此游览器不支持WebSocket")
+        return
+      }
+
+      let ws = new WebSocket(this.endpoint)
+      let host = this.tab_connection.panes[index-1].host
+      let rows = 0
+      let cols = 0
+      this.tab_connection.panes[index-1].connection = ws
+      this.tab_connection.panes[index-1].connection.onopen = function() {
+        ws.send(JSON.stringify({type: "connect", cols: cols, rows: rows, host: host}))
+      }
+      if (index == 1) {
+        cols = this.tab_connection.panes[index-1].cols
+        rows = this.tab_connection.panes[index-1].rows
+        this.tab_connection.panes[index-1].connection.onmessage = (evt) => {
+          let data = JSON.parse(evt.data)
+          switch (data.type) {
+            case "error":
+              this.$message.error("连接错误: "+ data.message)
+              this.tab_connection.panes[index-1].spinning = false
+            case "success":
+              this.tab_connection.panes[index-1].term.attach(this.tab_connection.panes[index-1].connection)
+              this.tab_connection.panes[index-1].connection.onmessage = function(evt) {}
+              this.tab_connection.panes[index-1].spinning = false
+              this.tab_connection.panes[index-1].term.fit()
+          }
+        }
+      } else {
+        let initPtySize = this.termSize()
+        cols = initPtySize.cols;
+        rows = initPtySize.rows;
+        setTimeout(() => {
+          let terminalContainer = document.getElementById(`xterm-${this.tab_connection.panes[index-1].id}`)
+          this.tab_connection.panes[index-1].cols = cols
+          this.tab_connection.panes[index-1].rows = rows
+          this.tab_connection.panes[index-1].term = new Terminal({
+              cursorBlink: true,
+              cols: cols,
+              rows: rows
+          })
+          this.tab_connection.panes[index-1].term.open(terminalContainer, true)
+          this.tab_connection.panes[index-1].connection.onmessage = (evt) => {
+            let data = JSON.parse(evt.data)
+            switch (data.type) {
+              case "error":
+                this.$message.error("连接错误: "+ data.message)
+                this.tab_connection.panes[index-1].spinning = false
+              case "success":
+                this.tab_connection.panes[index-1].term.attach(this.tab_connection.panes[index-1].connection)
+                this.tab_connection.panes[index-1].connection.onmessage = function(evt) {}
+                this.tab_connection.panes[index-1].spinning = false
+                this.tab_connection.panes[index-1].term.fit()
+                this.tab_connection.panes[index-1].term.focus()
+            }
+          }
+        }, 50)
+      }
+      // ws.connection.onerror = () => {
+      //   this.$message.error("连接中断: " + error)
+      //   this.tab_connection.panes[index-1].spinning = false
+      // }
+      // this.connection.onclose = () => {
+      //   this.$message.error("连接中断")
+      // }
+      // this.connection.onerror = (err) => {
+      //   this.$message.error("连接错误: "+err)
+      // }
     },
-    onclose() {
-      this.$message.error("连接中断")
-    },
-    onerror(error) {
-       this.$message.error("连接中断: " + error)
-       if (this.spinning) {
-         this.spinning = false
-       }
+    tabChange(activeKey) {
+      // console.log(this.tab_connection.panes[activeKey].term.buffer)
+      // this.tab_connection.panes[activeKey].term.dispose()
+      // this.tab_connection.panes[activeKey].term.setOption('theme', {
+      //   foreground: "#ECECEC",
+      //   background: "#000000",
+      //   cursor: "help",
+      // })
+      // this.tab_connection.panes[activeKey].term = new Terminal({
+      //     cursorBlink: true,
+      //     cols: this.tab_connection.panes[activeKey].cols,
+      //     rows: this.tab_connection.panes[activeKey].rows
+      // })
+      // let terminalContainer = document.getElementById(`xterm-${this.tab_connection.panes[activeKey].id}`)
+      // this.tab_connection.panes[activeKey].term.open(terminalContainer)
+      
+      this.tab_connection.panes[activeKey].term.attach(this.tab_connection.panes[activeKey].connection)
+
     },
     onresize(e) {
       const msg = { type: "resize", ...e };
-      this.connection.send(msg)
-      this.term.fit()
-    },
-    onmessage(evt) {
-      let data = JSON.parse(evt.data)
-      switch (data.type) {
-        case "error":
-          this.$message.error("连接错误: "+data.message)
-          this.spinning = false
-        case "success":
-          this.term.attach(this.connection)
-          this.connection.onmessage = function(evt) {}
-          this.spinning = false
-          this.term.fit()
-      }
-    },
-    host_connect() {
-      this.spinning = true
-      if (window.location.protocol === 'https:') {
-          this.protocol = 'wss://'
-      } else {
-          this.protocol = 'ws://'
-      }
-      let host = this.$apihost == ""? window.location.host: this.$apihost
-      this.endpoint = `${this.protocol}${host}/api/system/webssh`
-      let initPtySize = this.termSize();
-      let cols = initPtySize.cols;
-      let rows = initPtySize.rows;
-      const terminalContainer = document.getElementById("xterm")
-      this.term = new Terminal({
-          cursorBlink: true,
-          cols: cols,
-          rows: rows
+      this.tab_connection.panes.forEach((item) => {
+        item.connection.send(msg)
+        item.term.fit()
       })
-      this.term.open(terminalContainer, true)
-      if (!window.WebSocket) {
-        console.log('WebSocket Not Supported' + this.endpoint)
-        return
-      }
-      let ws = new WebSocket(this.endpoint)//后端接口位置
-      this.connection = ws
-      this.connection.onopen = this.onOpen
-      this.connection.onclose = this.onclose
-      this.connection.onerror = this.onerror
-      this.connection.onmessage = this.onmessage
     },
     onContextMenuClick(treeKey, menuKey) {
       switch (menuKey) {
@@ -521,16 +561,16 @@ export default {
       }) 
     },
     termSize() {
-        const init_width = 9;
-        const init_height = 18;
+      const init_width = 9;
+      const init_height = 18;
 
-        let windows_width = window.innerWidth;
-        let windows_height = window.innerHeight - 200;
+      let windows_width = window.innerWidth;
+      let windows_height = window.innerHeight - 200;
 
-        return {
-            cols: Math.floor(windows_width / init_width),
-            rows: Math.floor(windows_height / init_height),
-        }
+      return {
+          cols: Math.floor(windows_width / init_width),
+          rows: Math.floor(windows_height / init_height),
+      }
     },
     all_server(fn = function() {}) {
       let this_ = this
@@ -547,16 +587,30 @@ export default {
   created: function () {
     this.refresh_tree()
     this.servers = new Map()
-    let initPtySize = this.termSize();
-    let cols = initPtySize.cols;
-    let rows = initPtySize.rows;
-    const terminalContainer = document.getElementById("xterm")
-    this.term = new Terminal({
-        cursorBlink: true,
-        cols: cols,
-        rows: rows
+    if (window.location.protocol === 'https:') {
+      this.protocol = 'wss://'
+    } else {
+      this.protocol = 'ws://'
+    }
+    let host = this.$apihost == ""? window.location.host: this.$apihost
+    this.endpoint = `${this.protocol}${host}/api/system/webssh`
+    this.$nextTick(() => {
+      let initPtySize = this.termSize();
+      let cols = initPtySize.cols;
+      let rows = initPtySize.rows;
+      let terminalContainer = document.getElementById(`xterm-${this.tab_connection.panes[0].id}`)
+      this.tab_connection.panes[0].cols = cols
+      this.tab_connection.panes[0].rows = rows
+      this.tab_connection.panes[0].term = new Terminal({
+          cursorBlink: false,
+          cols: cols,
+          rows: rows
+      })
+      this.tab_connection.panes[0].term.open(terminalContainer, true)
     })
-    this.term.open(terminalContainer, true)
+  },
+  mounted: function () {    
+    
   },
   beforeDestroy() {
     this.connection.close()
