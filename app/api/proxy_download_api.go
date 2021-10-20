@@ -24,7 +24,7 @@ func (self *ProxyDownloadApi) AddTorrent(r *ghttp.Request) {
 }
 
 func (self *ProxyDownloadApi) Query(r *ghttp.Request) {
-	request := requests.NewQueryDownloadTaskRequest()
+	request := requests.NewQueryWebSocketRequest()
 	self.DoRequestValid(request, r)
 }
 

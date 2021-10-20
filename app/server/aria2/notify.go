@@ -19,7 +19,7 @@ func (CustomNotify) OnDownloadPause(events []rpc.Event)      {}
 func (CustomNotify) OnDownloadStop(events []rpc.Event)       {}
 func (CustomNotify) OnDownloadComplete(events []rpc.Event)   {
 	var cleanSize int
-	settings, err := models.GetSettings()
+	settings, err := models.GetAria2Settings()
 	if err != nil {
 		glog.Error("get settings error: %s", err.Error())
 		return

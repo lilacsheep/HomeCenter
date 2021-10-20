@@ -18,6 +18,8 @@ type CreateServerRequest struct {
 	Password   string `json:"password"`
 	PrivateKey string `json:"private_key"`
 	Remark     string `json:"remark"`
+	UseProxy   bool   `json:"use_proxy"`
+	ProxyID    int    `json:"proxy_id"`
 }
 
 func (self *CreateServerRequest) Exec(r *ghttp.Request) (response MessageResponse) {

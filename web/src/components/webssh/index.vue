@@ -203,7 +203,7 @@ export default {
                 private_key: "",
                 remark: "",
                 use_proxy: false,
-                proxy_id: undefined
+                proxy_id: 0
               }
             },
             edit: {

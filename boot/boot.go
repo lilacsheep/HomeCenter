@@ -8,13 +8,12 @@ import (
 	"homeproxy/library/docker"
 
 	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/os/gcron"
 	"github.com/gogf/gf/os/gfile"
 )
 
 func Setup() error {
 	sqlFile := []string{
-		"dbsql/objects.sql", "dbsql/global_config.sql","dbsql/instances.sql", "dbsql/auth_users.sql",
+		"dbsql/objects.sql", "dbsql/global_config.sql", "dbsql/instances.sql", "dbsql/auth_users.sql",
 		"dbsql/object_bucket.sql", "dbsql/object_token.sql", "dbsql/proxy_role.sql",
 		"dbsql/ddns_operation_settings.sql", "dbsql/host.sql", "dbsql/host_group.sql",
 		"dbsql/container_template.sql",
@@ -35,13 +34,13 @@ func Setup() error {
 	}
 	// 初始化下载配置
 
-	downloadSettings, err := models.GetSettings()
-	if err != nil {
-		return err
-	}
-	if downloadSettings.Aria2Url != "" {
-		gcron.AddSingleton("*/2 * * * * *", tasks.ReloadAira2Manager)
-	}
+	// downloadSettings, err := models.GetAria2Settings()
+	// if err != nil {
+	// 	return err
+	// }
+	// if downloadSettings.GetAria2Url() != "" {
+	// 	gcron.AddSingleton("*/2 * * * * *", tasks.ReloadAira2Manager)
+	// }
 	aria2.InitClient()
 	docker.InitDockerClient()
 	server.Setup()

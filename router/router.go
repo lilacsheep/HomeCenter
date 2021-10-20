@@ -82,7 +82,7 @@ func init() {
 
 		// download api
 		group.Group("/download", func(group *ghttp.RouterGroup) {
-			group.Middleware(middleware.CheckAria2Cli)
+			group.Middleware(middleware.CheckDockerCli)
 			group.POST("/create", downloadApi.Create)
 			group.POST("/torrent", downloadApi.AddTorrent)
 			group.GET("/tasks", downloadApi.Query)

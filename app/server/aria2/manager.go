@@ -1,20 +1,76 @@
 package aria2
 
 import (
-	"os/exec"
+	"context"
+	"homeproxy/app/models"
+	"homeproxy/library/docker"
+	"io/ioutil"
 	"strings"
 
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/network"
 	"github.com/gogf/gf/os/gfile"
+	"github.com/gogf/gf/os/glog"
 	"github.com/gogf/gf/util/gconv"
 	"github.com/zyxar/argo/rpc"
 )
 
-var Manager *manager
+/*
+-v 本地文件夹1:/downloads Aria2下载位置
+-v 本地文件夹2:/config Aria2配置文件位置
+-e PUID=1026 Linux用户UID
+-e PGID=100 Linux用户GID
+-e SECRET=yourtoken Aria2 token
+-e CACHE=1024M Aria2磁盘缓存配置
+-e PORT=6800 RPC通讯端口
+-e WEBUI=true 启用WEBUI
+-e WEBUI_PORT=8080 WEBUI端口
+-e BTPORT=32516 DHT和BT监听端口
+-e UT=true 启动容器时更新trackers
+-e CTU= 启动容器时更新自定义trackes地址 https://cdn.jsdelivr.net/gh/XIU2/TrackersListCollection@master/best_aria2.txt
+-e RUT=true	每天凌晨3点更新trackers
+-e SMD=true 保存磁力链接为种子文件
+-e FA= 磁盘预分配模式none,falloc,trunc,prealloc
+-p 6800:6800 Aria2 RPC连接端口
+-p 6881:6881 Aria2 tcp下载端口
+-p 6881:6881/udp Aria2 p2p udp下载端口
+--restart unless-stopped
+*/
+var (
+	Manager *manager
+	server  rpc.Client
+)
+
+const ImageName = "superng6/aria2:webui-latest"
+const ContainerName = "aria2_auto"
 
 type manager struct {
-	Change bool
+	Change   bool
+	Settings *models.DownloadSettings
+	init     bool
 }
 
+func (self *manager) Init() error {
+	if !self.Settings.AutoStart {
+		return nil
+	}
+	if self.Settings.ContainerId == "" {
+		ContainerId, err := self.CreateContainer()
+		if err != nil {
+			return err
+		}
+		models.UpdateConfig("aria2", "container_id", ContainerId)
+		err = docker.Docker.ContainerStart(context.Background(), ContainerId, types.ContainerStartOptions{})
+		if err != nil {
+			return err
+		}
+		return nil
+	} else {
+		
+	}
+	return nil
+}
 func (self *manager) GetGlobalStat() (info rpc.GlobalStatInfo, err error) {
 	return server.GetGlobalStat()
 }
@@ -29,6 +85,24 @@ func (self *manager) TellStopped(offset, limit int) (infos []rpc.StatusInfo, err
 
 func (self *manager) TellWaiting(offset, limit int) (infos []rpc.StatusInfo, err error) {
 	return server.TellWaiting(offset, limit)
+}
+
+func (self *manager) AllTasks() (infos []rpc.StatusInfo, err error) {
+	infos, err = self.ActiveTasks()
+	if err != nil {
+		return
+	}
+	stopped, err := self.TellStopped(0, 999)
+	if err != nil {
+		return
+	}
+	warnings, err := self.TellWaiting(0, 999)
+	if err != nil {
+		return
+	}
+	infos = append(infos, warnings...)
+	infos = append(infos, stopped...)
+	return
 }
 
 func (self *manager) UnpauseTask(gid string) error {
@@ -103,7 +177,59 @@ func (self *manager) GetOption(key string) (string, error) {
 	return "", err
 }
 
-func RestartAria2() {
-	cmd := exec.Command("systemctl", "restart", "aria2")
-	cmd.Run()
+func (self *manager) CheckImage() (bool, error) {
+	body, err := docker.Docker.ImageList(context.Background(), types.ImageListOptions{All: true})
+	if err != nil {
+		return false, err
+	}
+	for _, image := range body {
+		if image.RepoTags[0] == ImageName {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func (self *manager) DownloadImage() error {
+	out, err := docker.Docker.ImagePull(context.Background(), ImageName, types.ImagePullOptions{})
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+	if r, err := ioutil.ReadAll(out); err != nil {
+		return err
+	} else {
+		glog.Info(r)
+	}
+	return nil
+}
+
+func (self *manager) CreateContainer() (string, error) {
+	if v, err := self.CheckImage(); err != nil {
+		return "", err
+	} else {
+		if !v {
+			err = self.DownloadImage()
+			if err != nil {
+				return "", err
+			}
+		}
+	}
+	Config := container.Config{
+		Image: ImageName,
+		Env:   self.Settings.Env(),
+	}
+	HostConfig := self.Settings.ContainerHostConfig()
+	NetworkConfig := network.NetworkingConfig{}
+
+	body, err := docker.Docker.ContainerCreate(context.Background(), &Config, HostConfig, &NetworkConfig, nil, ContainerName)
+	if err != nil {
+		return "", err
+	}
+	return body.ID, nil
+}
+
+func (self *manager) Size() string {
+	p := gfile.Abs(self.Settings.DownloadPath)
+	return gfile.ReadableSize(p)
 }

@@ -65,23 +65,81 @@
           <a-tab-pane key="2" tab="配置管理">
             <a-card style="padding: 0">
               <a-form-model :model="settings.form" :label-col="labelCol" :wrapper-col="wrapperCol">
-                <a-form-model-item label="地址">
-                  <a-input addon-before="http://" addon-after="/jsonrpc" v-model="settings.form.aria2_url" style="width: 300px"></a-input>
+                <a-form-model-item label="启动">
+                  <a-switch v-model="settings.form.auto_start">
+                    <a-icon slot="checkedChildren" type="check" />
+                    <a-icon slot="unCheckedChildren" type="close" />
+                  </a-switch>
+                  <span style="color: #909399;font-size: 11px;margin-left: 5px ;">检查并启动Aria2</span>
                 </a-form-model-item>
-                <a-form-model-item label="Token">
-                  <a-input v-model="settings.form.aria2_token" style="width: 300px"></a-input>
+                <a-form-model-item label="RPC端口">
+                  <a-input-number :min="80" :max="65535" v-model="settings.form.port"/>
+                  <span style="color: #909399;font-size: 9px;margin-left: 5px ;">RPC连接端口</span>
                 </a-form-model-item>
-                <a-form-model-item label="清理">
-                  <a-input v-model="settings.form.auto_clean" style="width: 300px" addon-after="MB"></a-input>
-                  <span style="color: #909399;font-size: 11px">自动清理BT文件夹内不满足文件大小的文件, 0为关闭</span>
+                <a-form-model-item label="下载端口">
+                  <a-input addon-before="TCP" type="number" :min="80" :max="65535" style="width: 150px" v-model="settings.form.tcp_port"/>
+                  <a-input addon-before="UDP" type="number" :min="80" :max="65535" style="width: 150px;margin-left: 5px;" v-model="settings.form.udp_port"/>
+                  <span style="color: #909399;font-size: 9px;margin-left: 5px ;">Aria2下载端口</span>
+                </a-form-model-item>
+                <a-form-model-item label="BT端口">
+                  <a-input-number :min="80" :max="65535" v-model="settings.form.bt_port"/>
+                  <span style="color: #909399;font-size: 9px;margin-left: 5px ;">DHT和BT监听端口</span>
+                </a-form-model-item>
+                <a-form-model-item label="RPC Token">
+                  <a-input v-model="settings.form.token" style="width: 300px"></a-input>
+                  <span style="color: #909399;font-size: 11px;margin-left: 5px ;">Aria2 token</span>
+                </a-form-model-item>
+                <a-form-model-item label="WebUI">
+                  <a-switch v-model="settings.form.webui">
+                    <a-icon slot="checkedChildren" type="check" />
+                    <a-icon slot="unCheckedChildren" type="close" />
+                  </a-switch>
+                  <span style="color: #909399;font-size: 11px;margin-left: 5px ;">启用Aria2NG界面</span>
+                </a-form-model-item>
+                <a-form-model-item label="WebUI端口">
+                  <a-input-number :min="80" :max="65535" v-model="settings.form.webui_port"/>
+                  <span style="color: #909399;font-size: 9px;margin-left: 5px ;">Aria2NG端口</span>
+                </a-form-model-item>
+                <a-form-model-item label="磁盘模式">
+                  <a-radio-group v-model="settings.form.fa">
+                    <a-radio value="none">
+                      None
+                    </a-radio>
+                    <a-radio value="falloc">
+                      Falloc
+                    </a-radio>
+                    <a-radio value="trunc">
+                      Trunc
+                    </a-radio>
+                    <a-radio value="prealloc">
+                      Prealloc
+                    </a-radio>
+                  </a-radio-group>
                 </a-form-model-item>
                 <a-form-model-item label="自动同步">
-                  <a-select v-model="settings.form.auto_update_bt_tracker" placeholder="请选择" style="width: 300px">
-                    <a-select-option value="">关闭</a-select-option>
-                    <a-select-option value="@hourly">每小时</a-select-option>
-                    <a-select-option value="@every 24h">每天</a-select-option>
-                  </a-select>
-                  <span style="color: #909399;font-size: 11px">自动同步最新的BT服务器</span>
+                  <a-switch v-model="settings.form.rut">
+                    <a-icon slot="checkedChildren" type="check" />
+                    <a-icon slot="unCheckedChildren" type="close" />
+                  </a-switch>
+                  <span style="color: #909399;font-size: 11px;margin-left: 5px ;">每天凌晨3点更新trackers</span>
+                </a-form-model-item>
+                <a-form-model-item label="种子保存">
+                  <a-switch v-model="settings.form.smd">
+                    <a-icon slot="checkedChildren" type="check" />
+                    <a-icon slot="unCheckedChildren" type="close" />
+                  </a-switch>
+                  <span style="color: #909399;font-size: 11px;margin-left: 5px ;">保存磁力链接为种子文件</span>
+                </a-form-model-item>
+                <a-form-model-item label="对外访问">
+                  <a-switch v-model="settings.form.public_visit">
+                    <a-icon slot="checkedChildren" type="check" />
+                    <a-icon slot="unCheckedChildren" type="close" />
+                  </a-switch>
+                  <span style="color: #909399;font-size: 11px;margin-left: 5px ;">允许从外部访问Aria2和Aria2NG</span>
+                </a-form-model-item>
+                <a-form-model-item label="自动清理">
+                  <a-input type="number" v-model="settings.form.auto_clean" style="width: 300px" :min="0" addon-after="MB"></a-input>
+                  <span style="color: #909399;font-size: 9px;margin-left: 5px ;">清理BT不满足大小的文件, 0为关闭</span>
                 </a-form-model-item>
                 <a-form-model-item :wrapper-col="{ span: 14, offset: 4 }">
                   <a-button type="primary"  @click="submit_update_settings">立即更新</a-button>
@@ -156,8 +214,8 @@ export default {
       torrent: {
         sync: false
       },
-      labelCol: { span: 2 },
-      wrapperCol: { span: 22 },
+      labelCol: { span: 4},
+      wrapperCol: { span: 18 },
       aria2: {
         options: [],
         columns: [
@@ -209,10 +267,23 @@ export default {
       },
       settings: {
         form: {
-          aria2_url: "",
-          aria2_token: "",
           auto_clean: 0,
-          auto_update_bt_tracker: ""
+          bt_port: 0,
+          config_path: "",
+          container_id: "",
+          ctu: "",
+          download_path: "",
+          fa: true,
+          port: 6800,
+          public_visit: true,
+          rut: true,
+          smd: true,
+          tcp_port: 6881,
+          token: "",
+          udp_port: 6881,
+          ut: true,
+          webui: false,
+          webui_port: 8080,
         },
         nodes: []
       }
@@ -249,7 +320,7 @@ export default {
       this.$api.aria2.task.unpause(item.gid)
     },
     refresh_tasks () {
-      if (this.settings.form.aria2_url == "") {
+      if (!this.settings.form.auto_start) {
         return
       }
       let that = this, tasks = []

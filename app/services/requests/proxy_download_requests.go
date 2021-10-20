@@ -5,7 +5,9 @@ import (
 	"homeproxy/app/server/aria2"
 	"net/http"
 	"path"
+	"time"
 
+	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/net/ghttp"
 	"github.com/zyxar/argo/rpc"
 )
@@ -50,42 +52,37 @@ func NewCreateDownloadTaskRequest() *CreateDownloadTaskRequest {
 	return &CreateDownloadTaskRequest{}
 }
 
-type QueryDownloadTaskRequest struct {
-	Status string `json:"status"`
-}
+type QueryWebSocketRequest struct{}
 
-func (self *QueryDownloadTaskRequest) Exec(r *ghttp.Request) (response MessageResponse) {
+func (self *QueryWebSocketRequest) Exec(r *ghttp.Request) (response MessageResponse) {
 	var (
 		infos []rpc.StatusInfo
 		err   error
 	)
-	if aria2.Manager == nil {
-		response.SuccessWithDetail(nil)
-		return
-	}
-	infos, err = aria2.Manager.ActiveTasks()
+	ws, err := r.WebSocket()
 	if err != nil {
-		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
-		return
+		return *response.SystemError(err)
 	}
-	stopped, err := aria2.Manager.TellStopped(0, 999)
-	if err != nil {
-		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
-		return
+	defer ws.Close()
+
+	for {
+		_, d, err := ws.ReadMessage()
+		if err != nil {
+			return *response.SystemError(err)
+		}
+		switch gvar.New(d).String() {
+		case "tasks":
+			infos, _ = aria2.Manager.AllTasks()
+			ws.WriteJSON(infos)
+		case "stats":
+			stats, _ := aria2.Manager.GetGlobalStat()
+			ws.WriteJSON(stats)
+		}
 	}
-	warnings, err := aria2.Manager.TellWaiting(0, 999)
-	if err != nil {
-		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
-		return
-	}
-	infos = append(infos, warnings...)
-	infos = append(infos, stopped...)
-	response.DataTable(infos, len(infos))
-	return
 }
 
-func NewQueryDownloadTaskRequest() *QueryDownloadTaskRequest {
-	return &QueryDownloadTaskRequest{}
+func NewQueryWebSocketRequest() *QueryWebSocketRequest {
+	return &QueryWebSocketRequest{}
 }
 
 type RemoveDownloadTaskRequest struct {
@@ -145,7 +142,7 @@ func NewUnpauseDownloadTaskRequest() *UnpauseDownloadTaskRequest {
 type GetDownloadSettingsRequest struct{}
 
 func (self *GetDownloadSettingsRequest) Exec(r *ghttp.Request) (response MessageResponse) {
-	settings, err := models.GetSettings()
+	settings, err := models.GetAria2Settings()
 	if err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
@@ -159,29 +156,34 @@ func NewGetDownloadSettingsRequest() *GetDownloadSettingsRequest {
 }
 
 type UpdateDownloadSettingsRequest struct {
-	Aria2Url            string `json:"aria2_url"`
-	Aria2Token          string `json:"aria2_token"`
-	AutoClean           int    `json:"auto_clean"`
-	AutoUpdateBTTracker string `json:"auto_update_bt_tracker"`
+	Port         int    `json:"port"`          // RPC连接端口
+	TcpPort      int    `json:"tcp_port"`      // tcp下载端口
+	UdpPort      int    `json:"udp_port"`      // Aria2 p2p udp下载端口
+	DownloadPath string `json:"download_path"` // Aria2下载位置
+	ConfigPath   string `json:"config_path"`   // Aria2配置文件位置
+	SECRET       string `json:"token"`         // Aria2 token
+	WebUi        bool   `json:"webui"`         // 启用WEBUI
+	WebUiPort    int    `json:"webui_port"`    // WEBUI端口
+	BTPort       int    `json:"bt_port"`       // DHT和BT监听端口
+	UT           bool   `json:"ut"`            // 启动容器时更新trackers
+	CTU          string `json:"ctu"`           // 启动容器时更新自定义trackes地址
+	RUT          bool   `json:"rut"`           // 每天凌晨3点更新trackers
+	SMD          bool   `json:"smd"`           // 保存磁力链接为种子文件
+	FA           string `json:"fa"`            // 磁盘预分配模式none,falloc,trunc,prealloc
+	AutoClean    int    `json:"auto_clean"`    // 自动清理Bt下载后文件夹内内容，根据文件大小判断
+	AutoStart    bool   `json:"auto_start"`    // 启动Aria2任务
+	PublicVisit  bool   `json:"public_visit"`  // 允许公共访问
+	ContainerId  string `json:"container_id"`
 }
 
 func (self *UpdateDownloadSettingsRequest) Exec(r *ghttp.Request) (response MessageResponse) {
 	settings := models.DownloadSettings{}
-	err := models.ConfigToStruct("download", &settings)
+	err := models.ConfigToStruct("aria2", &settings)
 	if err != nil {
 		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
-		if self.Aria2Url != settings.Aria2Url {
-			models.UpdateConfig("download", "aria2_url", self.Aria2Url)
-		}
-		if self.Aria2Token != settings.Aria2Token {
-			models.UpdateConfig("download", "aria2_token", self.Aria2Token)
-		}
-		if self.AutoClean != settings.AutoClean {
-			models.UpdateConfig("download", "auto_clean", self.AutoClean)
-		}
-		if self.AutoUpdateBTTracker != settings.AutoUpdateBTTracker {
-			models.UpdateConfig("download", "auto_update_bt_tracker", self.AutoUpdateBTTracker)
+		for k, v := range gvar.New(self).MapStrStr() {
+			models.UpdateConfig("aria2", k, v)
 		}
 		response.Success()
 	}
@@ -199,13 +201,23 @@ func (self *GlobalStatInfoRequest) Exec(r *ghttp.Request) (response MessageRespo
 		response.SuccessWithDetail(nil)
 		return
 	}
-	info, err := aria2.Manager.GetGlobalStat()
+	ws, err := r.WebSocket()
 	if err != nil {
-		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
-	} else {
-		response.SuccessWithDetail(info)
+		return *response.SystemError(err)
 	}
-	return
+	defer ws.Close()
+	for {
+		time.Sleep(time.Second)
+		info, err := aria2.Manager.GetGlobalStat()
+		if err != nil {
+			continue
+		} else {
+			err = ws.WriteJSON(info)
+			if err != nil {
+				return
+			}
+		}
+	}
 }
 
 func NewGlobalStatInfoRequest() *GlobalStatInfoRequest {
