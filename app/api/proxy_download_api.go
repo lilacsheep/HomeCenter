@@ -53,11 +53,6 @@ func (self *ProxyDownloadApi) UpdateSettings(r *ghttp.Request) {
 	self.DoRequestValid(request, r)
 }
 
-func (self *ProxyDownloadApi) GlobalStatInfo(r *ghttp.Request) {
-	request := requests.NewGlobalStatInfoRequest()
-	self.DoRequestValid(request, r)
-}
-
 func (self *ProxyDownloadApi) TaskStatus(r *ghttp.Request) {
 	request := requests.NewTaskStatusRequest()
 	self.DoRequestValid(request, r)

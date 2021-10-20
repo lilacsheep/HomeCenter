@@ -2,7 +2,6 @@ package aria2
 
 import (
 	"homeproxy/app/models"
-
 )
 
 const (
@@ -16,5 +15,6 @@ func InitClient() error {
 		return err
 	}
 	Manager = &manager{Settings: settings}
-	return nil
+
+	return Manager.Init()
 }

@@ -2,7 +2,6 @@ package boot
 
 import (
 	"homeproxy/app/models"
-	"homeproxy/app/server"
 	"homeproxy/app/server/aria2"
 	"homeproxy/app/services/tasks"
 	"homeproxy/library/docker"
@@ -41,11 +40,13 @@ func Setup() error {
 	// if downloadSettings.GetAria2Url() != "" {
 	// 	gcron.AddSingleton("*/2 * * * * *", tasks.ReloadAira2Manager)
 	// }
-	aria2.InitClient()
 	docker.InitDockerClient()
-	server.Setup()
+	err := aria2.InitClient()
+	if err != nil {
+		return err
+	}
+	// server.Setup()
 	tasks.InitDDnsTask()
-	tasks.SetupMonitor()
 	tasks.SetupMonitor()
 	return nil
 }

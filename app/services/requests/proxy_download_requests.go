@@ -5,9 +5,10 @@ import (
 	"homeproxy/app/server/aria2"
 	"net/http"
 	"path"
-	"time"
 
 	"github.com/gogf/gf/container/gvar"
+	"github.com/gogf/gf/encoding/gjson"
+	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/ghttp"
 	"github.com/zyxar/argo/rpc"
 )
@@ -70,13 +71,18 @@ func (self *QueryWebSocketRequest) Exec(r *ghttp.Request) (response MessageRespo
 		if err != nil {
 			return *response.SystemError(err)
 		}
+		j := gjson.New(g.Map{})
 		switch gvar.New(d).String() {
 		case "tasks":
 			infos, _ = aria2.Manager.AllTasks()
-			ws.WriteJSON(infos)
+			j.Set("type", "tasks")
+			j.Set("data", infos)
+			ws.WriteJSON(j.Map())
 		case "stats":
 			stats, _ := aria2.Manager.GetGlobalStat()
-			ws.WriteJSON(stats)
+			j.Set("type", "stats")
+			j.Set("data", stats)
+			ws.WriteJSON(j.Map())
 		}
 	}
 }
@@ -180,48 +186,27 @@ func (self *UpdateDownloadSettingsRequest) Exec(r *ghttp.Request) (response Mess
 	settings := models.DownloadSettings{}
 	err := models.ConfigToStruct("aria2", &settings)
 	if err != nil {
-		response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
+		return *response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
+		if self.AutoStart != settings.AutoStart {
+			if self.AutoStart {
+				err = aria2.Manager.Init()
+				if err != nil {
+					return *response.SystemError(err)
+				}
+			} else {
+				aria2.Manager.StopContainer()
+			}
+		}
 		for k, v := range gvar.New(self).MapStrStr() {
 			models.UpdateConfig("aria2", k, v)
 		}
-		response.Success()
 	}
-	return
+	return *response.Success()
 }
 
 func NewUpdateDownloadSettingsRequest() *UpdateDownloadSettingsRequest {
 	return &UpdateDownloadSettingsRequest{}
-}
-
-type GlobalStatInfoRequest struct{}
-
-func (self *GlobalStatInfoRequest) Exec(r *ghttp.Request) (response MessageResponse) {
-	if aria2.Manager == nil {
-		response.SuccessWithDetail(nil)
-		return
-	}
-	ws, err := r.WebSocket()
-	if err != nil {
-		return *response.SystemError(err)
-	}
-	defer ws.Close()
-	for {
-		time.Sleep(time.Second)
-		info, err := aria2.Manager.GetGlobalStat()
-		if err != nil {
-			continue
-		} else {
-			err = ws.WriteJSON(info)
-			if err != nil {
-				return
-			}
-		}
-	}
-}
-
-func NewGlobalStatInfoRequest() *GlobalStatInfoRequest {
-	return &GlobalStatInfoRequest{}
 }
 
 type TaskStatusRequest struct {

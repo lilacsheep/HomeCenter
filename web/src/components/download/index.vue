@@ -12,7 +12,7 @@
           <a-tab-pane key="1" tab="下载列表">
             <a-button-group>
               <a-button type="primary" icon="edit" @click="download.create.visit = true">创建下载</a-button>
-              <a-upload name="file" :fileList="false" :loading="download.uploadloading" :multiple="false" @change="uploadChange" accept=".torrent" action="/api/download/torrent">
+              <a-upload name="file" :loading="download.uploadloading" :multiple="false" @change="uploadChange" accept=".torrent" action="/api/download/torrent">
                 <a-button  type="primary" icon="upload">上传种子</a-button>
               </a-upload>
             </a-button-group>
@@ -47,23 +47,23 @@
                 {{record.uploadSpeed | diskSize}}/秒
               </span>
               <span slot="action" slot-scope="text, record">
-                <a-popconfirm v-if="record.status == 'paused'" title="是否继续该任务？" @onConfirm="start_task(record)">
+                <a-popconfirm v-if="record.status == 'paused'" title="是否继续该任务？" @confirm="start_task(record)">
                   <a-button  style="color: green" type="link" icon="play-circle"></a-button>
                 </a-popconfirm>
                 <a-popconfirm v-if="record.status == 'error'" title="是否继续该任务？" @confirm="start_task(record)">
-                    <a-button style="color: green" type="link" icon="play-circle"></a-button>
-                  </a-popconfirm>
-                  <a-popconfirm v-if="record.status == 'active'" title="是否暂停该任务？" @confirm="cancel_task(record)">
-                    <a-button style="color: red" type="link" icon="pause-circle"></a-button>
-                  </a-popconfirm>
-                  <a-popconfirm title="是否删除该任务？" @confirm="remove_task(record)">
-                    <a-button style="color: red" type="link" icon="delete"></a-button>
-                  </a-popconfirm>
+                  <a-button style="color: green" type="link" icon="play-circle"></a-button>
+                </a-popconfirm>
+                <a-popconfirm v-if="record.status == 'active'" title="是否暂停该任务？" @confirm="cancel_task(record)">
+                  <a-button style="color: red" type="link" icon="pause-circle"></a-button>
+                </a-popconfirm>
+                <a-popconfirm title="是否删除该任务？" @confirm="remove_task(record)">
+                  <a-button style="color: red" type="link" icon="delete"></a-button>
+                </a-popconfirm>
               </span>
             </a-table>
           </a-tab-pane>
           <a-tab-pane key="2" tab="配置管理">
-            <a-card style="padding: 0">
+            <a-card style="padding: 0" >
               <a-form-model :model="settings.form" :label-col="labelCol" :wrapper-col="wrapperCol">
                 <a-form-model-item label="启动">
                   <a-switch v-model="settings.form.auto_start">
@@ -142,7 +142,7 @@
                   <span style="color: #909399;font-size: 9px;margin-left: 5px ;">清理BT不满足大小的文件, 0为关闭</span>
                 </a-form-model-item>
                 <a-form-model-item :wrapper-col="{ span: 14, offset: 4 }">
-                  <a-button type="primary"  @click="submit_update_settings">立即更新</a-button>
+                  <a-button type="primary" :loading="form_loading" @click="submit_update_settings">立即更新</a-button>
                 </a-form-model-item>
               </a-form-model>
             </a-card>
@@ -214,6 +214,9 @@ export default {
       torrent: {
         sync: false
       },
+      endpoint: "",
+      connection: null,
+      form_loading: false,
       labelCol: { span: 4},
       wrapperCol: { span: 18 },
       aria2: {
@@ -317,65 +320,32 @@ export default {
       this.$api.aria2.task.pause(item.gid)
     },
     start_task (item) {
-      this.$api.aria2.task.unpause(item.gid)
-    },
-    refresh_tasks () {
-      if (!this.settings.form.auto_start) {
-        return
-      }
-      let that = this, tasks = []
-      this.$api.aria2.task.list().then(function (response) {
-        if (that.task.query.status === "全部") {
-          response.detail.forEach(function (item) {
-            if ((item.status != "error") && (!item.followedBy)){
-              tasks.push(item)
-            }
-          })
-          that.download.tasks = tasks
-        } else if (that.task.query.status === '下载中') {
-          response.detail.forEach(function (item) {
-            if (item.status == "active") {
-              tasks.push(item)
-            }
-          }) 
-          that.download.tasks = tasks
-        } else if (that.task.query.status === '已完成') {
-          response.detail.forEach(function (item) {
-            if ((item.status == "complete") && (item.status != "error") && (!item.followedBy)) {
-              tasks.push(item)
-            }
-          })
-          that.download.tasks = tasks
-        } else {
-          response.detail.forEach(function (item) {
-            if ((item.status != "active") && (item.status != "complete") && (!item.followedBy)) {
-              tasks.push(item)
-            }
-          })
-          that.download.tasks = tasks
-        }
-      }).catch(function (response) {
-        that.$message.error("刷新任务列表失败: "+response.message)
-      })
-      this.$api.aria2.global.stats().then(function (response) {
-        that.global.upload = response.detail.uploadSpeed
-        that.global.download = response.detail.downloadSpeed
+      console.log(item)
+      this.$api.aria2.task.unpause(item.gid).then(function(response){}).catch(function(response) {
+        console.log(response)
       })
     },
     refresh_settings () {
       let that = this
+      this.form_loading = true
       this.$api.aria2.settings.info().then(function (response) {
         that.settings.form = response.detail
         that.download.create.form.thread_num = response.detail.thread_num
         that.download.create.form.path = response.detail.path
+        that.form_loading = false
+      }).catch(function(response) {
+        that.form_loading = false
       })
     },
     submit_update_settings () {
       let that = this
+      this.form_loading = true
       this.$api.aria2.settings.update(this.settings.form).then(function (response) {
         that.$message.success('更新成功')
+        that.form_loading = false
       }).catch(function (resp) {
         that.$message.error('更新失败')
+        that.form_loading = false
       })
     },
     refresh_global_options() {
@@ -389,7 +359,10 @@ export default {
     tabClick: function (key) {
       if (key === '1') {
         if (!this.timer) {
-          this.timer = setInterval(this.refresh_tasks, 1000)
+          this.timer = setInterval(() => {
+            this.connection.send("tasks")
+            this.connection.send("stats")
+          }, 3000)
         }
       } else if (key === '2') {
         if (this.timer) {
@@ -457,10 +430,47 @@ export default {
     },
     download_file(row) {
       window.open(`/api/download/file?file_index=${row.index}&gid=${this.task.info.status.gid}`, '_blank')
-    }
+    },
+    onOpen() {
+
+    },
+    onError(error) {
+      console.log(error)
+    },
+    onmessage(evt) {
+       let data = JSON.parse(evt.data)
+      switch (data.type) {
+        case "tasks":
+          this.download.tasks = data.data
+        case "stats":
+          if (data.data.uploadSpeed == "") {
+            this.global.upload = 0
+          } else {
+            this.global.upload = parseInt(data.data.uploadSpeed)
+          }
+          if (data.data.downloadSpeed == "") {
+            this.global.download = 0
+          } else {
+            this.global.download = parseInt(data.data.downloadSpeed)
+          }
+      }
+    },
   },
   created: function () {
     let that = this
+    if (window.location.protocol === 'https:') {
+        this.protocol = 'wss://'
+    } else {
+        this.protocol = 'ws://'
+    }
+    let host = this.$apihost == ""? window.location.host: this.$apihost
+    this.endpoint = `${this.protocol}${host}/api/download/query`
+    let ws = new WebSocket(this.endpoint)//后端接口位置
+    this.connection = ws
+    this.connection.onmessage = this.onmessage
+    this.connection.onerror = this.onError
+
+
     this.$api.aria2.settings.info().then(function (response) {
       that.settings.form = response.detail
       that.download.create.form.thread_num = response.detail.thread_num
@@ -468,12 +478,11 @@ export default {
     }).catch(function(response) {
       that.$message.error("加载配置失败: "+response.message)
     })
-    this.$api.aria2.task.list().then(function (response) {
-      that.refresh_tasks()
-      that.timer = setInterval(that.refresh_tasks, 1000)
-    }).catch(function(response) {
-      that.$message.error("任务列表获取失败: "+response.message)
-    })
+    this.timer = setInterval(() => {
+      this.connection.send("tasks")
+      this.connection.send("stats")
+    }, 3000)
+    
   },
   beforeDestroy () {
     clearInterval(this.timer)

@@ -90,9 +90,18 @@ func (s *DownloadSettings) ContainerHostConfig() *container.HostConfig {
 		portMap[nat.Port("8080/tcp")] = []nat.PortBinding{{HostIP: host, HostPort: fmt.Sprintf("%d/tcp", s.WebUiPort)}}
 	}
 
+	downloadPath := gfile.Abs(s.DownloadPath)
+	configPath := gfile.Abs(s.ConfigPath)
+	if !gfile.Exists(downloadPath) {
+		gfile.Mkdir(downloadPath)
+	}
+
+	if !gfile.Exists(configPath) {
+		gfile.Mkdir(configPath)
+	}
 	mt := []mount.Mount{
-		{Type: "bind", Source: "/downloads", Target: gfile.Abs(s.DownloadPath)},
-		{Type: "bind", Source: "/config", Target: gfile.Abs(s.ConfigPath)},
+		{Type: "bind", Source: downloadPath, Target: "/downloads"},
+		{Type: "bind", Source: configPath, Target: "/config"},
 	}
 	HostConfig := container.HostConfig{
 		PortBindings:  portMap,

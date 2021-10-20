@@ -2,14 +2,17 @@ package aria2
 
 import (
 	"context"
+	"fmt"
 	"homeproxy/app/models"
 	"homeproxy/library/docker"
 	"io/ioutil"
 	"strings"
+	"time"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
+	"github.com/docker/docker/client"
 	"github.com/gogf/gf/os/gfile"
 	"github.com/gogf/gf/os/glog"
 	"github.com/gogf/gf/util/gconv"
@@ -60,17 +63,41 @@ func (self *manager) Init() error {
 		if err != nil {
 			return err
 		}
+		self.Settings.ContainerId = ContainerId
 		models.UpdateConfig("aria2", "container_id", ContainerId)
 		err = docker.Docker.ContainerStart(context.Background(), ContainerId, types.ContainerStartOptions{})
 		if err != nil {
 			return err
 		}
-		return nil
+		server, err = rpc.New(context.Background(), fmt.Sprintf("http://127.0.0.1:%d/jsonrpc", self.Settings.Port), self.Settings.SECRET, time.Second, CustomNotify{})
+		if err != nil {
+			return err
+		}
+		self.init = true
 	} else {
-		
+		info, err := docker.Docker.ContainerInspect(context.Background(), self.Settings.ContainerId)
+		if err != nil {
+			if !client.IsErrNotFound(err) {
+				return err
+			}
+			models.UpdateConfig("aria2", "container_id", "")
+			return self.Init()
+		}
+		if !info.State.Running {
+			err := docker.Docker.ContainerStart(context.Background(), self.Settings.ContainerId, types.ContainerStartOptions{})
+			if err != nil {
+				return err
+			}
+		}
+		server, err = rpc.New(context.Background(), fmt.Sprintf("http://127.0.0.1:%d/jsonrpc", self.Settings.Port), self.Settings.SECRET, time.Second, CustomNotify{})
+		if err != nil {
+			return err
+		}
+		self.init = true
 	}
 	return nil
 }
+
 func (self *manager) GetGlobalStat() (info rpc.GlobalStatInfo, err error) {
 	return server.GetGlobalStat()
 }
@@ -175,6 +202,14 @@ func (self *manager) GetOption(key string) (string, error) {
 		}
 	}
 	return "", err
+}
+
+func (self *manager) StopContainer() error {
+	return docker.Docker.ContainerStop(context.Background(), self.Settings.ContainerId, nil)
+}
+
+func (self *manager) StartContainer() error {
+	return docker.Docker.ContainerStart(context.Background(), self.Settings.ContainerId, types.ContainerStartOptions{})
 }
 
 func (self *manager) CheckImage() (bool, error) {
