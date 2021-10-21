@@ -55,6 +55,7 @@ type manager struct {
 }
 
 func (self *manager) Init() error {
+	self.Settings, _ = models.GetAria2Settings()
 	if !self.Settings.AutoStart {
 		return nil
 	}
@@ -83,7 +84,6 @@ func (self *manager) Init() error {
 			}
 			glog.Infof("未发现容器ID：%s, 重新创建Aria2容器...", self.Settings.ContainerId)
 			models.UpdateConfig("aria2", "container_id", "")
-			self.Settings.ContainerId = ""
 			return self.Init()
 		}
 		if !info.State.Running {
