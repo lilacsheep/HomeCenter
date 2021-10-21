@@ -190,6 +190,7 @@ func (self *UpdateDownloadSettingsRequest) Exec(r *ghttp.Request) (response Mess
 	} else {
 		if self.AutoStart != settings.AutoStart {
 			if self.AutoStart {
+				models.UpdateConfig("aria2", "auto_start", "true")
 				err = aria2.Manager.Init()
 				if err != nil {
 					return *response.SystemError(err)
