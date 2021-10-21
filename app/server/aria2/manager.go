@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"homeproxy/app/models"
 	"homeproxy/library/docker"
-	"io/ioutil"
+	"io"
 	"strings"
 	"time"
 
@@ -59,6 +59,7 @@ func (self *manager) Init() error {
 		return nil
 	}
 	if self.Settings.ContainerId == "" {
+		glog.Info("未发现容器ID, 重新创建Aria2容器...")
 		ContainerId, err := self.CreateContainer()
 		if err != nil {
 			return err
@@ -80,7 +81,9 @@ func (self *manager) Init() error {
 			if !client.IsErrNotFound(err) {
 				return err
 			}
+			glog.Infof("未发现容器ID：%s, 重新创建Aria2容器...", self.Settings.ContainerId)
 			models.UpdateConfig("aria2", "container_id", "")
+			self.Settings.ContainerId = ""
 			return self.Init()
 		}
 		if !info.State.Running {
@@ -231,10 +234,15 @@ func (self *manager) DownloadImage() error {
 		return err
 	}
 	defer out.Close()
-	if r, err := ioutil.ReadAll(out); err != nil {
-		return err
-	} else {
-		glog.Info(r)
+	var buff = make([]byte, 1024)
+	for {
+		_, err = out.Read(buff)
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+		}
+		glog.Info(buff)
 	}
 	return nil
 }
@@ -244,6 +252,7 @@ func (self *manager) CreateContainer() (string, error) {
 		return "", err
 	} else {
 		if !v {
+			glog.Infof("未发现镜像：%s, 下载中...", ImageName)
 			err = self.DownloadImage()
 			if err != nil {
 				return "", err
@@ -267,4 +276,22 @@ func (self *manager) CreateContainer() (string, error) {
 func (self *manager) Size() string {
 	p := gfile.Abs(self.Settings.DownloadPath)
 	return gfile.ReadableSize(p)
+}
+
+func (self *manager) GetReadPath(gid, index string) (string, error) {
+	info, err := self.TaskStatus(gid)
+	if err != nil {
+		return "", err
+	}
+
+	var path string
+	for _, i := range info.Files {
+		if i.Index == index {
+			path = i.Path
+		}
+	}
+
+	p := strings.Replace(path, "/downloads", gfile.Abs(self.Settings.DownloadPath), -1)
+
+	return p, nil
 }

@@ -6,4 +6,4 @@ db
 *.log
 .vscode
 images
-download
+settings.config

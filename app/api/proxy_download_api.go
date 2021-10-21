@@ -80,19 +80,12 @@ func (self *ProxyDownloadApi) Download(r *ghttp.Request) {
 		response.ErrorWithMessage(requests.ParamsErrorCode, err.(gvalid.Error).Maps())
 		r.Response.WriteJsonExit(response)
 	}
-
-	task, err := aria2.Manager.TaskStatus(request.GID)
+	path, err := aria2.Manager.GetReadPath(request.GID, request.FileIndex)
 	if err != nil {
 		response.SystemError(err)
 		r.Response.WriteJsonExit(response)
 	}
-	var path string
-	for _, i := range task.Files {
-		if i.Index == request.FileIndex {
-			path = i.Path
-		}
-	}
-	
+
 	if path == "" {
 		response.ErrorWithMessage(http.StatusNotFound, "文件不存在")
 		r.Response.WriteJsonExit(request)
