@@ -35,7 +35,7 @@
             <a-button icon="thunderbolt" @click="on_clean">清屏</a-button>
             <a-button icon="api" @click="on_connection_close">断开</a-button>
           </a-button-group>
-          <a-tab-pane v-for="pane in tab_connection.panes" :key="pane.key" :tab="pane.title" :closable="pane.closable">
+          <a-tab-pane forceRender v-for="pane in tab_connection.panes" :key="pane.key" :tab="pane.title" :closable="pane.closable">
             <a-spin tip="连接中" :spinning="pane.spinning" :delay="500">
               <div :id="`xterm-${pane.id}`"></div>
             </a-spin>
@@ -401,23 +401,21 @@ export default {
       // }
     },
     tabChange(activeKey) {
-      // console.log(this.tab_connection.panes[activeKey].term.buffer)
-      // this.tab_connection.panes[activeKey].term.dispose()
-      // this.tab_connection.panes[activeKey].term.setOption('theme', {
-      //   foreground: "#ECECEC",
-      //   background: "#000000",
-      //   cursor: "help",
-      // })
-      // this.tab_connection.panes[activeKey].term = new Terminal({
-      //     cursorBlink: true,
-      //     cols: this.tab_connection.panes[activeKey].cols,
-      //     rows: this.tab_connection.panes[activeKey].rows
-      // })
-      // let terminalContainer = document.getElementById(`xterm-${this.tab_connection.panes[activeKey].id}`)
-      // this.tab_connection.panes[activeKey].term.open(terminalContainer)
+      this.tab_connection.panes[activeKey].term.selectAll()
+      let w = this.tab_connection.panes[activeKey].term.getSelection()
+      this.tab_connection.panes[activeKey].term.dispose()
       
+      this.tab_connection.panes[activeKey].term = new Terminal({
+          cursorBlink: true,
+          cols: this.tab_connection.panes[activeKey].cols,
+          rows: this.tab_connection.panes[activeKey].rows
+      })
+      let terminalContainer = document.getElementById(`xterm-${this.tab_connection.panes[activeKey].id}`)
+      
+      this.tab_connection.panes[activeKey].term.write(w.trim('', 'right'))
+      this.tab_connection.panes[activeKey].term.open(terminalContainer)
       this.tab_connection.panes[activeKey].term.attach(this.tab_connection.panes[activeKey].connection)
-
+      this.tab_connection.panes[activeKey].term.focus()
     },
     onresize(e) {
       const msg = { type: "resize", ...e };
