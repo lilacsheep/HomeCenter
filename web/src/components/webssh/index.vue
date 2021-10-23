@@ -283,7 +283,7 @@ export default {
             }
           } 
           
-          if (lastIndex == -1) {
+          if ((!panes.length) && (lastIndex == -1)) {
             this.tab_connection.panes = [{
               id: 1,
               key: 0, 
