@@ -29,7 +29,7 @@
         </a-tree>
       </a-col>
       <a-col :span="18" style="height: 100%;">
-        <a-tabs v-model="tab_connection.activeKey" hide-add type="editable-card" @change="tabChange" >
+        <a-tabs v-model="tab_connection.activeKey" hide-add type="editable-card" @change="tabChange"  @edit="onEdit">
           <a-button-group slot="tabBarExtraContent">
             <a-button icon="sync" @click="on_reconnect">重连</a-button>
             <a-button icon="thunderbolt" @click="on_clean">清屏</a-button>
@@ -261,16 +261,41 @@ export default {
       }
       return true
     },
+    onEdit(targetKey, action) {
+      switch (action) {
+        case "remove":
+          let activeKey = this.tab_connection.activeKey;
+          let lastIndex;
+          this.tab_connection.panes.forEach((pane, i) => {
+            if (pane.key === targetKey) {
+              lastIndex = i - 1;
+              pane.connection.close()
+              pane.term.dispose()
+            }
+          });
+          const panes = this.tab_connection.panes.filter(pane => pane.key !== targetKey);
+          if (panes.length && activeKey === targetKey) {
+            if (lastIndex >= 0) {
+              activeKey = panes[lastIndex].key;
+            } else {
+              activeKey = panes[0].key;
+            }
+          }
+          this.tab_connection.panes = panes;
+          this.tab_connection.activeKey = activeKey;
+          this.tabChange(activeKey)
+      }
+    },
     on_clean() {
-      this.connection.send("clear\r")
+      this.tab_connection.panes[this.tab_connection.activeKey].connection.send("clear\r")
     },
     on_connection_close() {
-      this.connection.close()
+      this.tab_connection.panes[this.tab_connection.activeKey].connection.close()
     },
     on_reconnect() {
-      this.connection.close()
-      this.term.destroy()
-      this.host_connect()
+      this.tab_connection.panes[this.tab_connection.activeKey].connection.close()
+      this.tab_connection.panes[this.tab_connection.activeKey].term.dispose()
+      this.openTab(this.tab_connection.activeKey+1)
     },
     refresh_tree: function() {
       let data = [], that = this;
@@ -301,8 +326,24 @@ export default {
           this.title = node.data.props.title
           let index = this.tab_connection.panes.length
 
+          let id = key.split("host-", -1)[1]
+          let exist = false
+          let this_ = this
+          let selected_server = undefined
+
+          this.all_servers.forEach((server) => {
+            if (server.id == id) {
+              selected_server = server
+            }
+          })
+          
+          if (!selected_server) {
+            this.$message.error('未发现该服务器信息...')
+            return
+          }
+
           if ((index == 1) && (this.tab_connection.panes[0].title == "默认连接")) {
-            this.tab_connection.panes[0].title = node.key
+            this.tab_connection.panes[0].title = selected_server.name
             this.tab_connection.panes[0].spinning = true
             this.tab_connection.panes[0].host = node.key
             this.tab_connection.panes[0].term.setOption('cursorBlink', true)
@@ -312,7 +353,7 @@ export default {
             const activeKey = index;
             let params = {
               key: index, 
-              title: node.key, 
+              title: selected_server.name, 
               id: index+1, 
               spinning: true, 
               term: undefined,
@@ -573,7 +614,7 @@ export default {
     all_server(fn = function() {}) {
       let this_ = this
       this.$webssh.server.list().then(function (response) {
-        this_.all_servers = response.detail
+        this_.all_servers = response.detail ? response.detail : []
         if (fn) {
           fn()
         }
