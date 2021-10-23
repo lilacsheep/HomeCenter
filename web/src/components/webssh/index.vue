@@ -722,4 +722,7 @@ export default {
   margin: 0 0 5px 0;
 }
 
+.ant-tabs.ant-tabs-card .ant-tabs-card-bar .ant-tabs-tab-active {
+  background: rgba(31, 106, 247, 0.3);
+}
 </style>
