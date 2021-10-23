@@ -35,7 +35,11 @@
             <a-button icon="thunderbolt" @click="on_clean">清屏</a-button>
             <a-button icon="api" @click="on_connection_close">断开</a-button>
           </a-button-group>
-          <a-tab-pane forceRender v-for="pane in tab_connection.panes" :key="pane.key" :tab="pane.title" :closable="pane.closable">
+          <a-tab-pane forceRender v-for="pane in tab_connection.panes" :key="pane.key"  :closable="pane.closable">
+            <span slot="tab">
+              <a-icon theme="twoTone" :two-tone-color="pane.color" :type="pane.type" />
+              {{pane.title}}
+            </span>
             <a-spin tip="连接中" :spinning="pane.spinning" :delay="500">
               <div :id="`xterm-${pane.id}`"></div>
             </a-spin>
@@ -185,6 +189,8 @@ export default {
             cols: 0,
             rows: 0,
             host: "",
+            type: "thunderbolt",
+            color: "#52c41a",
             closable: false
           }
         ]
@@ -294,7 +300,9 @@ export default {
               cols: 0,
               rows: 0,
               host: "",
-              closable: false
+              closable: false,
+              type: "thunderbolt",
+              color: "#52c41a"
             }]
             this.tab_connection.activeKey = 0
             this.$nextTick(() => {
@@ -324,6 +332,8 @@ export default {
     },
     on_connection_close() {
       this.tab_connection.panes[this.tab_connection.activeKey].connection.close()
+      this.tab_connection.panes[this.tab_connection.activeKey].type = "exclamation-circle"
+      this.tab_connection.panes[this.tab_connection.activeKey].color = "#eb2f96"
     },
     on_reconnect() {
       this.tab_connection.panes[this.tab_connection.activeKey].connection.close()
@@ -393,6 +403,8 @@ export default {
               cols: 0,
               rows: 0,
               host: node.key,
+              type: "thunderbolt",
+              color: "#52c41a"
             }
             panes.push(params)
             this.panes = panes;
@@ -416,6 +428,14 @@ export default {
       this.tab_connection.panes[index-1].connection.onopen = function() {
         ws.send(JSON.stringify({type: "connect", cols: cols, rows: rows, host: host}))
       }
+      this.tab_connection.panes[index-1].connection.onerror = (error) => {
+        this.tab_connection.panes[index-1].type = "exclamation-circle"
+        this.tab_connection.panes[index-1].color = "#eb2f96"
+      }
+      this.tab_connection.panes[index-1].connection.onclose = () => {
+        this.tab_connection.panes[index-1].type = "exclamation-circle"
+        this.tab_connection.panes[index-1].color = "#eb2f96"
+      }
       if (index == 1) {
         cols = this.tab_connection.panes[index-1].cols
         rows = this.tab_connection.panes[index-1].rows
@@ -429,6 +449,8 @@ export default {
               this.tab_connection.panes[index-1].term.attach(this.tab_connection.panes[index-1].connection)
               this.tab_connection.panes[index-1].connection.onmessage = function(evt) {}
               this.tab_connection.panes[index-1].spinning = false
+              this.tab_connection.panes[index-1].type = "thunderbolt"
+              this.tab_connection.panes[index-1].color = "#52c41a"
               this.tab_connection.panes[index-1].term.fit()
           }
         }
@@ -456,6 +478,8 @@ export default {
                 this.tab_connection.panes[index-1].term.attach(this.tab_connection.panes[index-1].connection)
                 this.tab_connection.panes[index-1].connection.onmessage = function(evt) {}
                 this.tab_connection.panes[index-1].spinning = false
+                this.tab_connection.panes[index-1].type = "thunderbolt"
+                this.tab_connection.panes[index-1].color = "#52c41a"
                 this.tab_connection.panes[index-1].term.fit()
                 this.tab_connection.panes[index-1].term.focus()
             }
