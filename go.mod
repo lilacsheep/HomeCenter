@@ -10,7 +10,7 @@ require (
 	github.com/asdine/storm/v3 v3.2.1
 	github.com/containerd/containerd v1.5.5 // indirect
 	github.com/docker/docker v20.10.8+incompatible
-	github.com/docker/go-connections v0.4.0 // indirect
+	github.com/docker/go-connections v0.4.0
 	github.com/gogf/gf v1.16.5
 	github.com/golang/snappy v0.0.2 // indirect
 	github.com/gorilla/websocket v1.4.2
@@ -22,7 +22,6 @@ require (
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/oschwald/geoip2-golang v1.5.0
 	github.com/shirou/gopsutil v3.21.7+incompatible
-	github.com/smartystreets/goconvey v1.6.4 // indirect
 	github.com/tklauser/go-sysconf v0.3.7 // indirect
 	github.com/zyxar/argo v0.0.0-20201218032338-28f97c7a4b97
 	go.etcd.io/bbolt v1.3.6 // indirect
@@ -33,6 +32,5 @@ require (
 	google.golang.org/appengine v1.6.7 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/fsnotify.v1 v1.4.7
-	gopkg.in/ini.v1 v1.62.0
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )
