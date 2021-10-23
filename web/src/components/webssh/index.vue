@@ -274,16 +274,49 @@ export default {
             }
           });
           const panes = this.tab_connection.panes.filter(pane => pane.key !== targetKey);
+          
           if (panes.length && activeKey === targetKey) {
             if (lastIndex >= 0) {
               activeKey = panes[lastIndex].key;
             } else {
               activeKey = panes[0].key;
             }
+          } 
+          
+          if (lastIndex == -1) {
+            this.tab_connection.panes = [{
+              id: 1,
+              key: 0, 
+              title: "默认连接", 
+              spinning: false, 
+              connection: undefined, 
+              term: undefined,
+              cols: 0,
+              rows: 0,
+              host: "",
+              closable: false
+            }]
+            this.tab_connection.activeKey = 0
+            this.$nextTick(() => {
+              let initPtySize = this.termSize();
+              let cols = initPtySize.cols;
+              let rows = initPtySize.rows;
+              let terminalContainer = document.getElementById(`xterm-${this.tab_connection.panes[0].id}`)
+              this.tab_connection.panes[0].cols = cols
+              this.tab_connection.panes[0].rows = rows
+              this.tab_connection.panes[0].term = new Terminal({
+                  cursorBlink: false,
+                  cols: cols,
+                  rows: rows
+              })
+              this.tab_connection.panes[0].term.open(terminalContainer, true)
+            })
+          } else {
+            this.tab_connection.panes = panes;
+            this.tab_connection.activeKey = activeKey;
+            this.tabChange(activeKey)
           }
-          this.tab_connection.panes = panes;
-          this.tab_connection.activeKey = activeKey;
-          this.tabChange(activeKey)
+          
       }
     },
     on_clean() {
@@ -327,8 +360,6 @@ export default {
           let index = this.tab_connection.panes.length
 
           let id = key.split("host-", -1)[1]
-          let exist = false
-          let this_ = this
           let selected_server = undefined
 
           this.all_servers.forEach((server) => {
@@ -346,6 +377,7 @@ export default {
             this.tab_connection.panes[0].title = selected_server.name
             this.tab_connection.panes[0].spinning = true
             this.tab_connection.panes[0].host = node.key
+            this.tab_connection.panes[0].closable = true
             this.tab_connection.panes[0].term.setOption('cursorBlink', true)
             this.openTab(index)
           } else {
