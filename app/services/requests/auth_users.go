@@ -1,6 +1,7 @@
 package requests
 
 import (
+	"database/sql"
 	"homeproxy/app/models"
 	"net/http"
 
@@ -30,6 +31,9 @@ type LoginRequest struct {
 func (self LoginRequest) Exec(r *ghttp.Request) (response MessageResponse) {
 	user, err := models.UserLogin(self.Username, self.Password)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return *response.ErrorWithMessage(http.StatusNotFound, "用户名或密码错误")
+		}
 		response.ErrorWithMessage(500, err.Error())
 	} else {
 		user.Password = ""
