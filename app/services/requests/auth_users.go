@@ -24,8 +24,8 @@ func NewGetSelfRequest() *GetSelfRequest {
 }
 
 type LoginRequest struct {
-	Username string `v:"username@required|length:5,30#请输入用户名称|用户名称长度非法"`
-	Password string `v:"password@required|password2"`
+	Username string `v:"username@required"`
+	Password string `v:"password@required"`
 }
 
 func (self LoginRequest) Exec(r *ghttp.Request) (response MessageResponse) {
