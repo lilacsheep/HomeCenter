@@ -63,19 +63,12 @@ export default {
     change_password_submit: function () {
       let that = this
       this.$api.post("/auth/change/self/password", this.user.password.change.form).then(function (response) {
-        that.$message({message: "修改成功", type: 'success'})
+        that.$message.info("修改成功")
+        Object.assign(that.user.password.change.form, this_.$options.data().user.password.change.form)
       }).catch(function (response) {
-        that.$message({message: response.message, type: 'error'})
+        that.$message.error(response.message)
       })
     },
-    create_user_submit: function() {
-      let that = this
-      this.$api.post("/auth/create/user", this.user.create.form).then(function (response) {
-        that.$message({message: "创建成功", type: 'success'})
-      }).catch(function (response) {
-        that.$message({message: response.message, type: 'error'})
-      })
-    }
   },
   
   created: function () {},
