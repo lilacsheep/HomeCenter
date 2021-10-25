@@ -58,16 +58,11 @@ func (self *ChangeSelfPasswordRequest) Exec(r *ghttp.Request) (response MessageR
 	if user == nil {
 		response.ErrorWithMessage(http.StatusUnauthorized, "need login")
 	} else {
-		u, err := models.UserLogin(user.(*models.User).Username, self.Current)
+		err := user.(*models.User).ChangePassword(self.Password1)
 		if err != nil {
-			response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
+			response.SystemError(err)
 		} else {
-			err = u.ChangePassword(self.Password1)
-			if err != nil {
-				response.SystemError(err)
-			} else {
-				response.Success()
-			}
+			response.Success()
 		}
 	}
 	return
