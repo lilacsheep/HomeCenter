@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/os/glog"
 	"github.com/gorilla/websocket"
 	"golang.org/x/crypto/ssh"
@@ -128,11 +129,16 @@ func (ssConn *SshConn) ReceiveWsMsg(wsConn *websocket.Conn, logBuff *bytes.Buffe
 				Rows: 50,
 				Cols: 180,
 			}
-			//if err := json.Unmarshal(wsData, &msgObj); err != nil {
-			//	logrus.WithError(err).WithField("wsData", string(wsData)).Error("unmarshal websocket message failed")
-			//}
+
+			if err := gvar.New(wsData).Scan(&msgObj); err != nil {
+				glog.Info(msgObj)
+				glog.Info(string(wsData))
+				// logrus.WithError(err).WithField("wsData", string(wsData)).Error("unmarshal websocket message failed")
+			}
 			switch msgObj.Type {
 			case wsMsgResize:
+				glog.Info(msgObj)
+				glog.Info(string(wsData))
 				//handle xterm.js size change
 				if msgObj.Cols > 0 && msgObj.Rows > 0 {
 					if err := ssConn.Session.WindowChange(msgObj.Rows, msgObj.Cols); err != nil {
@@ -140,18 +146,16 @@ func (ssConn *SshConn) ReceiveWsMsg(wsConn *websocket.Conn, logBuff *bytes.Buffe
 					}
 				}
 			case wsMsgCmd:
-				//handle xterm.js stdin
-				//decodeBytes, err := base64.StdEncoding.DecodeString(msgObj.Cmd)
 				decodeBytes := wsData
-				if err != nil {
-					glog.Error(err)
-				}
+		
 				if _, err := ssConn.StdinPipe.Write(decodeBytes); err != nil {
 					glog.Error(err)
 				}
 				//write input cmd to log buffer
-				if _, err := logBuff.Write(decodeBytes); err != nil {
-					glog.Error(err)
+				if logBuff != nil {
+					if _, err := logBuff.Write(decodeBytes); err != nil {
+						glog.Error(err)
+					}
 				}
 			}
 		}

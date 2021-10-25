@@ -1,7 +1,6 @@
 package api
 
 import (
-	"bytes"
 	"errors"
 	"homeproxy/app/models"
 	"homeproxy/app/services/requests"
@@ -71,12 +70,12 @@ func (a *SystemApi) Webssh(r *ghttp.Request) {
 	}
 	defer ws.Close()
 	client, cols, rows, err := connInit(ws)
+
 	if err != nil {
 		msg := gjson.New(g.Map{"type": "error", "message": err.Error()})
 		ws.WriteMessage(1, msg.MustToJson())
 		return
 	}
-
 	ssConn, err := NewSshConn(cols, rows, client)
 	if err != nil {
 		msg := gjson.New(g.Map{"type": "error", "message": err.Error()})
@@ -89,10 +88,8 @@ func (a *SystemApi) Webssh(r *ghttp.Request) {
 	ws.WriteMessage(1, msg.MustToJson())
 	quitChan := make(chan bool, 3)
 
-	var logBuff = new(bytes.Buffer)
-
 	// most messages are ssh output, not webSocket input
-	go ssConn.ReceiveWsMsg(ws.Conn, logBuff, quitChan)
+	go ssConn.ReceiveWsMsg(ws.Conn, nil, quitChan)
 	go ssConn.SendComboOutput(ws.Conn, quitChan)
 	go ssConn.SessionWait(quitChan)
 	<-quitChan

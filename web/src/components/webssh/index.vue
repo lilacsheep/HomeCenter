@@ -6,10 +6,10 @@
           用户管理
         </a-breadcrumb-item>
       </a-breadcrumb>
-    <a-row :gutter="20" >
-      <a-col :span="6">
+    <a-row :gutter="20" style="min-width: 1080px">
+      <a-col :span="6" style="min-width: 200px">
         <a-button type="primary" @click="form.group.add.visible=true" block>新增组</a-button>
-        <a-tree style="background: #FFFFFF;height: 100%;margin: 0;" :tree-data="servergroup" @select="server_select" :expandedKeys.sync="expandedKeys" show-icon>
+        <a-tree @expand="group_expand" style="background: #FFFFFF;height: 400px;margin: 0" :tree-data="servergroup" @select="server_select" :expandedKeys="expandedKeys" show-icon>
           <template #title="{ key: treeKey, title }" >
             <a-dropdown :trigger="['contextmenu']">
               <span>{{ title }}</span>
@@ -27,8 +27,30 @@
           <a-icon slot="desktop" type="desktop" />
           <a-icon slot="folder" type="folder" />
         </a-tree>
+        <a-collapse accordion style="margin-top: 5px">
+          <a-collapse-panel key="1" header="服务器性能">
+            <span>CPU使用率</span>
+            <a-progress :percent="60"/>
+            <span>内存使用率</span>
+            <a-progress :percent="80"  status="active" />
+            <a-statistic
+            title="网卡速率"
+            :value="9.3"
+            :precision="2"
+            suffix="Mbps"
+            :value-style="{ color: '#cf1322' }"
+          >
+          </a-statistic>
+          </a-collapse-panel>
+          <a-collapse-panel key="2" header="常用指令" :disabled="false">
+            <p>111111111111111</p>
+          </a-collapse-panel>
+          <a-collapse-panel key="3" header="This is panel header 3" disabled>
+            <p>1111111111111</p>
+          </a-collapse-panel>
+        </a-collapse>
       </a-col>
-      <a-col :span="18" style="height: 100%;">
+      <a-col :span="18" style="height: 100%;min-width: 800px">
         <a-tabs v-model="tab_connection.activeKey" hide-add type="editable-card" @change="tabChange"  @edit="onEdit">
           <a-button-group slot="tabBarExtraContent">
             <a-button icon="sync" @click="on_reconnect">重连</a-button>
@@ -194,6 +216,9 @@ export default {
             closable: false
           }
         ]
+      },
+      info: {
+        
       },
       servergroup: [],
       term: null,
@@ -517,7 +542,9 @@ export default {
     onresize(e) {
       const msg = { type: "resize", ...e };
       this.tab_connection.panes.forEach((item) => {
-        item.connection.send(msg)
+        msg['cols'] = item.term.cols
+        msg['rows'] = item.term.rows
+        item.connection.send(JSON.stringify(msg))
         item.term.fit()
       })
     },
@@ -605,6 +632,11 @@ export default {
         }
       })
       this.form.server.add.visible = true
+    },
+    group_expand(expandedKeys, event) {
+      if (event.expanded) {
+        this.expandedKeys = [event.node.eventKey]
+      }
     },
     auth_switch(checked, event) {
       if (checked) {
