@@ -88,6 +88,14 @@ func (a *SystemApi) Webssh(r *ghttp.Request) {
 	ws.WriteMessage(1, msg.MustToJson())
 	quitChan := make(chan bool, 3)
 
+	// mc, err := sshm.NewSshConnMonitor(client, ws.Conn)
+	// if err != nil {
+	// 	msg := gjson.New(g.Map{"type": "error", "message": err.Error()})
+	// 	ws.WriteMessage(1, msg.MustToJson())
+	// 	return
+	// }
+	// go mc.Run()
+	// defer mc.Close()
 	// most messages are ssh output, not webSocket input
 	go ssConn.ReceiveWsMsg(ws.Conn, nil, quitChan)
 	go ssConn.SendComboOutput(ws.Conn, quitChan)

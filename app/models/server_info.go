@@ -99,7 +99,6 @@ func (s *Server) GetProxyClient() (*ssh.Client, error) {
 }
 
 func (s *Server) GetSshClient() (*ssh.Client, error) {
-	glog.Info(s)
 	if s.UseProxy {
 		return s.GetProxyClient()
 	}

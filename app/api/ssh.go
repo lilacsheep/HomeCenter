@@ -53,6 +53,7 @@ type SshConn struct {
 //flushComboOutput flush ssh.session combine output into websocket response
 func flushComboOutput(w *wsBufferWriter, wsConn *websocket.Conn) error {
 	if w.buffer.Len() != 0 {
+		// msg := gjson.New(g.Map{"type": "output", "data": gconv.String(w.buffer.Bytes())})
 		err := wsConn.WriteMessage(websocket.TextMessage, w.buffer.Bytes())
 		if err != nil {
 			return err
@@ -104,7 +105,6 @@ func (s *SshConn) Close() {
 	if s.Session != nil {
 		s.Session.Close()
 	}
-
 }
 
 //ReceiveWsMsg  receive websocket msg do some handling then write into ssh.session.stdin
@@ -131,14 +131,10 @@ func (ssConn *SshConn) ReceiveWsMsg(wsConn *websocket.Conn, logBuff *bytes.Buffe
 			}
 
 			if err := gvar.New(wsData).Scan(&msgObj); err != nil {
-				glog.Info(msgObj)
-				glog.Info(string(wsData))
 				// logrus.WithError(err).WithField("wsData", string(wsData)).Error("unmarshal websocket message failed")
 			}
 			switch msgObj.Type {
 			case wsMsgResize:
-				glog.Info(msgObj)
-				glog.Info(string(wsData))
 				//handle xterm.js size change
 				if msgObj.Cols > 0 && msgObj.Rows > 0 {
 					if err := ssConn.Session.WindowChange(msgObj.Rows, msgObj.Cols); err != nil {
@@ -147,7 +143,7 @@ func (ssConn *SshConn) ReceiveWsMsg(wsConn *websocket.Conn, logBuff *bytes.Buffe
 				}
 			case wsMsgCmd:
 				decodeBytes := wsData
-		
+
 				if _, err := ssConn.StdinPipe.Write(decodeBytes); err != nil {
 					glog.Error(err)
 				}

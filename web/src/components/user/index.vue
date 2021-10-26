@@ -11,14 +11,14 @@
         <a-tabs>
           <a-tab-pane key="1" tab="修改密码">
             <a-card>
-              <a-form laba-width="100px" :moda="user.password.change.form">
-                <a-form-item laba="当前密码">
+              <a-form v-model="user.password.change.form">
+                <a-form-item label="当前密码">
                   <a-input v-model="user.password.change.form.current"  placeholder="请输入当前密码" autocomplete="off" show-password></a-input>
                 </a-form-item>
-                <a-form-item laba="新密码">
+                <a-form-item label="新密码">
                   <a-input v-model="user.password.change.form.password1"  placeholder="请输入新密码" autocomplete="off" show-password></a-input>
                 </a-form-item>
-                <a-form-item laba="重复密码">
+                <a-form-item label="重复密码">
                   <a-input v-model="user.password.change.form.password2"  placeholder="请再次输入新密码" autocomplete="off" show-password></a-input>
                 </a-form-item>
                 <a-form-item>
@@ -31,7 +31,6 @@
       </a-col>
     </a-row>
   </a-layout-content>
-  
 </template>
 
 <script>

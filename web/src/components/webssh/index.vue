@@ -27,20 +27,13 @@
           <a-icon slot="desktop" type="desktop" />
           <a-icon slot="folder" type="folder" />
         </a-tree>
-        <a-collapse accordion style="margin-top: 5px">
+        <!-- <a-collapse accordion style="margin-top: 5px">
           <a-collapse-panel key="1" header="服务器性能">
             <span>CPU使用率</span>
-            <a-progress :percent="60"/>
+            <a-progress :percent="info.cpu"/>
             <span>内存使用率</span>
             <a-progress :percent="80"  status="active" />
-            <a-statistic
-            title="网卡速率"
-            :value="9.3"
-            :precision="2"
-            suffix="Mbps"
-            :value-style="{ color: '#cf1322' }"
-          >
-          </a-statistic>
+            <span>网络延迟: <a-tag>{{info.delay}} ms</a-tag> </span>
           </a-collapse-panel>
           <a-collapse-panel key="2" header="常用指令" :disabled="false">
             <p>111111111111111</p>
@@ -48,7 +41,7 @@
           <a-collapse-panel key="3" header="This is panel header 3" disabled>
             <p>1111111111111</p>
           </a-collapse-panel>
-        </a-collapse>
+        </a-collapse> -->
       </a-col>
       <a-col :span="18" style="height: 100%;min-width: 800px">
         <a-tabs v-model="tab_connection.activeKey" hide-add type="editable-card" @change="tabChange"  @edit="onEdit">
@@ -218,7 +211,8 @@ export default {
         ]
       },
       info: {
-        
+        delay: 0,
+        cpu: 0
       },
       servergroup: [],
       term: null,
@@ -470,13 +464,23 @@ export default {
             case "error":
               this.$message.error("连接错误: "+ data.message)
               this.tab_connection.panes[index-1].spinning = false
+              return
             case "success":
               this.tab_connection.panes[index-1].term.attach(this.tab_connection.panes[index-1].connection)
-              this.tab_connection.panes[index-1].connection.onmessage = function(evt) {}
               this.tab_connection.panes[index-1].spinning = false
               this.tab_connection.panes[index-1].type = "thunderbolt"
               this.tab_connection.panes[index-1].color = "#52c41a"
               this.tab_connection.panes[index-1].term.fit()
+              return
+            case "delay":
+              this.info.delay = data.data
+              return
+            case "cpu":
+              this.info.cpu = data.data.toFix(1)
+              return
+            case "output":
+              this.tab_connection.panes[index-1].term.write(data.data)
+              return
           }
         }
       } else {
@@ -499,28 +503,25 @@ export default {
               case "error":
                 this.$message.error("连接错误: "+ data.message)
                 this.tab_connection.panes[index-1].spinning = false
+                return
               case "success":
                 this.tab_connection.panes[index-1].term.attach(this.tab_connection.panes[index-1].connection)
-                this.tab_connection.panes[index-1].connection.onmessage = function(evt) {}
                 this.tab_connection.panes[index-1].spinning = false
                 this.tab_connection.panes[index-1].type = "thunderbolt"
                 this.tab_connection.panes[index-1].color = "#52c41a"
                 this.tab_connection.panes[index-1].term.fit()
                 this.tab_connection.panes[index-1].term.focus()
+                return
+              case "delay":
+                this.info.delay = data.data
+                return
+              case "cpu":
+                this.info.cpu = data.data.toFix(1)
+                return
             }
           }
         }, 50)
       }
-      // ws.connection.onerror = () => {
-      //   this.$message.error("连接中断: " + error)
-      //   this.tab_connection.panes[index-1].spinning = false
-      // }
-      // this.connection.onclose = () => {
-      //   this.$message.error("连接中断")
-      // }
-      // this.connection.onerror = (err) => {
-      //   this.$message.error("连接错误: "+err)
-      // }
     },
     tabChange(activeKey) {
       this.tab_connection.panes[activeKey].term.selectAll()
@@ -692,7 +693,7 @@ export default {
       const init_height = 18;
 
       let windows_width = window.innerWidth;
-      let windows_height = window.innerHeight - 200;
+      let windows_height = window.innerHeight - 100;
 
       return {
           cols: Math.floor(windows_width / init_width),
