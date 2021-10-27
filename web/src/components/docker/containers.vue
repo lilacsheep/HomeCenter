@@ -24,7 +24,6 @@
 
               <span slot="Name" slot-scope="text">{{ text[0].slice(1) }}</span>
               <span slot="Created" slot-scope="text">{{ text * 1000 | dateformat }}</span>
-              <span slot="Ports" slot-scope="Ports">{{ Ports.length > 0 ? `${Ports[0].IP}:${Ports[0].PublicPort}/${Ports[0].Type}` : "Null"}}</span>
               <span slot="action" slot-scope="row">
                 <a-button-group size='small'>
                   <a-button icon='edit'></a-button>
@@ -47,7 +46,7 @@
             :visible="visible"
             :after-visible-change="afterVisibleChange"
             @close="onClose"
-            :width="520"
+            width="60%"
             :get-container="false"
           >
           <a-spin :spinning="drawerLoading">
@@ -87,12 +86,28 @@
                 <a-descriptions-item label="MAC地址">
                   {{ container.NetworkSettings.MacAddress}}
                 </a-descriptions-item>
+                <a-descriptions-item label="环境变量" :span="3">
+                  <li v-for="(env, index) in container.Config.Env" :key="index">
+                    {{env}}
+                    </li>
+                </a-descriptions-item>
                 <a-descriptions-item label="端口" :span="3">
-                  <span v-for="(port, index) in container.NetworkSettings.Ports" :key="index">{{port.length > 0 ? `${port[0].HostIp}:${port[0].HostPort}` : '无'}} -> {{index}}</span>
+                  <li v-for="(port, index) in container.NetworkSettings.Ports" :key="index">
+                    {{port ? `${port[0].HostIp}:${port[0].HostPort}` : '无'}} -> {{index}}</li>
                 </a-descriptions-item>
                 <a-descriptions-item label="卷组" :span="3">
                   <li v-for="(volume, index) in container.Mounts" :key="index">
-                    {{`${volume.Source.slice(0, 20)} -> ${volume.Destination}`}}
+                    <template v-if="volume.Source.length >= 20">
+                      <a-tooltip>
+                        <template slot="title">
+                          {{volume.Source}}
+                        </template>
+                        {{`${volume.Source.slice(0, 20)}...  ->  ${volume.Destination}`}}
+                      </a-tooltip>
+                    </template>
+                    <template v-else>
+                      {{`${volume.Source} -> ${volume.Destination}`}}
+                    </template>                    
                     </li>
                 </a-descriptions-item>
               </a-descriptions>
@@ -279,13 +294,6 @@ const columns = [
     key: 'Status',
     dataIndex: 'Status',
     width: 120
-  },
-  {
-    title: '端口',
-    key: 'Ports',
-    dataIndex: 'Ports',
-    scopedSlots: { customRender: 'Ports' },
-    width: 180
   },
   {
     title: '名称',

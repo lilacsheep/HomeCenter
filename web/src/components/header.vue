@@ -29,12 +29,12 @@
                 <span>容器管理</span>
               </router-link>
             </a-menu-item>
-            <a-menu-item key="42">
+            <!-- <a-menu-item key="42">
               <router-link :to="{path:'/container/template'}">
                 <a-icon type="profile" />
                 <span>容器模板</span>
               </router-link>
-            </a-menu-item>
+            </a-menu-item> -->
             <a-menu-item key="43">
               <router-link :to="{path:'/docker/images'}">
                 <a-icon type="profile" />
