@@ -21,8 +21,6 @@
                 <span slot="Created" slot-scope="text">{{ text * 1000 | dateformat }}</span>
                 <span slot="Size" slot-scope="text">{{ text | diskSize }}</span>
                 <span slot="action" slot-scope="text, record">
-                  <a>Invite</a>
-                  <a-divider type="vertical" />
                   <a-popconfirm v-if="data.length" title="确认删除镜像么" @confirm="() => onDelete(record)">
                     <a href="javascript:;"><a-icon type="delete" />删除</a>
                   </a-popconfirm>
