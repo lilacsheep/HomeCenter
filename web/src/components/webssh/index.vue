@@ -693,7 +693,7 @@ export default {
       const init_height = 18;
 
       let windows_width = window.innerWidth;
-      let windows_height = window.innerHeight - 100;
+      let windows_height = window.innerHeight - 150;
 
       return {
           cols: Math.floor(windows_width / init_width),
@@ -741,8 +741,10 @@ export default {
     
   },
   beforeDestroy() {
-    this.connection.close()
-    this.term.dispose()
+    this.tab_connection.panes.forEach((item) => {
+      item.connection.close()
+      item.term.dispose()
+    })
   },
   mounted: function () {
     window.addEventListener("resize", this.onresize);
