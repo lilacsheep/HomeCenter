@@ -471,6 +471,7 @@ export default {
               this.tab_connection.panes[index-1].type = "thunderbolt"
               this.tab_connection.panes[index-1].color = "#52c41a"
               this.tab_connection.panes[index-1].term.fit()
+              this.onresize({})
               return
             case "delay":
               this.info.delay = data.data
@@ -511,6 +512,7 @@ export default {
                 this.tab_connection.panes[index-1].color = "#52c41a"
                 this.tab_connection.panes[index-1].term.fit()
                 this.tab_connection.panes[index-1].term.focus()
+                this.onresize({})
                 return
               case "delay":
                 this.info.delay = data.data
