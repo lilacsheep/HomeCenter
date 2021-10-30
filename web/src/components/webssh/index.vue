@@ -7,7 +7,7 @@
         </a-breadcrumb-item>
       </a-breadcrumb>
     <a-row :gutter="20" style="min-width: 1080px">
-      <a-col :span="6" style="min-width: 200px">
+      <a-col :span="4" style="min-width: 200px">
         <a-button type="primary" @click="form.group.add.visible=true" block>新增组</a-button>
         <a-tree @expand="group_expand" style="background: #FFFFFF;height: 400px;margin: 0" :tree-data="servergroup" @select="server_select" :expandedKeys="expandedKeys" show-icon>
           <template #title="{ key: treeKey, title }" >
@@ -43,7 +43,7 @@
           </a-collapse-panel>
         </a-collapse> -->
       </a-col>
-      <a-col :span="18" style="height: 100%;min-width: 800px">
+      <a-col :span="20" style="height: 100%;min-width: 800px">
         <a-tabs v-model="tab_connection.activeKey" hide-add type="editable-card" @change="tabChange"  @edit="onEdit">
           <a-button-group slot="tabBarExtraContent">
             <a-button icon="sync" @click="on_reconnect">重连</a-button>

@@ -38,98 +38,13 @@
             </a-col>
           </a-row>
         </a-tab-pane>
-        <a-tab-pane key="2" tab="配置管理">
+        <a-tab-pane key="2" tab="本地配置">
           <a-row :gutter="20">
-            <a-col :span="10">
-              <a-card title="Card Title">
-                <a-card-grid style="width:50%;text-align:center">
-                  <a-statistic
-                    title="Feedback"
-                    :value="11.28"
-                    :precision="2"
-                    suffix="%"
-                    :value-style="{ color: '#3f8600' }"
-                    style="margin-right: 50px"
-                  >
-                    <template #prefix>
-                      <a-icon type="arrow-up" />
-                    </template>
-                  </a-statistic>
-                </a-card-grid>
-                <a-card-grid style="width:50%;text-align:center">
-                  <a-statistic
-                    title="Feedback"
-                    :value="11.28"
-                    :precision="2"
-                    suffix="%"
-                    :value-style="{ color: '#3f8600' }"
-                    style="margin-right: 50px"
-                  >
-                    <template #prefix>
-                      <a-icon type="arrow-up" />
-                    </template>
-                  </a-statistic>
-                </a-card-grid>
-                <a-card-grid style="width:50%;text-align:center">
-                  <a-statistic
-                    title="Feedback"
-                    :value="11.28"
-                    :precision="2"
-                    suffix="%"
-                    :value-style="{ color: '#3f8600' }"
-                    style="margin-right: 50px"
-                  >
-                    <template #prefix>
-                      <a-icon type="arrow-up" />
-                    </template>
-                  </a-statistic>
-                </a-card-grid>
-                <a-card-grid style="width:50%;text-align:center">
-                  <a-statistic
-                    title="Feedback"
-                    :value="11.28"
-                    :precision="2"
-                    suffix="%"
-                    :value-style="{ color: '#3f8600' }"
-                    style="margin-right: 50px"
-                  >
-                    <template #prefix>
-                      <a-icon type="arrow-up" />
-                    </template>
-                  </a-statistic>
-                </a-card-grid>
-                <a-card-grid style="width:100%;text-align:center" :hoverable="false">
-                  <a-statistic
-                    title="Feedback"
-                    :value="11.28"
-                    :precision="2"
-                    suffix="%"
-                    :value-style="{ color: '#3f8600' }"
-                    style="margin-right: 50px"
-                  >
-                    <template #prefix>
-                      <a-icon type="arrow-up" />
-                    </template>
-                  </a-statistic>
-                </a-card-grid>
-                <a-card-grid style="width:100%;text-align:center" :hoverable="false">
-                  <a-statistic
-                    title="Feedback"
-                    :value="11.28"
-                    :precision="2"
-                    suffix="%"
-                    :value-style="{ color: '#3f8600' }"
-                    style="margin-right: 50px"
-                  >
-                    <template #prefix>
-                      <a-icon type="arrow-up" />
-                    </template>
-                  </a-statistic>
-                </a-card-grid>
-              </a-card>
-            </a-col>
-            <a-col :span="14">
+            <a-col :span="24">
               <a-form-model :model="form" :label-col="labelCol" :wrapper-col="wrapperCol" style="background: #FFFFFF; padding: 10px;">
+                <a-form-model-item label="启动">
+                  <a-switch checked-children="开" un-checked-children="关" v-model="form.start" />
+                </a-form-model-item>
                 <a-form-model-item label="认证密钥">
                   <a-input v-model="form.access_key" />
                 </a-form-model-item>
@@ -151,18 +66,107 @@
                 <a-form-model-item label="服务地址">
                   <a-input v-model="form.server_url" />
                 </a-form-model-item>
-                
                 <a-form-model-item :wrapper-col="{ span: 14, offset: 3 }">
                   <a-button type="primary" @click="onSubmit">
-                    更新并启动
+                    应用配置
                   </a-button>
                 </a-form-model-item>
               </a-form-model>
             </a-col>
           </a-row>
-          
         </a-tab-pane>
       </a-tabs>
+      <a-drawer title="Basic Drawer"
+        placement="right"
+        :closable="false"
+      >
+        <a-card title="Card Title">
+          <a-card-grid style="width:50%;text-align:center">
+            <a-statistic
+              title="Feedback"
+              :value="11.28"
+              :precision="2"
+              suffix="%"
+              :value-style="{ color: '#3f8600' }"
+              style="margin-right: 50px"
+            >
+              <template #prefix>
+                <a-icon type="arrow-up" />
+              </template>
+            </a-statistic>
+          </a-card-grid>
+          <a-card-grid style="width:50%;text-align:center">
+            <a-statistic
+              title="Feedback"
+              :value="11.28"
+              :precision="2"
+              suffix="%"
+              :value-style="{ color: '#3f8600' }"
+              style="margin-right: 50px"
+            >
+              <template #prefix>
+                <a-icon type="arrow-up" />
+              </template>
+            </a-statistic>
+          </a-card-grid>
+          <a-card-grid style="width:50%;text-align:center">
+            <a-statistic
+              title="Feedback"
+              :value="11.28"
+              :precision="2"
+              suffix="%"
+              :value-style="{ color: '#3f8600' }"
+              style="margin-right: 50px"
+            >
+              <template #prefix>
+                <a-icon type="arrow-up" />
+              </template>
+            </a-statistic>
+          </a-card-grid>
+          <a-card-grid style="width:50%;text-align:center">
+            <a-statistic
+              title="Feedback"
+              :value="11.28"
+              :precision="2"
+              suffix="%"
+              :value-style="{ color: '#3f8600' }"
+              style="margin-right: 50px"
+            >
+              <template #prefix>
+                <a-icon type="arrow-up" />
+              </template>
+            </a-statistic>
+          </a-card-grid>
+          <a-card-grid style="width:100%;text-align:center" :hoverable="false">
+            <a-statistic
+              title="Feedback"
+              :value="11.28"
+              :precision="2"
+              suffix="%"
+              :value-style="{ color: '#3f8600' }"
+              style="margin-right: 50px"
+            >
+              <template #prefix>
+                <a-icon type="arrow-up" />
+              </template>
+            </a-statistic>
+          </a-card-grid>
+          <a-card-grid style="width:100%;text-align:center" :hoverable="false">
+            <a-statistic
+              title="Feedback"
+              :value="11.28"
+              :precision="2"
+              suffix="%"
+              :value-style="{ color: '#3f8600' }"
+              style="margin-right: 50px"
+            >
+              <template #prefix>
+                <a-icon type="arrow-up" />
+              </template>
+            </a-statistic>
+          </a-card-grid>
+        </a-card>
+      </a-drawer>
     </a-layout-content>
 </template>
 
@@ -173,9 +177,10 @@ export default {
       expandedKeys: [],
       objects: [],
       minios: [],
-      labelCol: { span: 4 },
-      wrapperCol: { span: 20 },
+      labelCol: { span: 3 },
+      wrapperCol: { span: 16 },
       form: {
+        start: false,
         name: '',
         region: undefined,
         date1: undefined,
