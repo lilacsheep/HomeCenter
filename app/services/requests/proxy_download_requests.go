@@ -179,29 +179,43 @@ type UpdateDownloadSettingsRequest struct {
 	AutoClean    int    `json:"auto_clean"`    // 自动清理Bt下载后文件夹内内容，根据文件大小判断
 	AutoStart    bool   `json:"auto_start"`    // 启动Aria2任务
 	PublicVisit  bool   `json:"public_visit"`  // 允许公共访问
-	ContainerId  string `json:"container_id"`
 }
 
 func (self *UpdateDownloadSettingsRequest) Exec(r *ghttp.Request) (response MessageResponse) {
 	settings := models.DownloadSettings{}
+	var needstart bool
 	err := models.ConfigToStruct("aria2", &settings)
 	if err != nil {
 		return *response.ErrorWithMessage(http.StatusInternalServerError, err.Error())
 	} else {
+		if settings.NeedReCreate(gvar.New(self)) {
+			aria2.Manager.StopContainer()
+			aria2.Manager.RemoveContianer()
+			needstart = true
+		}
+
+		for k, v := range gvar.New(self).MapStrStr() {
+			models.UpdateConfig("aria2", k, v)
+		}
+
 		if self.AutoStart != settings.AutoStart {
 			if self.AutoStart {
-				models.UpdateConfig("aria2", "auto_start", "true")
 				err = aria2.Manager.Init()
 				if err != nil {
 					return *response.SystemError(err)
 				}
+				needstart = false
 			} else {
 				aria2.Manager.StopContainer()
 			}
 		}
-		for k, v := range gvar.New(self).MapStrStr() {
-			models.UpdateConfig("aria2", k, v)
+		if needstart && self.AutoStart {
+			err = aria2.Manager.Init()
+			if err != nil {
+				return *response.SystemError(err)
+			}
 		}
+
 	}
 	return *response.Success()
 }

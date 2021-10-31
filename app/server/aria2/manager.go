@@ -207,6 +207,9 @@ func (self *manager) GetOption(key string) (string, error) {
 	return "", err
 }
 
+func (self *manager) RemoveContianer() error {
+	return docker.Docker.ContainerRemove(context.Background(), self.Settings.ContainerId, types.ContainerRemoveOptions{})
+}
 func (self *manager) StopContainer() error {
 	return docker.Docker.ContainerStop(context.Background(), self.Settings.ContainerId, nil)
 }

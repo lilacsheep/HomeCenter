@@ -6,6 +6,7 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/go-connections/nat"
+	"github.com/gogf/gf/container/gvar"
 	"github.com/gogf/gf/encoding/gjson"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/os/gfile"
@@ -55,6 +56,24 @@ type DownloadSettings struct {
 	ContainerId  string `json:"container_id"`
 }
 
+func (s *DownloadSettings) NeedReCreate(d *gvar.Var) bool {
+	now := gvar.New(s).MapStrStr()
+	new := d.MapStrStr()
+
+	needReCreateKey := []string{"port", "tcp_port", "udp_port", "download_path",
+		"config_path", "token", "webui", "webui_port", "bt_port", "ut", "ctu", "smd", "fa", "public_visit"}
+
+	for _, k := range needReCreateKey {
+		if v, ok := now[k]; ok {
+			if v2, ok2 := new[k]; ok2 {
+				if v != v2 {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
 func (s *DownloadSettings) Env() []string {
 	return []string{
 		fmt.Sprintf("SECRET=%s", s.SECRET),

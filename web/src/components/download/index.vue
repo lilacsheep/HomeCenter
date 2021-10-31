@@ -72,6 +72,14 @@
                   </a-switch>
                   <span style="color: #909399;font-size: 11px;margin-left: 5px ;">检查并启动Aria2</span>
                 </a-form-model-item>
+                <a-form-model-item label="下载路径">
+                  <a-input v-model="settings.form.download_path"  style="width: 300px"/>
+                  <span style="color: #909399;font-size: 9px;margin-left: 5px ;">文件所下载的位置</span>
+                </a-form-model-item>
+                <a-form-model-item label="配置路径">
+                  <a-input v-model="settings.form.config_path"  style="width: 300px"/>
+                  <span style="color: #909399;font-size: 9px;margin-left: 5px ;">配置文件所存放路径</span>
+                </a-form-model-item>
                 <a-form-model-item label="RPC端口">
                   <a-input-number :min="80" :max="65535" v-model="settings.form.port"/>
                   <span style="color: #909399;font-size: 9px;margin-left: 5px ;">RPC连接端口</span>
