@@ -26,7 +26,7 @@ func init() {
 	var err error
 	GeoDB, err = geoip2.Open("data/GeoLite2-Country.mmdb")
 	if err != nil {
-		panic(err)
+		glog.Warning(err)
 	}
 }
 
@@ -43,6 +43,9 @@ func LookupByApi(addr string) (string, error) {
 }
 
 func LookupCountry(addr string) (string, error) {
+	if GeoDB == nil {
+		return LookupByApi(addr)
+	}
 	record, err := GeoDB.Country(net.ParseIP(addr))
 	if err != nil {
 		glog.Warning("get ip from geo data error: " + err.Error())
