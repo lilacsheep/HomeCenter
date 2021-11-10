@@ -18,6 +18,7 @@ require (
 	github.com/kr/text v0.2.0 // indirect
 	github.com/mattn/go-isatty v0.0.13 // indirect
 	github.com/mattn/go-runewidth v0.0.13 // indirect
+	github.com/minio/minio-go/v7 v7.0.15 // indirect
 	github.com/moby/moby v20.10.8+incompatible
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/oschwald/geoip2-golang v1.5.0

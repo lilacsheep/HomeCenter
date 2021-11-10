@@ -99,6 +99,16 @@ func init() {
 		group.GET("/download/settings", downloadApi.Settings)
 		group.POST("/download/settings/update", downloadApi.UpdateSettings)
 
+		// minio api
+		minioApi := &api.MinioApi{}
+		group.Group("/minio", func(group *ghttp.RouterGroup) {
+			group.Middleware(middleware.CheckDockerCli)
+			group.POST("/settings", minioApi.QuerySettings)
+			group.POST("/settings/update", minioApi.UpdateSettings)
+			group.POST("/buckets", minioApi.BucketsList)
+			group.POST("/objects", minioApi.ObjectList)
+
+		})
 		// ddns api
 		ddnsApi := new(api.ProxyDDnsApi)
 		group.GET("/ddns/settings", ddnsApi.GetSettings)

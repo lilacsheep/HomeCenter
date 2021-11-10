@@ -31,6 +31,7 @@ func Setup() error {
 	if c, _ := g.DB().Model(&models.User{}).Count(); c == 0 {
 		models.CreateUser("admin", "!QAZ2wsx")
 	}
+
 	// 初始化下载配置
 
 	// downloadSettings, err := models.GetAria2Settings()
@@ -44,6 +45,14 @@ func Setup() error {
 	err := aria2.InitClient()
 	if err != nil {
 		return err
+	}
+	if minioOption, err := models.GetMinioConfig(); err != nil {
+		return err
+	} else {
+		err = minioOption.Auto()
+		if err != nil {
+			return err
+		}
 	}
 	// server.Setup()
 	tasks.InitDDnsTask()

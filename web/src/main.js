@@ -5,6 +5,7 @@ import router from './router'
 import moment from 'moment'
 import api from "./api/api"
 import webssh from "./api/server"
+import minio from "./api/minio"
 import base from "./api/base"
 import VueClipboard from 'vue-clipboard2'
 import Antd from 'ant-design-vue';
@@ -19,6 +20,7 @@ Vue.prototype.$moment = moment;
 Vue.prototype.$api = api;
 Vue.prototype.$apihost = base.apiHost;
 Vue.prototype.$webssh = webssh
+Vue.prototype.$minio = minio.minio
 Vue.use(VueClipboard)
 Vue.use(Antd)
 Vue.use(VCharts)
