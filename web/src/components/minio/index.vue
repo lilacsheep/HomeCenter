@@ -9,7 +9,7 @@
       <a-tab-pane key="1" tab="文件管理">
         <a-row :gutter="20">
           <a-col :span="6">
-            <a-button type="primary" @click="form.group.add.visible=true" block>新增Bucket</a-button>
+            <a-button type="primary" @click="bucket.create.visible=true" block>新增Bucket</a-button>
             <a-list id="bucketlist" bordered :data-source="buckets"  style="background: #FFF">
               <a-list-item slot="renderItem" slot-scope="item">
                 <a-button type="link" style="padding:0" @click="select_bucket(item.name)">{{ item.name }}</a-button>
@@ -17,16 +17,26 @@
               </a-list-item>
             </a-list>
           </a-col>
-          <a-col :span="18">
-            <a-breadcrumb id="breadcrumb" separator=">" style="margin-bottom: 5px;background: #fff">
-              <a-breadcrumb-item >
-                <a-tag style="font-size: 16px;padding: 2px;margin-right:0" @click="select_breadcrumb(-1)">{{now.bucket}}</a-tag>
-              </a-breadcrumb-item>
-              <a-breadcrumb-item :key="p" v-for="(p, i) in now.path">
-                <a-tag style="font-size: 16px;padding: 2px;margin-right:0" @click="select_breadcrumb(i)">{{ p }}</a-tag>
-              </a-breadcrumb-item>
-            </a-breadcrumb>
-            <a-table :columns="columns" :data-source="objects" size="small" style="background: white">
+          <a-col :span="18" style="background: #fff;padding: 0;">
+            <a-row :gutter="20">
+              <a-col :span="20">
+                <a-breadcrumb id="breadcrumb" separator="/" style="margin-bottom: 5px">
+                  <a-breadcrumb-item >
+                    <a style="font-size: 16px;padding: 2px;margin-right:0" @click="select_breadcrumb(-1)">{{now.bucket}}</a>
+                  </a-breadcrumb-item>
+                  <a-breadcrumb-item :key="p" v-for="(p, i) in now.path">
+                    <a style="font-size: 16px;padding: 2px;margin-right:0" @click="select_breadcrumb(i)">{{ p }}</a>
+                  </a-breadcrumb-item>
+                </a-breadcrumb>
+              </a-col>
+              <a-col :span="4" style="float: right" >
+                <a-upload name="file" :multiple="true" :action="upload_action" :data="{name: now.bucket}" @change="upload_change">
+                  <a-button size="small"> <a-icon type="upload" /> 上 传 </a-button>
+                </a-upload>
+              </a-col>
+            </a-row>
+            
+            <a-table :columns="columns" :data-source="objects" size="small" style="background: white" :scroll="{ x: 1300 }">
               <template slot="name" slot-scope="text, row">
                 <a-button icon="file" size="small" type="link" v-if="row.etag !== ''">{{ getFileName(row.name) }}</a-button>
                 <a-button icon="folder" @click="select_dir(row)" size="small" v-else type="link">
@@ -34,6 +44,14 @@
               </template>
               <span slot="size" slot-scope="text">{{ text | diskSize }}</span>
               <span slot="lastModified" slot-scope="text">{{text | dateformat}}</span>
+              <template slot="action" slot-scope="text, row">
+                <a-button-group size="small">
+                  <a-button @click="download_file(row)"><a-icon type="download" /></a-button>
+                  <a-button @click="share_file(row)"><a-icon type="share-alt" /></a-button>
+                  <a-button @click="object_info_open(row)"><a-icon type="setting" /></a-button>
+                </a-button-group>
+              </template>
+              
             </a-table>
           </a-col>
         </a-row>
@@ -98,7 +116,7 @@
         </a-row>
       </a-tab-pane>
     </a-tabs>
-    <a-drawer title="Basic Drawer" placement="right" :closable="false">
+    <a-drawer title="创建" placement="right" :closable="false">
       <a-card title="Card Title">
         <a-card-grid style="width: 50%; text-align: center">
           <a-statistic
@@ -186,6 +204,105 @@
         </a-card-grid>
       </a-card>
     </a-drawer>
+    <a-modal v-model="bucket.create.visible" title="创建Bucket" @ok="create_bucket">
+      <a-input placeholder="Bucket Name" v-model="bucket.create.name"/>
+    </a-modal>
+    <a-drawer title="创建" placement="right" :visible="object.info.visible" width="60%" :closable="false" @close="object_info_close">
+      <a-card title="Card Title">
+        <a-card-grid style="width: 50%; text-align: center">
+          <a-statistic
+            title="Feedback"
+            :value="11.28"
+            :precision="2"
+            suffix="%"
+            :value-style="{ color: '#3f8600' }"
+            style="margin-right: 50px"
+          >
+            <template #prefix>
+              <a-icon type="arrow-up" />
+            </template>
+          </a-statistic>
+        </a-card-grid>
+        <a-card-grid style="width: 50%; text-align: center">
+          <a-statistic
+            title="Feedback"
+            :value="11.28"
+            :precision="2"
+            suffix="%"
+            :value-style="{ color: '#3f8600' }"
+            style="margin-right: 50px"
+          >
+            <template #prefix>
+              <a-icon type="arrow-up" />
+            </template>
+          </a-statistic>
+        </a-card-grid>
+        <a-card-grid style="width: 50%; text-align: center">
+          <a-statistic
+            title="Feedback"
+            :value="11.28"
+            :precision="2"
+            suffix="%"
+            :value-style="{ color: '#3f8600' }"
+            style="margin-right: 50px"
+          >
+            <template #prefix>
+              <a-icon type="arrow-up" />
+            </template>
+          </a-statistic>
+        </a-card-grid>
+        <a-card-grid style="width: 50%; text-align: center">
+          <a-statistic
+            title="Feedback"
+            :value="11.28"
+            :precision="2"
+            suffix="%"
+            :value-style="{ color: '#3f8600' }"
+            style="margin-right: 50px"
+          >
+            <template #prefix>
+              <a-icon type="arrow-up" />
+            </template>
+          </a-statistic>
+        </a-card-grid>
+        <a-card-grid style="width: 100%; text-align: center" :hoverable="false">
+          <a-statistic
+            title="Feedback"
+            :value="11.28"
+            :precision="2"
+            suffix="%"
+            :value-style="{ color: '#3f8600' }"
+            style="margin-right: 50px"
+          >
+            <template #prefix>
+              <a-icon type="arrow-up" />
+            </template>
+          </a-statistic>
+        </a-card-grid>
+        <a-card-grid style="width: 100%; text-align: center" :hoverable="false">
+          <a-statistic
+            title="Feedback"
+            :value="11.28"
+            :precision="2"
+            suffix="%"
+            :value-style="{ color: '#3f8600' }"
+            style="margin-right: 50px"
+          >
+            <template #prefix>
+              <a-icon type="arrow-up" />
+            </template>
+          </a-statistic>
+        </a-card-grid>
+      </a-card>
+    </a-drawer>
+    <a-modal v-model="object.share.visible" title="分享连接" :footer="null">
+      <a-result
+          status="success"
+          title="已经成功复制到剪切板中"
+          :sub-title="object.share.url"
+        >
+        </a-result>
+    </a-modal>
   </a-layout-content>
 </template>
 
@@ -201,9 +318,26 @@ export default {
       update_loading: false,
       buckets: [],
       now: {
-        bucket: "test",
+        bucket: "",
         path: [],
       },
+      object: {
+        info: {
+          visible: false,
+          data: {}
+        },
+        share: {
+          visible: false,
+          url: ""
+        }
+      },
+      bucket: {
+        create: {
+          visible: false,
+          name: ""
+        }
+      },
+      upload_action: "",
       form: {
         auto_start: false,
         access_key: "",
@@ -227,31 +361,57 @@ export default {
           title: "Size",
           dataIndex: "size",
           key: "size",
+          fixed: 'right',
           scopedSlots: { customRender: "size" },
         },
         {
           title: "修改日期",
           dataIndex: "lastModified",
           key: "lastModified",
+          fixed: 'right',
           scopedSlots: { customRender: "lastModified" },
+        },
+        {
+          title: '操作',
+          key: 'operation',
+          fixed: 'right',
+          width: 120,
+          scopedSlots: { customRender: 'action' },
         },
       ],
     };
   },
   created: function () {
+    let host = this.$apihost == ""? window.location.host: this.$apihost
+    this.upload_action = `${window.location.protocol}//${host}/api/minio/object/upload`
     this.reload_setting();
-    this.reload_buckets();
-    this.load_object();
+    this.reload_buckets(true);
   },
   methods: {
-    reload_buckets: function () {
-      this.$minio.server.buckets().then((response) => {
-          this.buckets = response.detail ? response.detail : [];
+    reload_buckets: function (reload_object=false) {
+      this.$minio.buckets.list().then((response) => {
+        this.buckets = response.detail ? response.detail : [];
+        if (reload_object) {
           this.now.bucket = this.buckets[0].name
-        })
-        .catch((response) => {
-          this.$message.error(response.message);
-        });
+          this.load_object()
+        }
+      }).catch((response) => {
+        this.$message.error(response.message);
+      });
+    },
+    upload_change: function (event) {
+      if (event.file.status === "done") {
+        this.load_object()
+      }
+    },
+    create_bucket() {
+      this.$minio.buckets.create(this.bucket.create.name).then((response) => {
+        this.$message.info("创建成功");
+        this.bucket.create.visible = false
+        this.reload_buckets(false)
+      }).catch((response) => {
+        this.$message.error(response.message);
+      });
     },
     select_dir(row) {
       let dirs = row.name.substring(0, row.name.length-1).split("/")
@@ -259,6 +419,31 @@ export default {
       this.load_object();
     },
     select_file(row) {},
+    object_info_open(row) {
+      this.$minio.objects.info(this.now.bucket, row.name).then((response) => {
+        this.object.data = response.detail
+        this.object.info.visible = true
+      }).catch((response) => {
+        this.$message.error("获取信息失败: "+response.message)
+      })
+    },
+    object_info_close(e) {
+      this.object.info.visible = false
+    },
+    download_file(row) {
+      let host = this.$apihost == ""? window.location.host: this.$apihost
+      window.open(`${window.location.protocol}//${host}/api/minio/object/download?bucket_name=${this.now.bucket}&object_name=${row.name}`, "_blank")
+    },
+    share_file(row) {
+      this.$minio.objects.share(this.now.bucket, row.name).then((response) => {
+        this.object.share.visible = true
+        this.object.share.url = response.detail
+        console.log(response.detail)
+        this.$copyText(this.object.share.url)
+      }).catch((response) => {
+        this.$message.error("获取信息失败: "+response.message)
+      })
+    },
     select_bucket(bucket) {
       this.now.path = []
       this.now.bucket = bucket
@@ -290,27 +475,21 @@ export default {
       return dirs.pop()
     },
     load_object: function () {
-      this.$minio.server
-        .objects(this.now.bucket, this.now.path.join('/')+'/')
-        .then((response) => {
-          this.objects = response.detail;
-        })
-        .catch((response) => {
-          this.$message.error(response.message);
-        });
+      this.$minio.objects.list(this.now.bucket, this.now.path.join('/')+'/').then((response) => {
+        this.objects = response.detail;
+      }).catch((response) => {
+        this.$message.error(response.message);
+      });
     },
     update_setting: function () {
       this.update_loading = true;
-      this.$minio.settings
-        .update(this.form)
-        .then((response) => {
-          this.$message.info("更新成功");
-          this.update_loading = false;
-        })
-        .catch((response) => {
-          this.$message.error(response.message);
-          this.update_loading = false;
-        });
+      this.$minio.settings.update(this.form).then((response) => {
+        this.$message.info("更新成功");
+        this.update_loading = false;
+      }).catch((response) => {
+        this.$message.error(response.message);
+        this.update_loading = false;
+      });
     },
     reload_setting: function () {
       this.$minio.settings.query().then((response) => {

@@ -106,8 +106,12 @@ func init() {
 			group.POST("/settings", minioApi.QuerySettings)
 			group.POST("/settings/update", minioApi.UpdateSettings)
 			group.POST("/buckets", minioApi.BucketsList)
+			group.POST("/buckets/create", minioApi.BucketCreate)
 			group.POST("/objects", minioApi.ObjectList)
-
+			group.POST("/object/info", minioApi.ObjectInfo)
+			group.POST("/object/share", minioApi.ObjectShare)
+			group.POST("/object/upload", minioApi.ObjectUpload)
+			group.GET("/object/download", minioApi.ObjectDownload)
 		})
 		// ddns api
 		ddnsApi := new(api.ProxyDDnsApi)

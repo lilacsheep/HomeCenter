@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"homeproxy/library/docker"
 	"io"
+	"net/url"
 	"strings"
 
 	"github.com/docker/docker/api/types"
@@ -28,19 +29,20 @@ const ImageName = "minio/minio:latest"
 const ContainerName = "minio_auto"
 
 type LocalMinioOption struct {
-	Public        bool   `json:"public"`
-	AutoStart     bool   `json:"auto_start"`
-	Port          int    `json:"port"`
-	AccessKey     string `json:"access_key"`
-	SecretKey     string `json:"secret_key"`
-	WebUi         bool   `json:"webui"`
-	WebUiPort     int    `json:"webui_port"`
-	SavePath      string `json:"save_path"`
-	ConfigDir     string `json:"config_dir"`
-	MinioDomain   string `json:"minio_domain"`
-	Region        string `json:"region"`
-	RegionComment string `json:"region_comment"`
-	ContainerID   string `json:"container_id"`
+	Public         bool   `json:"public"`
+	AutoStart      bool   `json:"auto_start"`
+	Port           int    `json:"port"`
+	AccessKey      string `json:"access_key"`
+	SecretKey      string `json:"secret_key"`
+	WebUi          bool   `json:"webui"`
+	WebUiPort      int    `json:"webui_port"`
+	SavePath       string `json:"save_path"`
+	ConfigDir      string `json:"config_dir"`
+	MinioDomain    string `json:"minio_domain"`
+	MinioServerUrl string `json:"server_url"`
+	Region         string `json:"region"`
+	RegionComment  string `json:"region_comment"`
+	ContainerID    string `json:"container_id"`
 }
 
 func (o *LocalMinioOption) Auto() (err error) {
@@ -133,7 +135,10 @@ func (o *LocalMinioOption) Env() []string {
 		envs = append(envs, "MINIO_BROWSER=off")
 	}
 	if o.MinioDomain != "" {
-		envs = append(envs, fmt.Sprintf("MINIO_ROOT_USER=%s", o.MinioDomain))
+		envs = append(envs, fmt.Sprintf("MINIO_DOMAIN=%s", o.MinioDomain))
+	}
+	if o.MinioServerUrl != "" {
+		envs = append(envs, fmt.Sprintf("MINIO_SERVER_URL=%s", o.MinioServerUrl))
 	}
 	return envs
 }
@@ -330,6 +335,7 @@ func GetMinioConfig() (*LocalMinioOption, error) {
 			{"group": "minio", "key": "save_path", "type": "string", "value": "/data/minio/data", "desc": "存储目录"},
 			{"group": "minio", "key": "config_dir", "type": "string", "value": "/data/minio/config", "desc": "配置文件地址"},
 			{"group": "minio", "key": "minio_domain", "type": "string", "value": "", "desc": "minio域名地址"},
+			{"group": "minio", "key": "server_url", "type": "string", "value": "", "desc": "minio服务地址"},
 			{"group": "minio", "key": "region", "type": "string", "value": "us-east-1", "desc": "区域"},
 			{"group": "minio", "key": "region_comment", "type": "string", "value": "", "desc": "区域备注"},
 			{"group": "minio", "key": "container_id", "type": "string", "value": "", "desc": "本机容器ID"},
@@ -347,6 +353,25 @@ func GetMinioClient() (*minio.Client, error) {
 	endpoint := fmt.Sprintf("127.0.0.1:%d", options.Port)
 
 	minioClient, err := minio.New(endpoint, &minio.Options{
+		Creds:  credentials.NewStaticV4(options.AccessKey, options.SecretKey, ""),
+		Secure: false,
+	})
+	return minioClient, err
+}
+
+func GetPublicClient() (*minio.Client, error) {
+	options, err := GetMinioConfig()
+	if err != nil {
+		return nil, err
+	}
+	if options.MinioServerUrl == "" {
+		return nil, errors.New("not found public url please check MINIO_SERVER_URL")
+	}
+	u, err := url.Parse(options.MinioServerUrl)
+	if err != nil {
+		return nil, err
+	}
+	minioClient, err := minio.New(u.Host, &minio.Options{
 		Creds:  credentials.NewStaticV4(options.AccessKey, options.SecretKey, ""),
 		Secure: false,
 	})

@@ -37,8 +37,8 @@ export const minio = {
             });
         },
     },
-    server: {
-        buckets: function () {
+    buckets: {
+        list: function() {
             return new Promise((resolve, reject) => {
                 httpService({
                     url: '/minio/buckets',
@@ -54,7 +54,25 @@ export const minio = {
                 });
             });
         },
-        objects: function (bucket_name, prefix="") {
+        create: function(name="") {
+            return new Promise((resolve, reject) => {
+                httpService({
+                    url: '/minio/buckets/create',
+                    method: 'post',
+                    data: {name: name},
+                    headers: {
+                        'Content-type': 'application/json;charset=UTF-8'
+                    },
+                }).then(response => {
+                    resolve(response);
+                }).catch(error => {
+                    reject(error);
+                });
+            });
+        },
+    },
+    objects: {
+        list: function (bucket_name, prefix="") {
             return new Promise((resolve, reject) => {
                 httpService({
                     url: '/minio/objects',
@@ -70,8 +88,39 @@ export const minio = {
                 });
             });
         },
+        info: function(bucket_name, object_name) {
+            return new Promise((resolve, reject) => {
+                httpService({
+                    url: '/minio/object/info',
+                    method: 'post',
+                    data: {bucket_name: bucket_name, object_name: object_name},
+                    headers: {
+                        'Content-type': 'application/json;charset=UTF-8'
+                    },
+                }).then(response => {
+                    resolve(response);
+                }).catch(error => {
+                    reject(error);
+                });
+            });
+        },
+        share: function(bucket_name, object_name) {
+            return new Promise((resolve, reject) => {
+                httpService({
+                    url: '/minio/object/share',
+                    method: 'post',
+                    data: {bucket_name: bucket_name, object_name: object_name},
+                    headers: {
+                        'Content-type': 'application/json;charset=UTF-8'
+                    },
+                }).then(response => {
+                    resolve(response);
+                }).catch(error => {
+                    reject(error);
+                });
+            });
+        },
     }
-
 }
 
 
