@@ -370,7 +370,7 @@ export default {
           this.timer = setInterval(() => {
             this.connection.send("tasks")
             this.connection.send("stats")
-          }, 3000)
+          }, 2000)
         }
       } else if (key === '2') {
         if (this.timer) {
@@ -446,10 +446,11 @@ export default {
       console.log(error)
     },
     onmessage(evt) {
-       let data = JSON.parse(evt.data)
+      let data = JSON.parse(evt.data)
       switch (data.type) {
         case "tasks":
           this.download.tasks = data.data
+          return
         case "stats":
           if (data.data.uploadSpeed == "") {
             this.global.upload = 0
@@ -461,6 +462,7 @@ export default {
           } else {
             this.global.download = parseInt(data.data.downloadSpeed)
           }
+          return
       }
     },
   },
@@ -489,7 +491,7 @@ export default {
     this.timer = setInterval(() => {
       this.connection.send("tasks")
       this.connection.send("stats")
-    }, 3000)
+    }, 2000)
     
   },
   beforeDestroy () {
