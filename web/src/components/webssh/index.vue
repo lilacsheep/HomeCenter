@@ -552,6 +552,8 @@ export default {
       })
     },
     onContextMenuClick(treeKey, menuKey) {
+      let this_ = this
+
       switch (menuKey) {
         case "add_host":
           this.open_add_server(treeKey)
@@ -560,12 +562,25 @@ export default {
           this.form.server.edit.visible = this.open_edit_server(treeKey)
           return
         case "delete_host":
+          this.$confirm({
+            title: '确认',
+            content: '是否删除该服务器',
+            okText: '确认',
+            cancelText: '取消',
+            onOk() {
+              this_.$webssh.server.remove(treeKey.split("-")[1]).then(function(response) {
+                this_.$message.success("删除成功")
+                this_.refresh_tree()
+              }).catch(function(response) {
+                this_.$message.error("删除失败："+response.message)
+              })
+            }
+          })
           return
         case "edit_node":
           this.open_edit_group(treeKey)
           return
         case "delete_node":
-          let this_ = this
           this.$confirm({
             title: '确认',
             content: '是否删除节点',
