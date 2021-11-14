@@ -22,6 +22,7 @@ require (
 	github.com/moby/moby v20.10.8+incompatible
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/oschwald/geoip2-golang v1.5.0
+	github.com/roseduan/rosedb v1.3.0 // indirect
 	github.com/shirou/gopsutil v3.21.7+incompatible
 	github.com/tklauser/go-sysconf v0.3.7 // indirect
 	github.com/zyxar/argo v0.0.0-20201218032338-28f97c7a4b97

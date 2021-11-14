@@ -30,6 +30,7 @@ func init() {
 		Datetime: time.Now(),
 		l:        sync.Mutex{},
 	}
+	SetupMonitor()
 }
 
 type SystemInfo struct {
@@ -63,7 +64,6 @@ func (s *SystemInfo) Clone() *SystemInfo {
 	defer s.l.Unlock()
 	return s
 }
-
 
 func SetupMonitor() {
 	gcron.AddSingleton("* * * * * *", QueryProxyMonitorInfoTask)

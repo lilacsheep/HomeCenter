@@ -5,6 +5,7 @@ import (
 	"homeproxy/app/server/aria2"
 	"homeproxy/app/services/tasks"
 	"homeproxy/library/docker"
+	"homeproxy/library/cache"
 
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/os/gfile"
@@ -27,22 +28,17 @@ func Setup() error {
 		}
 	}
 
+	err := cache.Init()
+	if err != nil {
+		return err
+	}
 	// 初始化用户
 	if c, _ := g.DB().Model(&models.User{}).Count(); c == 0 {
 		models.CreateUser("admin", "!QAZ2wsx")
 	}
 
-	// 初始化下载配置
-
-	// downloadSettings, err := models.GetAria2Settings()
-	// if err != nil {
-	// 	return err
-	// }
-	// if downloadSettings.GetAria2Url() != "" {
-	// 	gcron.AddSingleton("*/2 * * * * *", tasks.ReloadAira2Manager)
-	// }
 	docker.InitDockerClient()
-	err := aria2.InitClient()
+	err = aria2.InitClient()
 	if err != nil {
 		return err
 	}
