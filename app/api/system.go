@@ -4,12 +4,14 @@ import (
 	"errors"
 	"homeproxy/app/models"
 	"homeproxy/app/services/requests"
+	"homeproxy/app/services/tasks"
 	"strings"
 
 	"github.com/gogf/gf/encoding/gjson"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/ghttp"
 	"github.com/gogf/gf/os/glog"
+	"github.com/gogf/gf/util/gconv"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -22,6 +24,30 @@ func (a *SystemApi) Info(r *ghttp.Request) {
 	a.DoRequest(request, r)
 }
 
+func (a *SystemApi) InfoWs(r *ghttp.Request) {
+
+	ws, err := r.WebSocket()
+	if err != nil {
+		glog.Error(err)
+		return
+	}
+	
+	for {
+		_, m, err := ws.ReadMessage()
+		if err != nil {
+			glog.Error(err)
+			return
+		}
+		switch gconv.String(m) {
+		case "status":
+			h := tasks.History.Clone()
+			ws.WriteJSON(g.Map{"type": "status", "data": h})
+		default:
+			continue
+		}
+	}
+	
+}
 func (a *SystemApi) Processes(r *ghttp.Request) {
 	request := &requests.ProcessesRquest{}
 	a.DoRequest(request, r)

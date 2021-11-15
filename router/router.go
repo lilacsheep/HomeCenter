@@ -128,6 +128,7 @@ func init() {
 		// system
 		systemMonApi := new(api.SystemApi)
 		group.GET("/system/info", systemMonApi.Info)
+		group.ALL("/system/info/ws", systemMonApi.InfoWs)
 		group.GET("/system/processes", systemMonApi.Processes)
 		group.POST("/system/process", systemMonApi.Process)
 		group.ALL("/system/webssh", systemMonApi.Webssh)

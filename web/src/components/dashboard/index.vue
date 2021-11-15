@@ -20,17 +20,17 @@
         <a-card :loading="system.loading" style="margin-top: 5px">
           <h3>性能指标</h3>
           <span>CPU使用率</span>
-          <a-progress :percent="system.info.cpu_percent.toFixed(2)" :stroke-color="percent_color(system.info.cpu_percent)"/>
+          <a-progress status="active" :percent="parseFloat(system.info.cpu_percent.toFixed(2))" :stroke-color="percent_color(system.info.cpu_percent)"/>
           <span>内存使用率</span>
-          <a-progress :percent="system.info.memory.usedPercent.toFixed(2)"  status="active" />
+          <a-progress :percent="parseFloat(system.info.memory.usedPercent.toFixed(2))"  status="active" />
         </a-card>
-        <a-card :loading="system.loading" style="margin-top: 5px">
+        <!-- <a-card :loading="system.loading" style="margin-top: 5px">
           <h3>磁盘信息</h3>
           <template v-for="(info, i) in system.info.disk">
             <span v-if="filter_fs(info)" :key="i">{{`${info.path} 可用: ${humanSize(info.free)} 共计: ${humanSize(info.total)}`}}</span>
-            <a-progress v-if="filter_fs(info)" :key="i" :percent="GetPercent((info.total - info.free), info.total)" :stroke-color="fs_percent_color(info)"/>
+            <a-progress v-if="filter_fs(info)" :key="800000+i" :percent="GetPercent((info.total - info.free), info.total)" :stroke-color="fs_percent_color(info)"/>
           </template>
-        </a-card>
+        </a-card> -->
       </a-col>
       <a-col :span="16">
         <a-table size="small" :columns="system.process.columns" :row-key="record => record.pid" :data-source="system.processes" style="background: #FFFFFF;">
@@ -110,12 +110,30 @@ export default {
           spinning: true
         },
         loading: true,
-      }
+      },
+      endpoint: "",
+      connection: undefined,
+      timer: undefined
     };
   },
   created: function () {
     this.refreshSystem()
     this.refreshProcesses()
+    if (window.location.protocol === 'https:') {
+      this.protocol = 'wss://'
+    } else {
+      this.protocol = 'ws://'
+    }
+    let host = this.$apihost == ""? window.location.host: this.$apihost
+    this.endpoint = `${this.protocol}${host}/api/system/info/ws`
+    this.init_ws()
+    this.timer = setInterval(() => {
+      this.connection.send("status")
+    }, 2000)
+  },
+  beforeDestroy () {
+    clearInterval(this.timer)
+    this.connection.close()
   },
   methods: {
     refreshSystem() {
@@ -126,6 +144,21 @@ export default {
       }).then(function (response) {
         that.$message.info(response.message)
       })
+    },
+    init_ws: function() {
+      if (!window.WebSocket) {
+        this.$message.error("此游览器不支持WebSocket")
+        return
+      }
+      this.connection = new WebSocket(this.endpoint)
+      this.connection.onmessage = (evt) => {
+        let data = JSON.parse(evt.data)
+        switch (data.type) {
+          case "status":
+            this.system.info = data.data
+            return
+        }
+      }
     },
     refreshProcesses() {
       let that = this;
